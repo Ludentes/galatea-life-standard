@@ -296,9 +296,10 @@ steward over any conforming applier (the harness grades the reference steward ov
 stand-in), an applier under any steward, a bridge under any applier, and any implementation graded
 by the same harness.
 
-**None of these releases exists yet.** The packages are private inside the workshop repository, already
-under their public names (renamed on 2026-10-06 from `@ludentes/galatea-life-*`, a scope that belongs to
-someone else on the registry). No container image is built yet: the services are
+**The packages are released; the rest is not yet.** The standard's five packages (`schemas`,
+`binding`, `test-clock`, `sim`, `harness`) are on the npm registry at 0.1.0 since 2026-10-06, as
+`@ludentes/galatea-life-<part>`, and the standard's repository `Ludentes/galatea-life-standard` is
+public. No container image is built yet: the services are
 packaged once the steward's remaining parts are built, after a small refactor that keeps each
 build's core free of process environment, files, MCP and the database driver, so that it can be
 wired by a host other than its own `main.ts`.
