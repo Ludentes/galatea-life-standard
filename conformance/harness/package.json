@@ -1,6 +1,6 @@
 {
   "name": "@ludentes/galatea-life-harness",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
   "type": "module",
   "license": "Apache-2.0",
@@ -13,7 +13,9 @@
     "dist",
     "manifests",
     "scripts/with-postgres.mjs",
-    "scripts/postgres-profile.mjs"
+    "scripts/postgres-profile.mjs",
+    "scripts/reach.mjs",
+    "scripts/matrix-timing.mjs"
   ],
   "bin": {
     "galatea-harness": "./dist/cli.js",
@@ -23,7 +25,22 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./database": {
+      "types": "./dist/database.d.ts",
+      "default": "./dist/database.js"
+    },
+    "./seams/mcp": {
+      "types": "./dist/seams/mcp.d.ts",
+      "default": "./dist/seams/mcp.js"
+    },
+    "./reach": {
+      "types": "./dist/reach.d.ts",
+      "default": "./dist/reach.js"
+    },
+    "./scripts/reach.mjs": "./scripts/reach.mjs",
+    "./scripts/matrix-timing.mjs": "./scripts/matrix-timing.mjs",
+    "./package.json": "./package.json"
   },
   "scripts": {
     "build": "node scripts/copy-manifests.mjs && tsc -p tsconfig.json",

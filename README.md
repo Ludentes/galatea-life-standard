@@ -30,7 +30,7 @@ are graded against are in `docs/reference/`, and the design notes behind them in
 
 - `<standard>-requirements.json` and `<standard>-constants.json`: each standard's requirement index
   and constants as data, generated from the text and checked against it by `check_manifest.py`.
-- Five packages, published to npm at one version:
+- Five packages, published to npm (each versioned on its own; a package is released only when it changes):
 
 | Package | Holds |
 |---|---|

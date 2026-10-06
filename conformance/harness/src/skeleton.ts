@@ -1,14 +1,15 @@
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { exitCode, writeReport } from "./cli.js";
 import { startHomes } from "./home.js";
 import { exitOnInterrupt } from "./interrupt.js";
-import { conformanceRoot } from "./manifest.js";
 import { toMarkdown, type Report } from "./report.js";
 import { runNegatives, runSubject } from "./runner.js";
 import "./tests/index.js";
 
 exitOnInterrupt();
-const subjects = join(conformanceRoot, "sim", "subjects");
+// The stand-ins' subjects, shipped in the sim package beside its dist/.
+const subjects = fileURLToPath(new URL("../subjects", import.meta.resolve("@ludentes/galatea-life-sim")));
 const homes = await startHomes().catch((err) => {
   console.error(`the simulated home did not start: ${err}`);
   process.exit(2);

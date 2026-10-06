@@ -93,8 +93,12 @@ requirement("GA-PERSIST-2", {
   mustEqual((await eventsAfter(ctx, cursor)).filter((e) => e.type === "outcome" && e.target === warm && e.outcome !== "dispatched").length, 0,
     "the third dimmer's outcomes before the restart");
   // The key the third dimmer's firing went under before the restart, which a retry after it must not reuse.
-  const warmBefore = [...new Set(fired().filter((x) => x.target === warm).map((x) => String(x.key)))];
+  const warmSent = () => fired().filter((x) => x.target === warm);
+  const warmBefore = [...new Set(warmSent().map((x) => String(x.key)))];
   must(warmBefore.length === 1, "the third dimmer's firing before the restart went under one key", warmBefore);
+  // What the stand-in received for the third dimmer from here on, read from a recorder started before the restart: a
+  // retry due at once may be sent at the first sync after it, before any recorder this case starts later.
+  const warmSentBefore = warmSent().length;
   await restartSteward(ctx, () => {
     applier.scriptLateAck(pulseF);
     ctx.time.step(10_000);
@@ -112,7 +116,8 @@ requirement("GA-PERSIST-2", {
   mustAccept(ctx, again, "the repeat after the restart");
   mustEqual(again.body.apply_id, first.body.apply_id, "the apply a repeat of its key returns after the restart");
   mustEqual(again.body, repeat.body, "the apply a repeat of its key returns after the restart, as before it");
-  mustEqual(sent().length, 0, "actions the stand-in received for the repeat");
+  // The lamp's: the third dimmer's retry may come at any time after the restart (GA-RULE-7's spacing).
+  mustEqual(sent().filter((x) => x.target === LAMP).length, 0, "actions the stand-in received for the repeat");
 
   // The run ended interrupted, its lease released.
   const st = await runReads(ctx, run_id, "ended(interrupted)", "the long run after the restart");
@@ -152,7 +157,7 @@ requirement("GA-PERSIST-2", {
     10_000, "the third dimmer's unreachable, given while the steward was down, was not relayed", 100);
   ctx.evidence(`the third dimmer's unreachable after the restart: ${JSON.stringify([lost.cause, lost.recovered])}`);
   mustEqual(lost.cause, { rule: "warm" }, "the cause of an outcome of a firing in flight at the stop");
-  const warmKeys = () => [...new Set(sent().filter((x) => x.target === warm).map((x) => String(x.key)))];
+  const warmKeys = () => [...new Set(warmSent().slice(warmSentBefore).map((x) => String(x.key)))];
 
   // The held trigger: its 180 s started afresh at the restart, not at its define.
   await stepTo(ctx, defined + 185_000);
