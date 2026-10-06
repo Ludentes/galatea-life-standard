@@ -1,0 +1,2 @@
+{ "apply_id": "a1", "outcomes": [{ "step_id": "s1", "target": "sim-bridge:lamp", "outcome": "acked", "time": "2026-09-27T10:00:01.250Z" },
+  { "step_id": "s2", "target": "sim-bridge:dimmer", "outcome": "skipped", "reason": "not_confirmed", "time": "2026-09-27T10:00:00.000Z" }] }

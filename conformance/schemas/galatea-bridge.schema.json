@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "galatea-bridge.schema.json",
+  "title": "Galatea bridge manifest",
+  "description": "What a bridge type can take, as data, for the finder. See the bridge standard, The manifest.",
+  "type": "object",
+  "required": ["bridgeType", "name", "version", "connect", "matchers"],
+  "additionalProperties": false,
+  "properties": {
+    "bridgeType": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "name": { "type": "string", "minLength": 1 },
+    "version": { "type": "string", "minLength": 1 },
+    "connect": { "type": "boolean" },
+    "matchers": { "type": "array", "items": { "$ref": "#/$defs/matcher" } }
+  },
+  "$defs": {
+    "pattern": { "type": "string", "minLength": 1 },
+    "hex4": { "type": "string", "pattern": "^[0-9A-Fa-f]{4}$" },
+    "matcher": {
+      "oneOf": [
+        { "$ref": "#/$defs/mdns" },
+        { "$ref": "#/$defs/ssdp" },
+        { "$ref": "#/$defs/dhcp" },
+        { "$ref": "#/$defs/bluetooth" },
+        { "$ref": "#/$defs/usb" }
+      ]
+    },
+    "mdns": {
+      "type": "object",
+      "required": ["source", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "source": { "const": "mdns" },
+        "type": { "type": "string", "pattern": "^_[a-z0-9-]+\\._(tcp|udp)\\.local\\.$" },
+        "name": { "$ref": "#/$defs/pattern" },
+        "properties": { "type": "object", "additionalProperties": { "$ref": "#/$defs/pattern" } }
+      }
+    },
+    "ssdp": {
+      "type": "object",
+      "required": ["source"],
+      "minProperties": 2,
+      "properties": { "source": { "const": "ssdp" } },
+      "additionalProperties": { "$ref": "#/$defs/pattern" }
+    },
+    "dhcp": {
+      "type": "object",
+      "required": ["source"],
+      "additionalProperties": false,
+      "anyOf": [{ "required": ["hostname"] }, { "required": ["macPrefix"] }],
+      "properties": {
+        "source": { "const": "dhcp" },
+        "hostname": { "$ref": "#/$defs/pattern" },
+        "macPrefix": { "type": "string", "pattern": "^[0-9A-Fa-f]{6}$" }
+      }
+    },
+    "bluetooth": {
+      "type": "object",
+      "required": ["source"],
+      "additionalProperties": false,
+      "anyOf": [
+        { "required": ["localName"] },
+        { "required": ["serviceUuid"] },
+        { "required": ["manufacturerId"] }
+      ],
+      "properties": {
+        "source": { "const": "bluetooth" },
+        "localName": { "$ref": "#/$defs/pattern" },
+        "serviceUuid": { "type": "string", "pattern": "^[0-9a-fA-F-]{4,36}$" },
+        "manufacturerId": { "type": "integer", "minimum": 0, "maximum": 65535 }
+      }
+    },
+    "usb": {
+      "type": "object",
+      "required": ["source", "vid", "pid"],
+      "additionalProperties": false,
+      "properties": {
+        "source": { "const": "usb" },
+        "vid": { "$ref": "#/$defs/hex4" },
+        "pid": { "$ref": "#/$defs/hex4" },
+        "serialNumber": { "$ref": "#/$defs/pattern" },
+        "manufacturer": { "$ref": "#/$defs/pattern" },
+        "description": { "$ref": "#/$defs/pattern" }
+      }
+    }
+  }
+}

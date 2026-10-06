@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/configure.load.json",
+  "title": "A configure change's value for kind load (provisional until the standard names the shape)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["device", "load"],
+  "properties": {
+    "device": { "type": "string", "minLength": 1 },
+    "load": { "$ref": "../common.json#/$defs/load" }
+  }
+}

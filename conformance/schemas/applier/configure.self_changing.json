@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/configure.self_changing.json",
+  "title": "A configure change's value for kind self_changing (provisional until the standard names the shape)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["device", "key"],
+  "properties": {
+    "device": { "type": "string", "minLength": 1 },
+    "key": { "type": "string", "minLength": 1 }
+  }
+}

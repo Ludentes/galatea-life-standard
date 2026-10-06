@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "harness/test-received.json",
+  "title": "A command as the test transport received it, on {root}/test/{bridgeId}/control/received",
+  "type": "object",
+  "required": ["device", "action"],
+  "properties": {
+    "device": { "type": "string" },
+    "action": { "$ref": "../common.json#/$defs/action" },
+    "args": {},
+    "state": { "type": "object" }
+  }
+}

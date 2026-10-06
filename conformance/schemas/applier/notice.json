@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/notice.json",
+  "title": "A notice in events.notices (applier, *Notices*); an unknown cause is shown all the same",
+  "type": "object",
+  "required": ["notice_id", "cause", "text"],
+  "properties": {
+    "notice_id": { "type": "string", "minLength": 1 },
+    "cause": { "type": "string", "minLength": 1 },
+    "rule_id": { "type": "string" },
+    "devices": { "type": "array", "items": { "type": "string" } },
+    "text": { "type": "string" },
+    "outcomes": { "type": "array" }
+  }
+}

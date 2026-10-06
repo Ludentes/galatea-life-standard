@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bridge/reply.json",
+  "title": "A reply on {root}/bridges/{b}/reply",
+  "type": "object",
+  "required": ["requestId", "op", "status"],
+  "properties": {
+    "requestId": { "type": "string" },
+    "op": { "$ref": "../common.json#/$defs/requestOp" },
+    "status": { "$ref": "../common.json#/$defs/replyStatus" },
+    "data": {},
+    "reason": { "type": "string" }
+  },
+  "if": { "properties": { "status": { "const": "failed" } } },
+  "then": { "required": ["reason"] }
+}

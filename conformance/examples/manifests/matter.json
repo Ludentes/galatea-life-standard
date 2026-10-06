@@ -1,0 +1,15 @@
+{
+  "bridgeType": "matter",
+  "name": "Matter",
+  "version": "0.1.0",
+  "connect": false,
+  "matchers": [
+    {
+      "source": "mdns",
+      "type": "_matterc._udp.local.",
+      "properties": {
+        "CM": "[123]"
+      }
+    }
+  ]
+}

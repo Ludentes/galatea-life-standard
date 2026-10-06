@@ -1,0 +1,16 @@
+{
+  "bridgeType": "tuya",
+  "name": "Tuya",
+  "version": "0.1.0",
+  "connect": false,
+  "matchers": [
+    {
+      "source": "dhcp",
+      "macPrefix": "D4A651"
+    },
+    {
+      "source": "dhcp",
+      "hostname": "wlan0*"
+    }
+  ]
+}

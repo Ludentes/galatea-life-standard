@@ -1,0 +1,6 @@
+{
+  "id": "both",
+  "name": "Оба сравнения",
+  "conditions": [{ "target": "sim-bridge:lamp", "key": "on", "op": "eq", "value": true, "not_in": [false] }],
+  "actions": [{ "target": "sim-bridge:lamp", "action": "onoff.turn_off", "args": {} }]
+}

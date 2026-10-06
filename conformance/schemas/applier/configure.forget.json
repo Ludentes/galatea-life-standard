@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/configure.forget.json",
+  "title": "A configure change's value for kind forget: the device the model forgets (provisional until the standard names the shape)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["device"],
+  "properties": {
+    "device": { "type": "string", "minLength": 1 }
+  }
+}

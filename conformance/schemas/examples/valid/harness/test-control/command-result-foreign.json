@@ -1,0 +1,1 @@
+{ "requestId": "c3", "op": "commandResult", "device": "lamp", "result": "no_confirmation", "afterMs": 0, "detail": "the bulb did not answer", "source": "another-bridge" }

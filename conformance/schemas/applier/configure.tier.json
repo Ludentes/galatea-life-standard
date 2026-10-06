@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/configure.tier.json",
+  "title": "A configure change's value for kind tier (provisional until the standard names the shape)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["device", "action", "tier"],
+  "properties": {
+    "device": { "type": "string", "minLength": 1 },
+    "action": { "$ref": "../common.json#/$defs/action" },
+    "tier": { "$ref": "../common.json#/$defs/tier" }
+  }
+}

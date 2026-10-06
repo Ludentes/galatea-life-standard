@@ -1,0 +1,2 @@
+{ "id": "hall-lights", "name": "Свет в холле", "aliases": ["весь свет"], "room": "hall",
+  "members": ["sim-bridge:lamp", "sim-bridge:dimmer"], "aggregate": "any" }

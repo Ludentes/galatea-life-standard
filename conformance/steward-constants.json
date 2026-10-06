@@ -1,0 +1,155 @@
+[
+  {
+    "key": "plan-expiry",
+    "name": "Plan expiry",
+    "value": "60 s; ask_expiry_s with an ask step",
+    "number": 60,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-STW-5, GA-CONF-1"
+  },
+  {
+    "key": "token-expiry",
+    "name": "Token expiry",
+    "value": "60 s after issue",
+    "number": 60,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-CONF-3"
+  },
+  {
+    "key": "ask-expiry-default",
+    "name": "Ask expiry, default",
+    "value": "300 s",
+    "number": 300,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-CONF-1"
+  },
+  {
+    "key": "clock-tolerance",
+    "name": "Clock tolerance",
+    "value": "1 s, a guess until measured",
+    "number": 1,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-CONF-2"
+  },
+  {
+    "key": "hold-time-default",
+    "name": "Hold time, default",
+    "value": "7200 s",
+    "number": 7200,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-LEASE-1"
+  },
+  {
+    "key": "notice-retry-interval",
+    "name": "Notice retry interval",
+    "value": "at most 60 s",
+    "number": 60,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-NOTE-1"
+  },
+  {
+    "key": "occupancy-hold-default",
+    "name": "Occupancy hold, default",
+    "value": "300 s",
+    "number": 300,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-OCC-1"
+  },
+  {
+    "key": "idempotency-key-retention",
+    "name": "Idempotency key retention",
+    "value": "3600 s, per credential",
+    "number": 3600,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-STW-6, GA-SCN-6"
+  },
+  {
+    "key": "event-retention",
+    "name": "Event retention",
+    "value": "3600 s",
+    "number": 3600,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-STW-7"
+  },
+  {
+    "key": "history-retention",
+    "name": "History retention",
+    "value": "7 days",
+    "number": 7,
+    "unit": "days",
+    "guess": false,
+    "where": "GA-STW-7"
+  },
+  {
+    "key": "late-ack-slack",
+    "name": "Late-ack slack",
+    "value": "11 s, as the applier's fresh_slack_s for a bridged device, plus its 6 s for each meta-applier hop; ⚠️ a guess",
+    "number": 11,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-RULE-8"
+  },
+  {
+    "key": "rule-retry-spacing",
+    "name": "Rule retry spacing",
+    "value": "at least the action's ack_within_s; at most 300 s, or the ack_within_s when longer; ⚠️ a guess",
+    "number": 300,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-RULE-7"
+  },
+  {
+    "key": "narrowing-limit",
+    "name": "Narrowing limit",
+    "value": "12 h",
+    "number": 12,
+    "unit": "h",
+    "guess": false,
+    "where": "GA-LISTEN-1"
+  },
+  {
+    "key": "source-delay",
+    "name": "Source delay",
+    "value": "1 s, a guess until measured",
+    "number": 1,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-LISTEN-3"
+  },
+  {
+    "key": "duck-limit",
+    "name": "Duck limit",
+    "value": "60 s",
+    "number": 60,
+    "unit": "s",
+    "guess": false,
+    "where": "*Listening*"
+  },
+  {
+    "key": "announce-hold",
+    "name": "Announce hold",
+    "value": "30 s",
+    "number": 30,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-LISTEN-3"
+  },
+  {
+    "key": "offline-grace",
+    "name": "Offline grace",
+    "value": "600 s",
+    "number": 600,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-LISTEN-2"
+  }
+]

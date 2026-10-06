@@ -1,0 +1,1 @@
+{ "apply_id": "a1", "outcomes": [{ "step_id": "s1", "target": "flat:heater", "outcome": "acked", "witness": { "sensor": "flat:living-temp", "expect": "rises", "within_s": 900, "verdict": "confirmed" } }] }

@@ -1,0 +1,1 @@
+{ "device": "flat:dehumidifier", "action": "onoff.turn_on", "sensor": "flat:bath-climate", "key": "humidity", "expect": "falls", "within_s": 1800 }

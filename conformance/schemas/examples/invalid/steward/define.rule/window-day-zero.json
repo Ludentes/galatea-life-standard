@@ -1,0 +1,6 @@
+{
+  "id": "day-zero",
+  "name": "Нулевой день",
+  "conditions": [{ "between": { "from": "21:00", "until": "07:00", "days": [0] } }],
+  "actions": [{ "target": "sim-bridge:lamp", "action": "onoff.turn_off", "args": {} }]
+}

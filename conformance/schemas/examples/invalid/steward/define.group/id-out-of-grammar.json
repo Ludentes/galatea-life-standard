@@ -1,0 +1,1 @@
+{ "id": "свет в холле", "name": "Свет в холле", "room": null, "members": ["sim-bridge:lamp"], "aggregate": "any" }

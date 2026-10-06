@@ -1,0 +1,11 @@
+{
+  "id": "liza-limit",
+  "name": "Лиза: вечерний лимит",
+  "conditions": [
+    { "between": { "from": "21:00", "until": "07:00", "days": [7, 1, 2, 3, 4] } },
+    { "target": "sim-bridge:laptop", "key": "session.liza", "not_in": ["locked", "disconnected", "none"] }
+  ],
+  "actions": [{ "target": "sim-bridge:laptop", "action": "session.lock", "args": { "account": "liza" } }],
+  "active": true,
+  "exceptions": [{ "from": "2030-01-01T21:00:00+03:00", "until": "2030-01-01T21:30:00+03:00" }]
+}

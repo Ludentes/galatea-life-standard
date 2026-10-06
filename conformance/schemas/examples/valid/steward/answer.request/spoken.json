@@ -1,0 +1,3 @@
+{ "plan_id": "p1", "endpoint": "kitchen-voice", "answers": { "s1": "yes" },
+  "utterance": { "utterance_id": "6f1c2b8e-2d4a-4c1e-9f3b-1a2b3c4d5e6f", "endpoint": "kitchen-voice", "time": "2030-01-01T08:00:05Z",
+    "transcript": "да", "addressed_by": "wake", "asked_by": { "say_id": "say-1", "status": "full", "ended_at": "2030-01-01T08:00:04Z" } } }

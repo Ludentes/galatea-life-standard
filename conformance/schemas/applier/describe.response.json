@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/describe.response.json",
+  "title": "describe's answer: the model, or unchanged",
+  "anyOf": [{ "$ref": "#/$defs/full" }, { "$ref": "#/$defs/unchanged" }],
+  "$defs": {
+    "full": {
+      "type": "object",
+      "required": ["applier_id", "standard_version", "levels", "revision", "descendants", "ungoverned", "box",
+                   "clients", "devices", "transports", "safety_rules", "children"],
+      "properties": {
+        "applier_id": { "type": "string" },
+        "standard_version": { "type": "string", "pattern": "^\\d+\\.\\d+$" },
+        "levels": { "type": "array", "items": { "$ref": "../common.json#/$defs/applierLevel" } },
+        "revision": { "type": "integer", "minimum": 0 },
+        "descendants": { "type": "array", "items": { "type": "string" } },
+        "ungoverned": { "type": "array" },
+        "box": {},
+        "clients": { "type": "array" },
+        "devices": { "type": "array", "items": { "$ref": "device.json" } },
+        "transports": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "kind", "up", "state", "bridge"],
+            "properties": {
+              "id": { "type": "string" },
+              "kind": { "$ref": "../common.json#/$defs/protocol" },
+              "up": { "type": "boolean" },
+              "state": { "$ref": "../common.json#/$defs/transportState" },
+              "bridge": { "type": "string" }
+            }
+          }
+        },
+        "safety_rules": { "type": "array" },
+        "children": { "type": "array" },
+        "test_run_id": { "type": "string" }
+      }
+    },
+    "unchanged": {
+      "type": "object",
+      "required": ["revision", "unchanged"],
+      "properties": { "revision": { "type": "integer" }, "unchanged": { "const": true } }
+    }
+  }
+}

@@ -1,0 +1,2 @@
+{ "standard": "applier", "claims": ["Act"], "start": { "command": "node", "args": ["main.mjs"], "ready": { "log": "ready" } },
+  "state_dir": false }

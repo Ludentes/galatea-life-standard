@@ -1,0 +1,1 @@
+{ "id": "movie", "name": "Кино", "mode": "single", "steps": [{ "wait": { "target": "sim-bridge:door", "key": "opening", "value": false } }] }

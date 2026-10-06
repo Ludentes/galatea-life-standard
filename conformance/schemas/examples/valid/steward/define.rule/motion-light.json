@@ -1,0 +1,7 @@
+{
+  "id": "night-light-on",
+  "name": "Ночник по движению",
+  "trigger": { "state": { "target": "sim-bridge:motion", "key": "motion", "op": "eq", "value": true } },
+  "conditions": [{ "between": { "from": "23:00", "until": "06:00" } }],
+  "actions": [{ "selector": { "room": "hall", "capability": "level" }, "action": "level.set_level", "args": { "level": 10 }, "respect_occupancy": false }]
+}

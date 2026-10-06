@@ -1,0 +1,1 @@
+{ "device": "hall:gate", "action": "cover.close", "ack_within_s": 120 }

@@ -1,0 +1,7 @@
+{ "publishedAt": "2026-09-27T10:00:00.000Z", "devices": [{ "id": "lamp", "stableIdentifier": "test:lamp",
+  "transport": "test", "model": { "vendor": "demo", "model": "lamp" }, "capabilities": ["onoff"],
+  "sensorKeys": [], "actions": [
+    { "action": "turn_on", "idempotent": true, "stateless": false, "confirms": true },
+    { "action": "onoff.turn_off", "idempotent": true, "stateless": false, "confirms": true }],
+  "feedback": "closed", "reachMs": 1000, "proposedClass": "light", "classEvidence": "protocol",
+  "otherAdmins": [], "connections": [] }] }

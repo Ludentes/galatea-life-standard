@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/configure.adopt.json",
+  "title": "A configure change's value for kind adopt (provisional until the standard names the shape)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["device", "class"],
+  "properties": {
+    "device": { "type": "string", "minLength": 1 },
+    "class": { "anyOf": [{ "$ref": "../common.json#/$defs/deviceClass" }, { "type": "null" }] },
+    "declarations": { "$ref": "declarations.json" },
+    "replaces": { "type": "string", "minLength": 1 }
+  }
+}

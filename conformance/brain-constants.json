@@ -1,0 +1,38 @@
+[
+  {
+    "key": "arbitration-window",
+    "name": "Arbitration window",
+    "value": "2 s",
+    "number": 2,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-BRAIN-5"
+  },
+  {
+    "key": "failure-bound",
+    "name": "Failure bound",
+    "value": "10 s",
+    "number": 10,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-BRAIN-12, GA-BRAIN-15"
+  },
+  {
+    "key": "runs-per-case",
+    "name": "Runs per case",
+    "value": "3 with injected fields, 3 without",
+    "number": 3,
+    "unit": null,
+    "guess": false,
+    "where": "*Conformance*"
+  },
+  {
+    "key": "utterance-lifetime",
+    "name": "Utterance lifetime",
+    "value": "60 s",
+    "number": 60,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-BRAIN-3, GA-BRAIN-17"
+  }
+]

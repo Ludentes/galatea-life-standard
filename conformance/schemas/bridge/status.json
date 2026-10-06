@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bridge/status.json",
+  "title": "A bridge's status, retained on {root}/bridges/{b}/status",
+  "type": "object",
+  "required": ["bridgeId", "instanceId", "v", "state", "version", "levels", "faults", "ungoverned",
+               "blocked", "transports", "devices", "publishedAt"],
+  "properties": {
+    "bridgeId": { "type": "string", "minLength": 1 },
+    "instanceId": { "$ref": "../common.json#/$defs/uuid" },
+    "v": { "const": 1 },
+    "state": { "$ref": "../common.json#/$defs/bridgeState" },
+    "graceful": { "const": true },
+    "version": { "type": "string" },
+    "bridgeType": { "type": "string" },
+    "levels": { "type": "array", "items": { "$ref": "../common.json#/$defs/bridgeLevel" } },
+    "faults": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code"],
+        "properties": {
+          "code": { "$ref": "../common.json#/$defs/bridgeFaultCode" },
+          "device": { "type": "string" },
+          "topic": { "type": "string" },
+          "detail": { "type": "string" }
+        }
+      }
+    },
+    "ungoverned": { "type": "array" },
+    "blocked": { "type": "array" },
+    "testRunId": { "type": "string" },
+    "transports": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "state", "since"],
+        "properties": {
+          "id": { "type": "string" },
+          "kind": { "$ref": "../common.json#/$defs/protocol" },
+          "state": { "$ref": "../common.json#/$defs/transportState" },
+          "since": { "$ref": "../common.json#/$defs/wireTime" },
+          "retryIntervalMs": { "type": "number", "minimum": 0 },
+          "connections": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "devices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "transport", "basis", "cadenceMs", "basisMaxAgeMs", "timestamp", "lastCheckIn",
+                     "observable", "since"],
+        "properties": {
+          "id": { "type": "string" },
+          "transport": { "type": "string" },
+          "basis": { "type": "string" },
+          "cadenceMs": { "type": ["number", "null"] },
+          "basisMaxAgeMs": { "type": ["number", "null"] },
+          "timestamp": { "anyOf": [{ "$ref": "../common.json#/$defs/wireTime" }, { "type": "null" }] },
+          "lastCheckIn": { "anyOf": [{ "$ref": "../common.json#/$defs/wireTime" }, { "type": "null" }] },
+          "observable": { "type": "boolean" },
+          "since": { "$ref": "../common.json#/$defs/wireTime" }
+        }
+      }
+    },
+    "publishedAt": { "$ref": "../common.json#/$defs/wireTime" }
+  }
+}

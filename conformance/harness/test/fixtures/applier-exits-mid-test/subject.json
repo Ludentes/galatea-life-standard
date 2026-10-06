@@ -1,0 +1,8 @@
+{
+  "standard": "applier",
+  "claims": ["Act"],
+  "start": { "command": "sh", "args": ["-c", "node ../../../../sim/dist/applier/main.js & P=$!; if [ -n \"$GALATEA_MUTATION\" ]; then (while [ ! -e \"$FIXTURE_EXIT_FILE\" ]; do sleep 0.05; done; kill -9 $P) & fi; wait $P"],
+             "ready": { "log": "ready" } },
+  "state_dir": false,
+  "mutations": ["plans-with-side-effect"]
+}

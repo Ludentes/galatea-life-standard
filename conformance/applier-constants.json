@@ -1,0 +1,209 @@
+[
+  {
+    "key": "plan-expiry",
+    "name": "Plan expiry",
+    "value": "60 s",
+    "number": 60,
+    "unit": "s",
+    "guess": false,
+    "where": "*Planning changes nothing*"
+  },
+  {
+    "key": "apply-synchronous-bound",
+    "name": "Apply synchronous bound",
+    "value": "500 ms for ≤ 20 targets, plus 300 ms per meta-applier hop",
+    "number": 500,
+    "unit": "ms",
+    "guess": true,
+    "where": "GA-APPLY-1 ⚠️ proposed, not measured; a SHOULD until measured"
+  },
+  {
+    "key": "ack-bound-defaults",
+    "name": "Ack bound, defaults",
+    "value": "10 s for session.lock and otherwise; 30 s for media.launch; 60 s for a valve; 90 s for a cover, gate or garage door; 240 s for power.wake, a cold boot and a plugin server's 120 s start bound",
+    "number": 10,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-APPLY-8, GA-APPLY-13 ⚠️ guesses. Declared per action; the harness uses the declared value"
+  },
+  {
+    "key": "late-verdict-tolerance",
+    "name": "Late verdict tolerance",
+    "value": "1 s",
+    "number": 1,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-APPLY-8, GA-WIT-1"
+  },
+  {
+    "key": "late-ack-window",
+    "name": "Late ack window",
+    "value": "60 s",
+    "number": 60,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-APPLY-11"
+  },
+  {
+    "key": "idempotency-key-retention",
+    "name": "Idempotency key retention",
+    "value": "3600 s, per client, and for the owner's provision",
+    "number": 3600,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-APPLY-4, GA-PROV-3"
+  },
+  {
+    "key": "event-retention",
+    "name": "Event retention",
+    "value": "3600 s",
+    "number": 3600,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-EVT-4"
+  },
+  {
+    "key": "history-retention",
+    "name": "History retention",
+    "value": "7 days",
+    "number": 7,
+    "unit": "days",
+    "guess": false,
+    "where": "GA-EVT-5"
+  },
+  {
+    "key": "events-long-poll",
+    "name": "events long-poll",
+    "value": "≤ 30 s",
+    "number": 30,
+    "unit": "s",
+    "guess": false,
+    "where": "*Events and history*"
+  },
+  {
+    "key": "heating-load-cap-default",
+    "name": "Heating load cap, default",
+    "value": "14400 s",
+    "number": 14400,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-LOAD-2 ⚠️ a guess. Declared per socket; the harness uses the declared value"
+  },
+  {
+    "key": "token-expiry-skew",
+    "name": "Token expiry skew",
+    "value": "5 s",
+    "number": 5,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-TOKEN-2"
+  },
+  {
+    "key": "meta-applier-poll-on-a-child",
+    "name": "Meta-applier poll on a child",
+    "value": "≤ 5 s",
+    "number": 5,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-META-7"
+  },
+  {
+    "key": "child-dead-after",
+    "name": "Child dead after",
+    "value": "10 s unanswered",
+    "number": 10,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-META-7"
+  },
+  {
+    "key": "bridge-dead-after",
+    "name": "Bridge dead after",
+    "value": "30 s without a status, or its will, or a graceful offline",
+    "number": 30,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-STATE-2; a deployed fleet's"
+  },
+  {
+    "key": "fresh-slack-s-for-a-bridged-device",
+    "name": "fresh_slack_s for a bridged device",
+    "value": "11 s",
+    "number": 11,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-STATE-5; the bridge's 10 s status interval, a deployed fleet's, and 1 s for delivery"
+  },
+  {
+    "key": "fresh-slack-s-per-meta-applier-hop",
+    "name": "fresh_slack_s, per meta-applier hop",
+    "value": "6 s",
+    "number": 6,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-STATE-5; GA-META-7's 5 s poll and 1 s"
+  },
+  {
+    "key": "safety-notice-grace-after-a-planned-reload-or-broker-loss",
+    "name": "Safety notice grace after a planned reload or broker loss",
+    "value": "60 s",
+    "number": 60,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-SAFE-10 ⚠️ a guess"
+  },
+  {
+    "key": "reload-loop-window",
+    "name": "Reload loop window",
+    "value": "10 min",
+    "number": 10,
+    "unit": "min",
+    "guess": true,
+    "where": "GA-SAFE-10 ⚠️ a guess"
+  },
+  {
+    "key": "fast-clock-tolerance",
+    "name": "Fast-clock tolerance",
+    "value": "5 s",
+    "number": 5,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-BUS-2 ⚠️ a guess"
+  },
+  {
+    "key": "provisioning-reply-awaited",
+    "name": "Provisioning reply awaited",
+    "value": "2 s from the publish",
+    "number": 2,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-PROV-1"
+  },
+  {
+    "key": "a-connect-ended-lost-after",
+    "name": "A connect ended lost after",
+    "value": "70 s from the applier's publish",
+    "number": 70,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-DISC-4 ⚠️ the bridge's 60 s and a margin"
+  },
+  {
+    "key": "activate-re-sent-while-its-bridge-stays-live",
+    "name": "activate re-sent while its bridge stays live",
+    "value": "at least every 60 s until an ok",
+    "number": 60,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-ADOPT-4 ⚠️ a guess"
+  },
+  {
+    "key": "dead-reported-within",
+    "name": "dead reported within",
+    "value": "1 s of detection",
+    "number": 1,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-STATE-2, GA-STATE-3, GA-META-7, GA-BUS-7"
+  }
+]

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bridge/event.json",
+  "title": "An event on {root}/bridges/{b}/event",
+  "type": "object",
+  "required": ["seq", "instanceId", "type"],
+  "properties": {
+    "seq": { "type": "integer", "minimum": 0 },
+    "instanceId": { "$ref": "../common.json#/$defs/uuid" },
+    "type": { "$ref": "../common.json#/$defs/bridgeEventType" }
+  }
+}

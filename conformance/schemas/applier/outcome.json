@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/outcome.json",
+  "title": "One step's outcome, as apply, outcome and events carry it",
+  "type": "object",
+  "required": ["step_id", "target", "outcome"],
+  "properties": {
+    "step_id": { "type": "string" },
+    "target": { "type": "string" },
+    "outcome": { "$ref": "../common.json#/$defs/outcome" },
+    "reason": { "type": "string" },
+    "detail": { "type": "string" },
+    "time": { "$ref": "../common.json#/$defs/time" },
+    "witness": {
+      "description": "A witnessed step's witness and its verdict (GA-WIT-1): beside the step's own outcome in outcome, which never changes; in the verdict's own outcome event, whose outcome is the verdict",
+      "type": "object",
+      "required": ["sensor", "expect", "within_s", "verdict"],
+      "properties": {
+        "sensor": { "type": "string" },
+        "key": { "type": "string" },
+        "expect": {},
+        "within_s": { "type": "number" },
+        "verdict": { "enum": ["confirmed", "unconfirmed", "unknown"] }
+      }
+    }
+  }
+}

@@ -1,0 +1,2 @@
+{ "events": [{ "seq": 1, "time": "2026-09-27T10:00:00.000Z", "type": "outcome", "apply_id": "a1",
+  "target": "sim-bridge:lamp", "outcome": "acked" }], "cursor": "1", "notices": [] }

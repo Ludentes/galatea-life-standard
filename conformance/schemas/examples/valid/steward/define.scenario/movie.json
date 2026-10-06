@@ -1,0 +1,2 @@
+{ "id": "movie", "name": "Кино", "mode": "single", "respect_occupancy": true, "steps": [
+  { "selector": { "room": "hall", "class": "light" }, "action": "level.set_level", "args": { "level": 10 } }, { "delay": 2.5 } ] }

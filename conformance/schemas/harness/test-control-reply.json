@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "harness/test-control-reply.json",
+  "title": "The bridge's answer on {root}/test/{bridgeId}/control/reply",
+  "type": "object",
+  "required": ["requestId", "ok"],
+  "properties": { "requestId": { "type": "string" }, "ok": { "type": "boolean" }, "error": { "type": "string" },
+    "unsupported": { "type": "boolean", "description": "true when ok is false because this test transport cannot play the op; the harness reports the test not_applicable" } }
+}

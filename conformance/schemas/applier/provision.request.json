@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/provision.request.json",
+  "title": "provision (applier, *Provisioning*): exactly one operation, and an optional idempotency_key. Provisional: the text gives the operations' fields, not this schema; nothing else at the top level, so expected_revision and dry_run are refused",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "idempotency_key": { "type": "string", "minLength": 1 },
+    "join": {
+      "type": "object", "additionalProperties": false, "required": ["transport", "window_s"],
+      "properties": { "transport": { "type": "string" }, "window_s": { "type": "integer", "minimum": 1 }, "near": { "type": "string" } }
+    },
+    "join_close": {
+      "type": "object", "additionalProperties": false, "required": ["transport"],
+      "properties": { "transport": { "type": "string" } }
+    },
+    "commission": {
+      "type": "object", "additionalProperties": false, "required": ["transport", "code"],
+      "properties": { "transport": { "type": "string" }, "code": { "type": "string", "pattern": "^([0-9]{11}|[0-9]{21})$" },
+        "accept_unattested": { "type": "boolean" } }
+    },
+    "connect": {
+      "type": "object", "additionalProperties": false, "required": ["candidate", "bridge"],
+      "properties": { "candidate": { "type": "string" }, "bridge": { "type": "string" }, "address": {} }
+    },
+    "remove": {
+      "type": "object", "additionalProperties": false, "required": ["block_rejoin"],
+      "properties": { "device": { "type": "string" }, "identifier": { "type": "string" }, "bridge": { "type": "string" },
+        "block_rejoin": { "type": "boolean" }, "force": { "type": "boolean" } },
+      "oneOf": [{ "required": ["device"], "not": { "required": ["identifier"] } }, { "required": ["identifier", "bridge"], "not": { "required": ["device"] } }]
+    },
+    "unblock": {
+      "type": "object", "additionalProperties": false, "required": ["identifier", "bridge"],
+      "properties": { "identifier": { "type": "string" }, "bridge": { "type": "string" } }
+    },
+    "install": {
+      "type": "object", "additionalProperties": false, "required": ["host", "package", "account"],
+      "properties": { "host": { "type": "string" }, "account": { "type": "string" },
+        "package": { "type": "object", "additionalProperties": false, "required": ["url", "sha256"],
+          "properties": { "url": { "type": "string" }, "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" } } } }
+    },
+    "uninstall": {
+      "type": "object", "additionalProperties": false, "required": ["host", "plugin"],
+      "properties": { "host": { "type": "string" }, "plugin": { "type": "string" } }
+    }
+  },
+  "oneOf": [
+    { "required": ["join"] }, { "required": ["join_close"] }, { "required": ["commission"] }, { "required": ["connect"] },
+    { "required": ["remove"] }, { "required": ["unblock"] }, { "required": ["install"] }, { "required": ["uninstall"] }
+  ]
+}

@@ -1,0 +1,2 @@
+{ "apply_id": "a2", "outcomes": [{ "step_id": "s1", "target": "sim-bridge:channel", "outcome": "dispatched", "from_replaced": true,
+  "time": "2026-09-27T10:00:00.000+03:00" }] }

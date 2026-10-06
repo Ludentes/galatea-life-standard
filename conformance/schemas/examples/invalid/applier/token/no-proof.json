@@ -1,0 +1,2 @@
+{ "token_id": "t-1", "issuer": "harness", "target": "sim-bridge:gate", "action": "cover.close", "args": {}, "via": "app",
+  "brain": false, "for": { "person": "demo" }, "expires": "2030-01-01T08:01:00.000Z" }

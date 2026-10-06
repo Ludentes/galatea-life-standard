@@ -1,0 +1,6 @@
+{
+  "standard": "applier",
+  "claims": ["Act"],
+  "start": { "command": "node", "args": ["../../../../sim/dist/applier/main.js"], "ready": { "log": "ready" } },
+  "database": true
+}

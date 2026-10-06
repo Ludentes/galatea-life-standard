@@ -1,0 +1,40 @@
+{
+  "name": "@ludentes/galatea-life-schemas",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ludentes/galatea-life-standard.git",
+    "directory": "conformance/schemas"
+  },
+  "files": [
+    "dist",
+    "common.json",
+    "galatea-bridge.schema.json",
+    "applier",
+    "brain",
+    "bridge",
+    "harness",
+    "steward"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "gen": "tsx scripts/gen-types.ts"
+  },
+  "dependencies": {
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1"
+  },
+  "devDependencies": {
+    "json-schema-to-typescript": "16.0.0"
+  }
+}

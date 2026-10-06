@@ -1,0 +1,12 @@
+{
+  "bridgeType": "esphome",
+  "name": "ESPHome",
+  "version": "0.1.0",
+  "connect": true,
+  "matchers": [
+    {
+      "source": "tuya-udp",
+      "port": 6667
+    }
+  ]
+}

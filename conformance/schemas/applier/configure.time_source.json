@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/configure.time_source.json",
+  "title": "A configure change's value for kind time_source: the harness's SNTP server (provisional)",
+  "type": "string",
+  "pattern": "^[^\\s:]+:[0-9]{1,5}$"
+}

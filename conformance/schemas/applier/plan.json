@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/plan.json",
+  "title": "A plan",
+  "type": "object",
+  "required": ["plan_id", "expires_at", "revision", "client", "request", "steps"],
+  "properties": {
+    "plan_id": { "type": "string" },
+    "expires_at": { "$ref": "../common.json#/$defs/time" },
+    "revision": { "type": "integer", "minimum": 0 },
+    "client": { "type": "string" },
+    "request": { "$ref": "plan.request.json" },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["step_id", "target", "action", "verdict", "tier", "stale", "basis"],
+        "properties": {
+          "step_id": { "type": "string" },
+          "target": { "type": "string" },
+          "action": { "type": "string" },
+          "args": {},
+          "verdict": { "$ref": "../common.json#/$defs/verdict" },
+          "reason": { "$ref": "../common.json#/$defs/stepReason" },
+          "tier": { "$ref": "../common.json#/$defs/tier" },
+          "stale": { "type": "boolean" },
+          "basis": { "$ref": "../common.json#/$defs/planBasis" }
+        }
+      }
+    }
+  }
+}

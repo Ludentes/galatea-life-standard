@@ -1,0 +1,4 @@
+{ "plan_id": "p2", "expires_at": "2026-09-27T10:02:00.000Z", "revision": 12, "endpoint": "demo-panel",
+  "request": { "endpoint": "demo-panel", "actions": [{ "target": "sim-bridge:lamp", "action": "onoff.turn_off", "args": {} }] },
+  "steps": [{ "step_id": "s1", "target": "sim-bridge:lamp", "action": "onoff.turn_off", "args": {}, "verdict": "refuse",
+    "reason": "leased", "holder": { "person": "olga", "endpoint": "olga-app" }, "tier": "reversible", "stale": false, "basis": "real" }] }

@@ -1,0 +1,3 @@
+{ "targets": { "sim-bridge:lamp": { "values": [{ "key": "on", "value": true, "basis_time": "2030-01-01T08:00:00Z" }],
+  "liveness": "live", "last_check_in": "2030-01-01T08:00:00Z", "fresh_s": 60, "fresh_basis": "declared", "other_admins": [] } },
+  "transports": [], "latches": [], "groups": { "hall-lights": { "on": true }, "empty": { "on": null } } }

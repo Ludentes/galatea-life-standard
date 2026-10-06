@@ -1,0 +1,1 @@
+{ "requestId": "c2", "op": "commandResult", "device": "lamp", "result": "confirmed", "afterMs": 0, "reportAfterMs": 2000 }

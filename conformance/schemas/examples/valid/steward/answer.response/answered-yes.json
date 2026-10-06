@@ -1,0 +1,4 @@
+{ "plan_id": "p1", "expires_at": "2026-09-27T10:05:00.000Z", "revision": 12, "endpoint": "kitchen-voice", "client": "brain",
+  "request": { "endpoint": "kitchen-voice", "actions": [{ "target": "sim-bridge:lamp", "action": "onoff.turn_on", "args": {} }] },
+  "steps": [{ "step_id": "s1", "target": "sim-bridge:lamp", "action": "onoff.turn_on", "args": {}, "verdict": "ask",
+    "reason": "confirm_tier", "tier": "confirm", "stale": false, "basis": "real", "answer": "yes" }] }

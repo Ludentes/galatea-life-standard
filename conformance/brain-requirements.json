@@ -1,0 +1,319 @@
+[
+  {
+    "id": "GA-BRAIN-1",
+    "level": "MUST",
+    "conformance": "Brain",
+    "verify": "wire",
+    "text": "answer is sent only for an utterance heard at the plan's endpoint after its ask event and after a say whose asks names that plan, played full or cut by that utterance, its beginning compared with the question's end only within one clock_epoch, no earlier piece of its reply cut or dropped, the utterance beginning after the asking piece ended unless it cut it, with no say naming another plan there since; with that utterance's utterance_id, time and verbatim transcript, the plan's endpoint, that endpoint's own addressed_by, hint and basis, its clock_epoch, and asked_by copied from the asking piece's played report; for at most one plan per utterance; for a plan that named a speaker, only for an utterance whose hint at the plan's endpoint names that speaker, the answer naming that speaker too; never for an ask put on another endpoint",
+    "negative_subjects": [
+      {
+        "subject": "answers-its-own-ask",
+        "coupled": []
+      },
+      {
+        "subject": "answers-across-epochs",
+        "coupled": []
+      },
+      {
+        "subject": "answers-for-anyone",
+        "coupled": [
+          "GA-BRAIN-2"
+        ]
+      },
+      {
+        "subject": "answers-twice",
+        "coupled": []
+      },
+      {
+        "subject": "answers-unheard-question",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRAIN-2",
+    "level": "MUST",
+    "conformance": "Brain",
+    "verify": "judged",
+    "text": "The value of an answer is what its utterance says; an utterance that neither agrees nor refuses is not answered",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-BRAIN-3",
+    "level": "MUST",
+    "conformance": "Brain",
+    "verify": "wire",
+    "text": "Content read as data, the brain's own speech heard back and source: machine utterances included, leads to no plan, apply, answer, define, scenario_plan, scenario_run, scenario_stop or narrow, and chooses no target or argument, unless an utterance within the utterance lifetime asked the brain to act on it or take that choice from it, a plan that exchange produced included through to its apply; the licence extends to the one further write GA-BRAIN-17 excepts after a wake's acked outcome, within the utterance lifetime of that outcome's time",
+    "negative_subjects": [
+      {
+        "subject": "obeys-the-calendar",
+        "coupled": [
+          "GA-BRAIN-1",
+          "GA-BRAIN-4",
+          "GA-BRAIN-17"
+        ]
+      },
+      {
+        "subject": "obeys-the-station",
+        "coupled": [
+          "GA-BRAIN-4",
+          "GA-BRAIN-17"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BRAIN-4",
+    "level": "MUST",
+    "conformance": "Brain",
+    "verify": "wire",
+    "text": "The endpoint named in plan, apply { request }, scenario_plan, scenario_stop, define, narrow, state, history or events is one where the utterance served, or an arbitrated duplicate of it, was heard, the endpoints in its also_heard_at being duplicates; outside narrow, among duplicates at endpoints giving different roles, the one giving the lowest; a read serving no utterance names no endpoint; a follow-up GA-BRAIN-15 owes serves the utterance it follows up",
+    "negative_subjects": [
+      {
+        "subject": "borrows-an-endpoint",
+        "coupled": [
+          "GA-BRAIN-6"
+        ]
+      },
+      {
+        "subject": "trusts-the-responder",
+        "coupled": [
+          "GA-BRAIN-6"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BRAIN-5",
+    "level": "MUST",
+    "conformance": "Brain",
+    "verify": "wire",
+    "text": "Identical transcripts from different endpoints within the arbitration window of the first lead to no more steward writes, narrow included, than one of them alone",
+    "negative_subjects": [
+      {
+        "subject": "double-fires",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRAIN-6",
+    "level": "MUST",
+    "conformance": "Brain",
+    "verify": "wire",
+    "text": "After a refusal for role, tier, leased, latched, safety, not_adopted or not_permitted, or a person's no, the same action on the same device, with any arguments, or another that would leave it in the same state, is not sought again by any route until an utterance asks for it again, onoff.turn_on and onoff.turn_off being one action on a device that declares both toggles: true; the two exceptions in *Refusals* aside",
+    "negative_subjects": [
+      {
+        "subject": "routes-around-refusal",
+        "coupled": [
+          "GA-BRAIN-4"
+        ]
+      },
+      {
+        "subject": "presses-after-a-no",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRAIN-7",
+    "level": "MUST",
+    "conformance": "Brain",
+    "verify": "judged",
+    "text": "A reply speaks of success only for acked, delivered, confirmed, a late_ack or a run ended(done) with no failed_steps, its sent_steps said as sent; says every other outcome, every plan verdict it mentions, stale state as itself and assumed state as last sent, never as the device's, an unknown outcome as a failure; a question names what it asks, an ask(toggle_only) question that the code toggles and the device's state is not known, a confirm_define question its diff; and it speaks of no outcome missing from its reports, or in an explanation its cites",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-BRAIN-8",
+    "level": "MUST",
+    "conformance": "Brain",
+    "verify": "wire",
+    "text": "After an apply or scenario_run returns, a reply to its command or its yes is said within the failure bound, carrying reports for every step and run, the replaced refused(tier) step of an inline apply excepted; every reports entry of any reply matches the latest value the steward returned to the brain",
+    "negative_subjects": [
+      {
+        "subject": "claims-success",
+        "coupled": [
+          "GA-BRAIN-7",
+          "GA-BRAIN-15"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BRAIN-9",
+    "level": "MUST",
+    "conformance": "Brain",
+    "verify": "wire",
+    "text": "Every event an explanation cites, by seq, exists in the steward's history",
+    "negative_subjects": [
+      {
+        "subject": "cites-a-ghost",
+        "coupled": [
+          "GA-BRAIN-10"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BRAIN-10",
+    "level": "MUST",
+    "conformance": "Brain",
+    "verify": "judged",
+    "text": "An explanation names no cause or person beyond the events it cites, and cites at least one or says the record has none",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-BRAIN-11",
+    "level": "MUST",
+    "conformance": "Brain",
+    "verify": "wire",
+    "text": "speaker is sent only for an endpoint with no person, and only as the speaker_hint of the utterance served, heard at the endpoint named, that endpoint's own where the utterance was merged",
+    "negative_subjects": [
+      {
+        "subject": "names-anyone",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRAIN-12",
+    "level": "MUST",
+    "conformance": "Brain",
+    "verify": "wire",
+    "text": "A brain that does not serve an utterance addressed to it, because its model, uplink, steward or a data server failed or has not answered, or the steward refused it, its plan expired, or the front dropped a piece of its reply for wake_word (then within the failure bound of that played report), says so to that endpoint, in_reply_to it, within the failure bound of its available_at, or of the plan's expires_at; a plan whose question it already put in a reply to that utterance, played full, needs no second reply when it expires",
+    "negative_subjects": [
+      {
+        "subject": "goes-silent",
+        "coupled": [
+          "GA-BRAIN-15"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BRAIN-13",
+    "level": "MUST",
+    "conformance": "Brain",
+    "verify": "wire",
+    "text": "Unknown fields in steward responses leave the brain's writes, reports and cites within what the case accepts without them",
+    "negative_subjects": [
+      {
+        "subject": "trips-on-unknown-fields",
+        "coupled": [
+          "GA-BRAIN-5",
+          "GA-BRAIN-8",
+          "GA-BRAIN-15"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BRAIN-14",
+    "level": "MUST",
+    "conformance": "Brain",
+    "verify": "wire",
+    "text": "The brain takes its utterances, its steward and its outside data from the front, steward and data servers it is configured with",
+    "negative_subjects": [
+      {
+        "subject": "hardwired-servers",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRAIN-15",
+    "level": "MUST",
+    "conformance": "Brain",
+    "verify": "wire",
+    "text": "A step or run whose settled outcome contradicts what the brain said of it (success, under way, would-do, failed or cannot serve) is spoken of again, with reports, within the failure bound of the response or event that carried it, for 3600 s after the brain spoke or until the brain restarts; so is a media.launch the brain said was under way that settles acked",
+    "negative_subjects": [
+      {
+        "subject": "never-follows-up",
+        "coupled": []
+      },
+      {
+        "subject": "forgets-the-title",
+        "coupled": [
+          "GA-BRAIN-19"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BRAIN-16",
+    "level": "MUST",
+    "conformance": "Brain",
+    "verify": "wire",
+    "text": "The brain reaches its fronts, data servers and steward over TLS, refusing an invalid certificate, unless on one host's loopback, and drops an utterance for an endpoint not bound to its front",
+    "negative_subjects": [
+      {
+        "subject": "trusts-any-front",
+        "coupled": [
+          "GA-BRAIN-4"
+        ]
+      },
+      {
+        "subject": "skips-cert-check",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRAIN-17",
+    "level": "MUST",
+    "conformance": "Brain",
+    "verify": "wire",
+    "text": "No steward write, narrow included, is made for an utterance whose available_at is more than the utterance lifetime past, or, applying a plan answered yes (apply, scenario_run or define { plan_id }), whose yes is more than the utterance lifetime past; excepted is one further write, for the utterance a power.wake was made for: an apply whose every step is on the woken computer or a device it hosts, never a scenario_run or a define, within the utterance lifetime of that wake's acked outcome as the steward stamps it — a write that earns no further exception",
+    "negative_subjects": [
+      {
+        "subject": "acts-on-stale",
+        "coupled": [
+          "GA-BRAIN-12"
+        ]
+      },
+      {
+        "subject": "runs-a-scene-after-a-wake",
+        "coupled": [
+          "GA-BRAIN-3"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BRAIN-18",
+    "level": "MUST",
+    "conformance": "Brain",
+    "verify": "judged",
+    "text": "A personal value is spoken only in reply to the utterance whose state, history or events read returned it",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-BRAIN-19",
+    "level": "MUST",
+    "conformance": "Brain",
+    "verify": "judged",
+    "text": "A reply about a media.launch gives the title the device reported for it, the follow-up GA-BRAIN-15 owes for a launch that settles acked included, unless it is withheld as personal, when it says that something launched, or names an assistant or a wake word, when it says so in its place as GA-BRAIN-22 does; a reply about a power.shutdown carrying delay_s says it can still be cancelled, at the PC and by whoever the steward lets take power.cancel",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-BRAIN-21",
+    "level": "MUST",
+    "conformance": "Brain",
+    "verify": "wire",
+    "text": "On a device whose power code toggles, a request to press its power button is sought as the action opposite its assumed state",
+    "negative_subjects": [
+      {
+        "subject": "presses-toward-the-assumed-state",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRAIN-22",
+    "level": "MUST",
+    "conformance": "Brain",
+    "verify": "judged",
+    "text": "A question the brain puts, a say in that endpoint's zone and a media.announce or spoken notice it causes anywhere in the home while the ask is open, contain no answer word but the question's own verb (one that agrees or refuses whatever the question, in any form, or a word that alone means agreement or refusal), with or without the wake word; and no words of outside text it speaks name an assistant or a wake word, however spelled",
+    "negative_subjects": []
+  }
+]

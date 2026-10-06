@@ -1,0 +1,2 @@
+{ "endpoint": "demo-kitchen", "in_reply_to": "3f1c2b4a-5d6e-4f70-8a9b-0c1d2e3f4a5b",
+  "reports": [{ "apply_id": "a1", "step_id": "s1", "outcome": "acked" }], "final": true }

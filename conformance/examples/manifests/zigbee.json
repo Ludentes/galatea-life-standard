@@ -1,0 +1,23 @@
+{
+  "bridgeType": "zigbee",
+  "name": "Zigbee",
+  "version": "0.1.0",
+  "connect": false,
+  "matchers": [
+    {
+      "source": "usb",
+      "vid": "10C4",
+      "pid": "EA60",
+      "description": "*zigbee*"
+    },
+    {
+      "source": "ssdp",
+      "st": "urn:schemas-upnp-org:device:Basic:1",
+      "manufacturer": "demo"
+    },
+    {
+      "source": "bluetooth",
+      "manufacturerId": 4660
+    }
+  ]
+}

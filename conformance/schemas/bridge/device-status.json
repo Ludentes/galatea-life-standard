@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bridge/device-status.json",
+  "title": "A device's status, retained on {root}/bridges/{b}/devices/{d}/status; readings are further fields",
+  "type": "object",
+  "required": ["deviceId", "timestamp", "available"],
+  "properties": {
+    "deviceId": { "type": "string" },
+    "state": { "type": "string" },
+    "timestamp": { "$ref": "../common.json#/$defs/wireTime" },
+    "timestamps": { "type": "object", "additionalProperties": { "$ref": "../common.json#/$defs/wireTime" } },
+    "available": { "type": "boolean" }
+  }
+}

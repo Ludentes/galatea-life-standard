@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bridge/lwt.json",
+  "title": "A bridge's will, retained on {root}/bridges/{b}/lwt",
+  "type": "object",
+  "required": ["bridgeId", "instanceId"],
+  "properties": {
+    "bridgeId": { "type": "string" },
+    "instanceId": { "$ref": "../common.json#/$defs/uuid" }
+  }
+}

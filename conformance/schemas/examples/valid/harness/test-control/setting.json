@@ -1,0 +1,1 @@
+{ "requestId": "r2", "op": "setting", "device": "pusher", "key": "org.galatea.test.pusher.mode", "value": "click", "observedAt": "2030-01-01T08:00:01.000Z" }

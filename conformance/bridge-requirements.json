@@ -1,0 +1,1688 @@
+[
+  {
+    "id": "GA-BRIDGE-1",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "Each reading's time is its observation's; nothing the bridge cannot observe is reported, a setting kept under GA-BRIDGE-79 excepted, with its observation's time; loss of contact is available: false, never a value; a field of the wrong type, or a key the device's entry in devices does not declare as a state key, is left out and the rest published",
+    "negative_subjects": [
+      {
+        "subject": "stamps-publication-time",
+        "coupled": [
+          "GA-BRIDGE-2"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-2",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A read of some keys restamps only the keys it read",
+    "negative_subjects": [
+      {
+        "subject": "restamps-partial-read",
+        "coupled": [
+          "GA-BRIDGE-1"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-3",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "Times are RFC 3339 UTC with milliseconds, never more than 1 s ahead of true time",
+    "negative_subjects": [
+      {
+        "subject": "stamps-the-future",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-4",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "Every command gets exactly one terminal ack within its time, and every request but snapshot a reply within 1 s of its receipt, with a defined result or status; unknown fields are ignored except in a command's value, which is failed(invalid_request); a repeated commandId gets the first ack, or nothing more while the first runs, and does nothing more; a request repeated by requestId within 10 s gets the first reply; an unmappable action is unsupported within 1 s",
+    "negative_subjects": [
+      {
+        "subject": "double-acks",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-5",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A reading is only what the device reported: no optimistic state, no echo of a commanded value; a setting kept under GA-BRIDGE-79 is what the device confirmed",
+    "negative_subjects": [
+      {
+        "subject": "echoes-commanded-state",
+        "coupled": [
+          "GA-BRIDGE-1"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-6",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A command for a device whose transport is down or which is available: false when it arrives is acked failed(unreachable) within 1 s; one for an unknown device failed(unknown_device), naming it; failed(unreachable) and failed(expired) only for a command of which nothing was transmitted, handing it to the protocol stack counting as transmission",
+    "negative_subjects": [
+      {
+        "subject": "unreachable-late",
+        "coupled": []
+      },
+      {
+        "subject": "unreachable-after-transmit",
+        "coupled": [
+          "GA-BRIDGE-7"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-7",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A command whose time has run out is never started, and is acked failed(expired); one acked failed is never carried out later; a sleeping device's queue is used only where it drops a command when its time runs out; no action is offered on a device unreachable within 145 s",
+    "negative_subjects": [
+      {
+        "subject": "runs-expired-commands",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-8",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "applied only once the protocol confirmed the command, never on handing it to the radio; confirms: true wherever the protocol path can confirm; sent only for an action declared confirms: false; a confirmation that never came is failed(no_confirmation)",
+    "negative_subjects": [
+      {
+        "subject": "applied-before-confirmation",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-9",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A fault on one device or transport stops no other; losing the broker is recovered in process and changes no device's available or observable because of it",
+    "negative_subjects": [
+      {
+        "subject": "one-fault-stops-all",
+        "coupled": [
+          "GA-BRIDGE-6",
+          "GA-BRIDGE-4"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-10",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A recoverable fault never makes the bridge exit",
+    "negative_subjects": [
+      {
+        "subject": "exits-on-fault",
+        "coupled": [
+          "GA-BRIDGE-9",
+          "GA-BRIDGE-4",
+          "GA-BRIDGE-6",
+          "GA-BRIDGE-17",
+          "GA-BRIDGE-22",
+          "GA-BRIDGE-30"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-11",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "Transport reconnection backs off to a ceiling of at least 60 s within 180 s, and resets only on a successful exchange, never on a connect, or for a transmitter that can answer nothing when its host link opens again",
+    "negative_subjects": [
+      {
+        "subject": "resets-on-connect",
+        "coupled": []
+      },
+      {
+        "subject": "keeps-a-mute-backoff",
+        "coupled": [
+          "GA-BRIDGE-72"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-12",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "Persisted state that disagrees with the network is a fault in status; until the owner resolves it, every transport is down, status goes on, commands are acked failed(unreachable) and provisioning failed(state_mismatch)",
+    "negative_subjects": [
+      {
+        "subject": "serves-on-mismatch",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-13",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "Every feedback: closed device's roster entry carries basisMaxAgeMs: a bound the bridge knows from the protocol or the model, at most 3 × cadenceMs for a poll, the granted maximum interval plus the controller's configured slack for a Matter subscription, twice the longest configured report interval, or the model's where none is configured, for a device that reports on its own, no more, 30 s for the bridge's own host, observed at least every 10 s, 3 × the manifest's cadenceMs for a plugin device, or null where it cannot know it, never one guessed from observed intervals",
+    "negative_subjects": [
+      {
+        "subject": "inflates-a-plugin-bound",
+        "coupled": []
+      },
+      {
+        "subject": "inflates-the-bound",
+        "coupled": []
+      },
+      {
+        "subject": "guesses-the-bound",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-14",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "otherAdmins is read from the protocol where it shows it; a Zigbee device is [] only when no binding on the network the bridge did not make targets it and it is in no foreign group, with every table read within 24 h; unknown otherwise; a change is an event",
+    "negative_subjects": [
+      {
+        "subject": "hides-other-admins",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-15",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "proposedClass states its classEvidence, and protocol evidence is claimed only when read from the device",
+    "negative_subjects": [
+      {
+        "subject": "claims-protocol-class",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-16",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "The test transport runs only when the harness's start-up option enables it; status then carries testRunId, and the bridge takes all time from the harness's time source",
+    "negative_subjects": [
+      {
+        "subject": "test-transport-unannounced",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-17",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "status is published from the main loop at least every 10 s, and within 1 s of a transport's state or a device's observable changing",
+    "negative_subjects": [
+      {
+        "subject": "heartbeat-from-client-thread",
+        "coupled": [
+          "GA-BRIDGE-4",
+          "GA-BRIDGE-6",
+          "GA-BRIDGE-23",
+          "GA-BRIDGE-30",
+          "GA-BRIDGE-34",
+          "GA-BRIDGE-37"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-18",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "The bridge connects as *Connections* says (an authenticated identity, over TLS or, with a password, over plain TCP only on one host's loopback or, on a deployment that does not claim Box, on its local network, a clean session, keepalive at most 10 s, a will on lwt carrying its instanceId, lwt cleared on connect, no shared subscription, device ids in topics free of +, # and /) and subscribes to its commands and requests before its first status",
+    "negative_subjects": [
+      {
+        "subject": "online-before-subscribed",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-19",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A retained command or request is never acted on; on MQTT 5 requests and commands are subscribed with Retain Handling 2",
+    "negative_subjects": [
+      {
+        "subject": "acts-on-retained-request",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-20",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A refusal on a SUBACK, or on an MQTT 5 PUBACK, is reported as a fault in status naming the topic",
+    "negative_subjects": [
+      {
+        "subject": "ignores-refusals",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-21",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A removed device's retained status is cleared with an empty payload, and it leaves the roster and devices",
+    "negative_subjects": [
+      {
+        "subject": "leaves-retained-state",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-22",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A restart or reload unsubscribes from commands and requests and waits for the UNSUBACK, closes any open window with its window_closed, ends every connect in flight with the device taken or connect_failed(unreachable), acks every command in flight, failed(unreachable) if not yet transmitted and failed(no_confirmation) if transmitted, then publishes offline with graceful: true, clears lwt and disconnects cleanly before the new instance connects; a PC's bridge publishes a sleep's or shutdown's terminal ack, applied, before its graceful offline and before clearing lwt, holding the suspend until then where the OS offers a way to, and goes offline gracefully, in the same order, on any suspend or shutdown the OS announces",
+    "negative_subjects": [
+      {
+        "subject": "sleeps-before-its-ack",
+        "coupled": [
+          "GA-BRIDGE-4"
+        ]
+      },
+      {
+        "subject": "dies-on-an-announced-suspend",
+        "coupled": []
+      },
+      {
+        "subject": "reloads-without-graceful",
+        "coupled": [
+          "GA-BRIDGE-4",
+          "GA-BRIDGE-34"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-23",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A transport is up only on a successful exchange within the last 30 s, never on a connect alone; a quiet transport gets a health exchange at least every 10 s",
+    "negative_subjects": [
+      {
+        "subject": "up-without-exchange",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-24",
+    "level": "MUST",
+    "conformance": "Provision",
+    "verify": "static",
+    "text": "A Zigbee transport runs on a network key and PAN id generated for the installation, never a well-known default; the export it is checked against is the bridge's own, so its honesty is the bridge author's word (*not checked by the harness*)",
+    "negative_subjects": [
+      {
+        "subject": "default-network-key",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-25",
+    "level": "MUST",
+    "conformance": "Provision",
+    "verify": "wire",
+    "text": "A join window lasts at most the lesser of windowMs and the transport's cap, closes at once on join_close, and window_closed carries every device that joined and the effective windowMs",
+    "negative_subjects": [
+      {
+        "subject": "window-never-closes",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-26",
+    "level": "MUST",
+    "conformance": "Provision",
+    "verify": "wire",
+    "text": "near is honoured where the transport can open a window at one router",
+    "negative_subjects": [
+      {
+        "subject": "ignores-near",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-27",
+    "level": "MUST",
+    "conformance": "Provision",
+    "verify": "wire",
+    "text": "remove with blockRejoin keeps the stableIdentifier out of every later window, and removes it again at once, with a blocked_rejoin event and no admission, if it rejoins secured, until unblock names it; remove with force drops a device that cannot answer; a blocked identifier is refused by connect too; join_close, remove and unblock are idempotent; a remove of an identifier the bridge never had is failed(unknown_device)",
+    "negative_subjects": [
+      {
+        "subject": "forgets-the-blocklist",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-28",
+    "level": "MUST",
+    "conformance": "Provision",
+    "verify": "wire",
+    "text": "join on a transport with no join window, or commission on one with no setup codes, is invalid_request",
+    "negative_subjects": [
+      {
+        "subject": "provisions-the-wrong-way",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-29",
+    "level": "MUST",
+    "conformance": "Provision",
+    "verify": "wire",
+    "text": "commission refuses a device that fails Matter's device attestation unless the request carries acceptUnattested",
+    "negative_subjects": [
+      {
+        "subject": "accepts-unattested",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-30",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "On snapshot, status, devices and every device's status are re-published, then ok is replied, within 10 s",
+    "negative_subjects": [
+      {
+        "subject": "ignores-snapshot",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-31",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "The blocklist, lastCheckIn and otherAdmins, each device's kept settings, the keys it has reported once and its undescribed list, and at Host each installed version's manifest as installed and its files' hashes, and each accepted install or uninstall not yet ended, survive a restart; every start takes a new UUID as instanceId",
+    "negative_subjects": [
+      {
+        "subject": "forgets-on-restart",
+        "coupled": [
+          "GA-BRIDGE-27",
+          "GA-BRIDGE-37"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-32",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "Every native way the doer can change a device or open a window without the applier's request is disabled, or listed in status as ungoverned; on a computer, the OS's own automations and a person at the PC, in any login session on it (local, SSH or Remote Desktop), are the device's own behaviour, not such a way",
+    "negative_subjects": [
+      {
+        "subject": "hides-native-control",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-33",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "Every event carries instanceId and a seq starting at 1 and increasing by one",
+    "negative_subjects": [
+      {
+        "subject": "skips-seq",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-34",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "After an applied, sent or failed(no_confirmation) for a stateful action on a feedback: closed device, other than one a reload sends (GA-BRIDGE-22), a fresh observation of every key it sets is published within the ack bound, read back if no report came",
+    "negative_subjects": [
+      {
+        "subject": "no-read-back",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-35",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A device the protocol admits anew gets a device id the bridge never used before, whatever identifier it shows, and the old id leaves the devices document and the roster, its retained status cleared; a rejoin of any kind by hardware not in the devices document, unless it is blocked (GA-BRIDGE-27), is reported the same way, with a joined event; a plugin device's id is the exception, <plugin id>:<version>:<key> again after an uninstall",
+    "negative_subjects": [
+      {
+        "subject": "reuses-id-on-join",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-36",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A PIN for remote operation is held in the bridge's own configuration and never sent on the binding, in a command's value or in an event; without one, no unlock is offered, and a faults entry in status names the device",
+    "negative_subjects": [
+      {
+        "subject": "pin-on-the-wire",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-37",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "lastCheckIn is when the device's latest check-in reached the bridge, never a publish, a restart or a cache read, and is kept across a restart; a device's status is published within 1 s of each report that changes a reading or its time; a PC's bridge observes its own host at least every 10 s, each successful observation the computer's check-in; a plugin device's check-in is each successful state read or change notification",
+    "negative_subjects": [
+      {
+        "subject": "computer-checks-in-on-publish",
+        "coupled": []
+      },
+      {
+        "subject": "restamps-check-in",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-38",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "status carries every field *The bridge's status* lists as required, the roster with every device and, for each, lastCheckIn, basisMaxAgeMs and observable present, null where *The roster and freshness* allows; the retained devices document lists every device the roster does, at every level, each entry with the fields *Devices* gives it (a computer's accounts, personal and selfChanging; a plugin device's host, plugin, version, declarations, extensions, confirmedBy, requestedTier, toolHash and stagedFor, and its fixed feedback: closed, reachMs 0, model { vendor: <plugin id>, model: <key> } and classEvidence none; a relay entry's internal; any device's extensions, and confirmedBy on each of its stateful extension actions), never leaving out a declaration the standard makes",
+    "negative_subjects": [
+      {
+        "subject": "status-without-roster",
+        "coupled": [
+          "GA-BRIDGE-13",
+          "GA-BRIDGE-17",
+          "GA-BRIDGE-37"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-39",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "static",
+    "text": "A bridge type that ships a manifest ships one valid against conformance/galatea-bridge.schema.json",
+    "negative_subjects": [
+      {
+        "subject": "bad-manifest",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-40",
+    "level": "MUST",
+    "conformance": "Provision",
+    "verify": "wire",
+    "text": "A connect accepted by a bridge whose manifest says connect: true ends within 60 s in connected, naming the one device it holds, or connect_failed with a reason; only a device that proves its identity, as *Provisioning* defines it, and shows one of the candidate's keys is taken; a failed handshake, or another secret, is connect_failed(unproven), and none of the keys connect_failed(refused); the credential is never disclosed to a device that has not proved it (a bench check, *not checked by the harness*); a proven device already held is connected naming it, admitting, evicting and re-pointing nothing; devices, with the new device's connections, is re-published before connected; each later connection to a device taken through connect repeats its proof and discloses the credential to none that fails it; a connect repeated with the same requestId while the first runs gets the first reply and does nothing more; one with a new requestId while another runs on the same bridge is failed(busy); a blocked identifier is connect_failed(refused); a connect to loopback however written (IPv4-mapped included), multicast, broadcast, IPv6 link-local, or the box's own or its host's addresses or container networks is connect_failed(refused), with no connection; a bridge whose manifest does not say connect answers invalid_request",
+    "negative_subjects": [
+      {
+        "subject": "connect-ignored",
+        "coupled": []
+      },
+      {
+        "subject": "connect-readmits",
+        "coupled": [
+          "GA-BRIDGE-35"
+        ]
+      },
+      {
+        "subject": "connect-takes-the-unproven",
+        "coupled": []
+      },
+      {
+        "subject": "takes-another-device",
+        "coupled": []
+      },
+      {
+        "subject": "connects-to-the-box",
+        "coupled": []
+      },
+      {
+        "subject": "takes-with-another-secret",
+        "coupled": []
+      },
+      {
+        "subject": "follows-without-proof",
+        "coupled": []
+      },
+      {
+        "subject": "connects-a-blocked-device",
+        "coupled": [
+          "GA-BRIDGE-27"
+        ]
+      },
+      {
+        "subject": "connect-twice",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-41",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A bridge whose type ships a manifest gives its bridgeType in status, and every device and transport carries in connections every identity key the bridge knows for it, in canonical form",
+    "negative_subjects": [
+      {
+        "subject": "no-bridge-type",
+        "coupled": []
+      },
+      {
+        "subject": "partial-connections",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-42",
+    "level": "MUST",
+    "conformance": "Host",
+    "verify": "wire",
+    "text": "A plugin's server is verified and started by the bridge itself, in the chosen account's graphical session where its manifest declares needsSession (its console session, else the graphical one the OS started first, by Windows' LogonTime or logind's Timestamp, a tie going to the lower session id, as numbers where both read as integers, else in byte order), never by a session helper, and never before its version's activate; activate is answered ok within 1 s, or failed(unknown_plugin) for a version not installed; the activation is kept across restarts",
+    "negative_subjects": [
+      {
+        "subject": "starts-before-activate",
+        "coupled": [
+          "GA-BRIDGE-46"
+        ]
+      },
+      {
+        "subject": "starts-outside-the-session",
+        "coupled": []
+      },
+      {
+        "subject": "starts-in-the-later-session",
+        "coupled": []
+      },
+      {
+        "subject": "breaks-a-tie-by-text",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-43",
+    "level": "MUST",
+    "conformance": "Host",
+    "verify": "wire",
+    "text": "Each installed file's SHA-256 is kept at install, and the installed files are verified against them at every start of the plugin's server",
+    "negative_subjects": [
+      {
+        "subject": "skips-file-check",
+        "coupled": [
+          "GA-BRIDGE-45"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-44",
+    "level": "MUST",
+    "conformance": "Host",
+    "verify": "wire",
+    "text": "The live tools are compared with the toolHashes of the manifest as installed, never one read again from disk (SHA-256 over the RFC 8785 JSON of name, title, description, inputSchema, outputSchema, annotations), at every start of the server and on every tools/list change it announces; a live tool not in the manifest, a missing tool or a changed hash is a mismatch",
+    "negative_subjects": [
+      {
+        "subject": "trusts-changed-tools",
+        "coupled": [
+          "GA-BRIDGE-45"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-45",
+    "level": "MUST",
+    "conformance": "Host",
+    "verify": "wire",
+    "text": "On a mismatch of files or tools the server is stopped, every one of the plugin's devices is available: false, and one faults entry of code pin_mismatch per device names it; only a reinstall of that version that verifies (GA-BRIDGE-57), or a new version, clears them",
+    "negative_subjects": [
+      {
+        "subject": "serves-on-tamper",
+        "coupled": []
+      },
+      {
+        "subject": "clears-a-tamper-by-itself",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-46",
+    "level": "MUST",
+    "conformance": "Host",
+    "verify": "wire",
+    "text": "No tool is called that the manifest does not map to an action, and a tool is called only to serve a command",
+    "negative_subjects": [
+      {
+        "subject": "calls-unmapped-tool",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-47",
+    "level": "MUST",
+    "conformance": "Host",
+    "verify": "wire",
+    "text": "A plugin's elicitation or sampling is never relayed; an action whose tool asks for input ends failed(no_confirmation)",
+    "negative_subjects": [
+      {
+        "subject": "relays-elicitation",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-48",
+    "level": "MUST",
+    "conformance": "Host",
+    "verify": "wire",
+    "text": "No broker credential, confirmation token or user credential is passed to a plugin; graded on a real OS (*Conformance*)",
+    "negative_subjects": [
+      {
+        "subject": "passes-credentials",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-49",
+    "level": "MUST",
+    "conformance": "Host",
+    "verify": "wire",
+    "text": "A plugin's server runs as the account the owner chose, never elevated: never SYSTEM or root, with the filtered token on Windows, with no_new_privs on Linux; its devices are available: false while its manifest declares needsSession and the account has no graphical session (an SSH login alone is none), and a started server keeps running while its session is locked or disconnected; best effort, as *Hosting* says; graded on a real OS (*Conformance*)",
+    "negative_subjects": [
+      {
+        "subject": "runs-elevated",
+        "coupled": []
+      },
+      {
+        "subject": "stops-on-lock",
+        "coupled": [
+          "GA-BRIDGE-58"
+        ]
+      },
+      {
+        "subject": "starts-for-an-ssh-login",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-50",
+    "level": "SHOULD",
+    "conformance": "Host",
+    "verify": "judged",
+    "text": "A plugin's server is sandboxed to its package files and the manifest's hosts",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-BRIDGE-51",
+    "level": "MUST",
+    "conformance": "Host",
+    "verify": "wire",
+    "text": "A command to a plugin device is failed(no_confirmation) on a tool result with isError, since the tool ran, with the tool's text in detail; on success, applied only for an action declared confirms: true, and sent otherwise; after a successful tool call the device's state is read within 1 s of the tool's result, and GA-BRIDGE-34's read-back is still made",
+    "negative_subjects": [
+      {
+        "subject": "applied-without-confirms",
+        "coupled": [
+          "GA-BRIDGE-8"
+        ]
+      },
+      {
+        "subject": "drops-the-tool-text",
+        "coupled": []
+      },
+      {
+        "subject": "reads-back-late-only",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-52",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A computer carries one session.<token> key per interactive account; the token is derived as *Sessions* says, fixed at first sight by the OS's own identity for the account (the uid, the whole SID), never numbered from the last part of a SID, never one another account holds or held, never a name matching u[0-9]+ or g[0-9]+ or unknown, kept across restarts and renames, retired with its key only when the OS reports the account deleted, or the directory itself reports a directory account as not existing, never on its mere absence from a listing or a cache miss, and never given again, and declared in accounts; an account's several sessions make one key, the most in-use state any of them reads, in the order active, idle, unknown, locked, disconnected, none; none, locked and disconnected are read by the system service without the helper, and only active or idle is taken from a helper, only for a session the OS reports neither locked nor disconnected; a logged-in graphical session neither locked nor disconnected with no helper reads unknown, never available: false, and a non-graphical one (an SSH login; a logind Type other than x11, wayland or mir; Windows' session 0) reads from the OS alone, active, or idle where the OS reports idleness, and joins the key only while the account has no graphical session",
+    "negative_subjects": [
+      {
+        "subject": "unstable-account-token",
+        "coupled": []
+      },
+      {
+        "subject": "takes-an-unsafe-name",
+        "coupled": []
+      },
+      {
+        "subject": "takes-a-held-name",
+        "coupled": []
+      },
+      {
+        "subject": "reuses-a-deleted-token",
+        "coupled": []
+      },
+      {
+        "subject": "reports-one-session",
+        "coupled": []
+      },
+      {
+        "subject": "ssh-reads-unknown",
+        "coupled": []
+      },
+      {
+        "subject": "ssh-hides-a-lock",
+        "coupled": []
+      },
+      {
+        "subject": "takes-the-unknown-name",
+        "coupled": []
+      },
+      {
+        "subject": "retires-a-lapsed-account",
+        "coupled": []
+      },
+      {
+        "subject": "keeps-a-deleted-directory-token",
+        "coupled": []
+      },
+      {
+        "subject": "helper-claims-locked",
+        "coupled": [
+          "GA-BRIDGE-61"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-53",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A PC's bridge reports otherAdmins on the computer and each plugin device, one { vendor: \"os\", label: <token> } per administrator account (on Windows Administrators and Backup Operators, an account holding SeDebugPrivilege, SeTakeOwnershipPrivilege, SeRestorePrivilege or SeBackupPrivilege through local policy, and on a domain-joined machine Server Operators and Account Operators; on Linux root, every account sudo or polkit lets run any command as root, one command being enough, every identity polkit's administrator rules name, and the docker group's members) and per group granted the rights, a group's token g and a number, and one { vendor: \"os\", label: \"unknown\" } where that set cannot be enumerated (a polkit rule not reducible to users and groups, a sudo grant whose users or root target rest on an alias or a digest it does not evaluate, an unreadable Windows local policy), re-read at start, on every change of the administrators group and at least every 24 h, a change being an event; each plugin device also lists the account its plugin runs as, unless listed already as an administrator, and so does the computer for a plugin whose manifest declares needsSession; each entry of a plugin's manifest's otherAdmins, its app's own network control, is copied to every device of the plugin, never ungoverned; the enumeration of administrators, the unknown entry included, graded on a real OS (*Conformance*)",
+    "negative_subjects": [
+      {
+        "subject": "drops-plugin-network-control",
+        "coupled": []
+      },
+      {
+        "subject": "hides-pc-admins",
+        "coupled": [
+          "GA-BRIDGE-14"
+        ]
+      },
+      {
+        "subject": "keeps-a-demoted-admin",
+        "coupled": []
+      },
+      {
+        "subject": "hides-the-plugin-account",
+        "coupled": []
+      },
+      {
+        "subject": "misses-a-polkit-admin",
+        "coupled": []
+      },
+      {
+        "subject": "misses-the-docker-group",
+        "coupled": []
+      },
+      {
+        "subject": "trusts-an-incomplete-admin-list",
+        "coupled": []
+      },
+      {
+        "subject": "trusts-a-one-command-grant",
+        "coupled": []
+      },
+      {
+        "subject": "trusts-a-narrowed-sudo-grant",
+        "coupled": []
+      },
+      {
+        "subject": "gives-a-group-a-user-token",
+        "coupled": []
+      },
+      {
+        "subject": "misses-a-debug-privilege",
+        "coupled": []
+      },
+      {
+        "subject": "hides-a-session-plugin-account",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-54",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "No action among a bridge's own executes its arguments as a command, script or code, or hands them to an OS handler that may; for a plugin's actions this is the manifest's word (*not checked by the harness*)",
+    "negative_subjects": [
+      {
+        "subject": "offers-a-shell",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-55",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A wake relay's transport is up only while its interface has a link and the gateway answered ARP within the last 30 s; each entry is feedback: open, internal, proposedClass null, and offers only power.wake, declared confirms: false",
+    "negative_subjects": [
+      {
+        "subject": "relay-up-without-arp",
+        "coupled": [
+          "GA-BRIDGE-23"
+        ]
+      },
+      {
+        "subject": "relay-entry-closed",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-56",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "judged",
+    "text": "A bridge that lists from among its notify action's args shows it with the text, and a notify without from as from an unknown sender, never unmarked; graded by a person from what the test transport's notification hook was asked to show",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-BRIDGE-57",
+    "level": "MUST",
+    "conformance": "Host",
+    "verify": "wire",
+    "text": "An install of a version already installed is a reinstall: with a package sha256 other than the one the version was installed from, or a manifest other than the installed one's, it is install_failed(version_conflict) and changes nothing; so is one whose account is not the one the version was installed for; otherwise the version's files and hashes are replaced, its device ids and activation kept, an activated server started again, verified, and it ends in installed",
+    "negative_subjects": [
+      {
+        "subject": "reinstall-swaps-tools",
+        "coupled": []
+      },
+      {
+        "subject": "reinstall-changes-account",
+        "coupled": []
+      },
+      {
+        "subject": "reinstall-swaps-the-package",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-58",
+    "level": "MUST",
+    "conformance": "Host",
+    "verify": "wire",
+    "text": "After activation a plugin's devices are available: false only while its server cannot serve them (a mismatch, needsSession with no graphical session, a server that exited, one that has served and then answered neither a state read nor a probe within 10 s, or one that has not served within 120 s of its start), at once when it exits or stops answering; a server that has served is probed (ping before MCP 2026-07-28, server/discover from it) at least every 10 s when no state read has passed; the server is started again, verified, backing off to a ceiling of at least 60 s within 180 s and at most 300 s, unless stopped for a mismatch or a deleted account; after 5 failed starts in a row, one faults entry of code crash_loop per device of the plugin names it, cleared once a restarted server has served; these times are kept on a clock that stops in suspend, or started again at resume; never available: false because the server is still starting, within those 120 s, or was stopped by the bridge's own going offline; published available: true within 1 s of the server having served, after the activation and every restart",
+    "negative_subjects": [
+      {
+        "subject": "keeps-a-dead-server",
+        "coupled": []
+      },
+      {
+        "subject": "unavailable-while-starting",
+        "coupled": []
+      },
+      {
+        "subject": "misses-a-hung-server",
+        "coupled": []
+      },
+      {
+        "subject": "starts-for-ever",
+        "coupled": []
+      },
+      {
+        "subject": "retries-once-an-hour",
+        "coupled": []
+      },
+      {
+        "subject": "hangs-every-server-on-resume",
+        "coupled": []
+      },
+      {
+        "subject": "crash-loops-silently",
+        "coupled": []
+      },
+      {
+        "subject": "unavailable-on-the-way-down",
+        "coupled": []
+      },
+      {
+        "subject": "stays-unavailable-after-serving",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-59",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "On resuming, where the OS offers a way to, a PC's bridge has the OS step its clock to its time source before its first status, waiting at most 10 s",
+    "negative_subjects": [
+      {
+        "subject": "resumes-on-a-slow-clock",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-60",
+    "level": "MUST",
+    "conformance": "Host",
+    "verify": "wire",
+    "text": "Each activated plugin device's state is read within 10 s of its server having started (its first successful answer to initialize, or to server/discover from MCP 2026-07-28), and within 10 s of the bridge's first status after resuming, whatever its cadenceMs, a failed read being tried again at least every 10 s until one succeeds; a command to a plugin device whose server is still starting is acked failed(unreachable) within 1 s",
+    "negative_subjects": [
+      {
+        "subject": "waits-for-the-cadence",
+        "coupled": []
+      },
+      {
+        "subject": "holds-a-command-while-starting",
+        "coupled": []
+      },
+      {
+        "subject": "gives-up-after-a-failed-read",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-61",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "Each session helper is bound to its session by the OS identity of its connection (session id and uid), never by its own word; a helper's report for another session is ignored and named as a faults entry of code helper_refused on the computer; one helper is bound per session, the one the service started in it, and a second connection from that session, or one from a plugin server's process, is refused and named as a faults entry of code helper_refused on the computer; app, camera_in_use and microphone_in_use are taken only from the helper of the session the OS reports active at the console; the binding graded on a real OS (*Conformance*)",
+    "negative_subjects": [
+      {
+        "subject": "trusts-a-forged-helper",
+        "coupled": []
+      },
+      {
+        "subject": "trusts-a-background-helper",
+        "coupled": []
+      },
+      {
+        "subject": "trusts-a-second-helper",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-62",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A computer's notify lists from among its args, and a notify to a computer is shown in every logged-in session that is neither locked nor disconnected and has a running helper, as the test transport's notification hook records; shown in none, it is acked failed(not_shown), never applied",
+    "negative_subjects": [
+      {
+        "subject": "hides-the-sender",
+        "coupled": []
+      },
+      {
+        "subject": "notifies-one-session",
+        "coupled": []
+      },
+      {
+        "subject": "acks-an-unshown-notify",
+        "coupled": []
+      },
+      {
+        "subject": "notifies-a-disconnected-session",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-63",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A computer's cancel is acked applied when nothing is scheduled",
+    "negative_subjects": [
+      {
+        "subject": "cancel-fails-when-idle",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-64",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A PC's bridge's broker credential is readable only by its system service and the OS's administrators, and the endpoint its session helpers connect to is created and owned by the service, so no other process binds, replaces or listens on it; graded on a real OS (*Conformance*)",
+    "negative_subjects": [
+      {
+        "subject": "credential-readable",
+        "coupled": []
+      },
+      {
+        "subject": "helper-endpoint-open",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-65",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A PC's bridge on its broker's own host, reaching it over loopback or through one of its host's own addresses, declares proposedInfrastructure: true on its computer",
+    "negative_subjects": [
+      {
+        "subject": "hides-the-broker-host",
+        "coupled": []
+      },
+      {
+        "subject": "hides-the-broker-host-by-address",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-66",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A computer's session.lock is declared confirms: true and idempotent: true, its args declaring account as the tokens accounts lists, a lock naming any other token acked failed(invalid_request) within 1 s, nothing done; it locks or disconnects every graphical session of the account, and is acked applied only once the OS reports each of them locked or disconnected, or the account has no session at all, a non-graphical session (an SSH login) not blocking the ack beside a graphical one; it is failed(no_graphical_session) within 1 s of its receipt for an account whose only sessions are non-graphical, and failed(not_locked) when a graphical session is not so reported within 5 s of the request",
+    "negative_subjects": [
+      {
+        "subject": "locks-one-session",
+        "coupled": []
+      },
+      {
+        "subject": "acks-an-unhonoured-lock",
+        "coupled": []
+      },
+      {
+        "subject": "waits-on-an-ssh-login",
+        "coupled": []
+      },
+      {
+        "subject": "acks-an-ssh-only-lock",
+        "coupled": []
+      },
+      {
+        "subject": "declares-a-lock-not-idempotent",
+        "coupled": []
+      },
+      {
+        "subject": "locks-an-unlisted-account",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-67",
+    "level": "MUST",
+    "conformance": "Host",
+    "verify": "wire",
+    "text": "When the OS reports deleted the account a plugin runs as, its server is stopped and not started again, every device of the plugin is available: false, and one faults entry of code account_deleted per device names it until the plugin is uninstalled; a reinstall of that version ends install_failed(version_conflict), whatever account it names",
+    "negative_subjects": [
+      {
+        "subject": "serves-a-deleted-account",
+        "coupled": []
+      },
+      {
+        "subject": "reinstalls-for-a-deleted-account",
+        "coupled": [
+          "GA-BRIDGE-57"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-68",
+    "level": "MUST",
+    "conformance": "Host",
+    "verify": "wire",
+    "text": "install and uninstall are answered accepted within 1 s; an accepted install ends in exactly one installed, carrying the manifest, or install_failed with a reason, within 600 s of its accepted, else install_failed(timeout) with nothing installed, and an accepted uninstall in uninstalled, once the plugin's server is stopped, its files removed and every device of every version of it removed as GA-BRIDGE-21 says; a package whose SHA-256 is not sha256, or whose command names a file outside it other than an interpreter, by name, as its first element, found in a directory the plugin's account cannot write without elevation, is install_failed with nothing installed, and so is one whose interpreter, resolved by the bridge to an absolute path in the account's search order, is a file, or has a directory on its path or earlier in that order where the name would have been looked for, that the account can write, or a manifest with a cadenceMs above 300 000, a non-scalar extension key schema, or an id, key or version holding a character outside [A-Za-z0-9._-], an id or key over 40 characters or a version over 32 (invalid_manifest); the interpreter's absolute path is recorded with the manifest as installed, and the server started by it, never by name; and an account not in the computer's accounts (unknown_account); an install for another host is invalid_request, and an uninstall of a plugin not installed failed(unknown_plugin), within 1 s, nothing done; one accepted and not ended at a restart ends after the start in exactly one terminal event (installed, or install_failed(restart) with nothing installed, within its 600 s or at once if they passed; uninstalled); both are duplicates when repeated by requestId within 10 s, as GA-BRIDGE-4 says for every request",
+    "negative_subjects": [
+      {
+        "subject": "install-never-ends",
+        "coupled": []
+      },
+      {
+        "subject": "install-without-end",
+        "coupled": []
+      },
+      {
+        "subject": "uninstall-leaves-a-server",
+        "coupled": []
+      },
+      {
+        "subject": "accepts-a-slow-cadence",
+        "coupled": [
+          "GA-BRIDGE-13"
+        ]
+      },
+      {
+        "subject": "accepts-an-object-key",
+        "coupled": []
+      },
+      {
+        "subject": "installs-for-no-account",
+        "coupled": []
+      },
+      {
+        "subject": "accepts-a-colon-key",
+        "coupled": []
+      },
+      {
+        "subject": "installs-for-another-host",
+        "coupled": []
+      },
+      {
+        "subject": "uninstalls-a-stranger",
+        "coupled": []
+      },
+      {
+        "subject": "forgets-an-install-on-restart",
+        "coupled": [
+          "GA-BRIDGE-31"
+        ]
+      },
+      {
+        "subject": "runs-a-writable-interpreter",
+        "coupled": []
+      },
+      {
+        "subject": "hijacks-the-interpreter-by-path",
+        "coupled": []
+      },
+      {
+        "subject": "accepts-a-long-id",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-69",
+    "level": "MUST",
+    "conformance": "Host",
+    "verify": "wire",
+    "text": "A plugin device has stableIdentifier <computer stableIdentifier>/<plugin id>/<key>, device id <plugin id>:<version>:<key> and host naming the computer; a staged device names the device it would replace in stagedFor; the old version's server keeps running and its devices stay until the new version's activate, sent for a version with staged devices only on an adoption with replaces, then the new server starts, and once it has served the old one stops and all its devices leave as GA-BRIDGE-21 says, and the new version's devices keep stagedFor; while the new server fails its check or has not served, the old version stays as it was; the swap ends the old version's activation and removes it, so no later start runs its server, with no uninstalled; an activate naming the version whose server runs, while another's activation waits for its swap, cancels that pending activation, the new server stopped if it runs and never swapped to later, the bridge's next start included",
+    "negative_subjects": [
+      {
+        "subject": "drops-the-old-version-early",
+        "coupled": []
+      },
+      {
+        "subject": "forgets-staged-for",
+        "coupled": []
+      },
+      {
+        "subject": "restarts-the-old-version",
+        "coupled": []
+      },
+      {
+        "subject": "swaps-to-a-broken-version",
+        "coupled": []
+      },
+      {
+        "subject": "swaps-after-a-cancel",
+        "coupled": []
+      },
+      {
+        "subject": "shares-a-plugin-identifier",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-70",
+    "level": "MUST",
+    "conformance": "Host",
+    "verify": "wire",
+    "text": "A plugin's install directory is writable only by the bridge's system service; graded on a real OS (*Conformance*)",
+    "negative_subjects": [
+      {
+        "subject": "install-dir-writable",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-71",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "An action the device carries out by a code that reaches a state only from a known one (flips, cycles or steps it relatively) is declared toggles: true and idempotent: false; one carried out by a code that sets it is not declared toggles: true; one carried out by a code learned from a remote is declared toggles: true unless the owner declared that code discrete",
+    "negative_subjects": [
+      {
+        "subject": "declares-a-toggle-discrete",
+        "coupled": []
+      },
+      {
+        "subject": "trusts-a-learned-code",
+        "coupled": []
+      },
+      {
+        "subject": "declares-a-cycle-discrete",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-72",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A transport that only transmits and can answer nothing on its host link is unknown, never up, and down only from its host reporting a write to it failed, or removing its host link, until its host link, retried on GA-BRIDGE-11's backoff without transmitting, opens again, then unknown; a command whose write failed is acked failed(unreachable); any other transport is up or down; every device on an unknown transport is feedback: open",
+    "negative_subjects": [
+      {
+        "subject": "mute-transmitter-up",
+        "coupled": [
+          "GA-BRIDGE-23"
+        ]
+      },
+      {
+        "subject": "answering-blaster-unknown",
+        "coupled": []
+      },
+      {
+        "subject": "downs-an-idle-transmitter",
+        "coupled": []
+      },
+      {
+        "subject": "keeps-an-unplugged-dongle",
+        "coupled": []
+      },
+      {
+        "subject": "sends-into-a-failed-write",
+        "coupled": []
+      },
+      {
+        "subject": "stays-down-after-reopen",
+        "coupled": []
+      },
+      {
+        "subject": "closes-a-mute-device",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-73",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "An action carried out by a code that carries the device's whole state is declared wholeState: true, and its code is built from the command alone, its state with the action's value applied, a key it leaves out from the model's default, never from what the bridge last sent",
+    "negative_subjects": [
+      {
+        "subject": "builds-from-memory",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-74",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "Every declaration on a device's entry (capabilities; each action's idempotent, stateless, toggles, args, confirms and confirmedBy) holds for the device's settings as last observed; devices is re-published within 1 s of observing a setting that changes one, before the status or ack that carries the setting's new value; a setting is declared from its kept value (GA-BRIDGE-79), and by its worst case only where none is kept",
+    "negative_subjects": [
+      {
+        "subject": "keeps-a-stale-description",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-75",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A key of kind event is published once per occurrence the device reports, as an occurrence on the event topic, never in a retained status, never changing available, and never re-published after a restart, a reconnect or a snapshot; a frame received twice, with the same transaction number and payload within 10 s (⚠️ a guess), is one occurrence",
+    "negative_subjects": [
+      {
+        "subject": "replays-an-occurrence",
+        "coupled": []
+      },
+      {
+        "subject": "retains-an-occurrence",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-76",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "Data a device sends that the bridge maps to no declared key, other than a duplicate of a declared reading by another path (which path is the duplicate is the maker's word, *not checked by the harness*), is never published as a reading, and is named in the device's undescribed in devices, with when it was first seen, each name matching ^[A-Za-z0-9._-]{1,64}$, kept across restarts, and announced by one undescribed event when it is added; at most 32 are listed at once, a new name while the list is full is neither listed nor announced, a name the declarations come to describe leaves and frees its place, and a name not listed is added when it next arrives with a place free; a held-back key's first report is not undescribed (GA-BRIDGE-80)",
+    "negative_subjects": [
+      {
+        "subject": "publishes-an-undescribed-key",
+        "coupled": [
+          "GA-BRIDGE-1"
+        ]
+      },
+      {
+        "subject": "repeats-the-undescribed-event",
+        "coupled": [
+          "GA-BRIDGE-31"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-77",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "static",
+    "text": "An extension's capability is a namespace with at least one dot that its publisher controls, each action and key the capability's name, a dot and a name matching ^[a-z][a-z0-9_]*$; no extension takes a standard capability's name or reports a standard key under its own; on one device no capability's name is another's with a segment added; a manifest that breaks it is invalid_manifest",
+    "negative_subjects": [
+      {
+        "subject": "misnames-an-extension",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-78",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "A movement reading is published under motion, never occupancy, whatever the protocol or library names it, its false the device's own where it sends one; a reading is published under any vocabulary key only where it means what standard/applier.md's *Sensor keys* defines for that key (*not checked by the harness* beyond the movement case)",
+    "negative_subjects": [
+      {
+        "subject": "maps-motion-to-occupancy",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-79",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "Every setting of a device is listed in the entry's settings, and no vocabulary state key is; a setting that the device confirmed, by a frame of the device's carrying the value (a report, or an echo of a write that carries it; a write response that carries no value confirms nothing), is kept across the bridge's restarts with that observation's time and published with it until the device reports that setting again; every kept setting of a device interviewed again is dropped, and a secured rejoin keeps them; a setting never confirmed is never published",
+    "negative_subjects": [
+      {
+        "subject": "publishes-an-unconfirmed-setting",
+        "coupled": [
+          "GA-BRIDGE-1",
+          "GA-BRIDGE-5"
+        ]
+      },
+      {
+        "subject": "forgets-a-confirmed-setting",
+        "coupled": [
+          "GA-BRIDGE-31"
+        ]
+      },
+      {
+        "subject": "drops-a-setting-on-a-rejoin",
+        "coupled": [
+          "GA-BRIDGE-74"
+        ]
+      },
+      {
+        "subject": "keeps-a-setting-through-an-interview",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BRIDGE-80",
+    "level": "MUST",
+    "conformance": "Serve",
+    "verify": "wire",
+    "text": "Only a numeric measurement, as a sensor key or an extension state key, that the maker's records name, for the model, as promised and seen missing (that naming *not checked by the harness*) may be held back until the device first reports it, and never a boolean key; while held back it is listed in the entry's awaitedKeys and is never a reading; it is declared, and taken out of awaitedKeys, in a devices published before the status carrying its first value and within 1 s (⚠️ a guess) of that report; once reported, it is never held back again, across restarts",
+    "negative_subjects": [
+      {
+        "subject": "holds-back-silently",
+        "coupled": []
+      },
+      {
+        "subject": "holds-back-the-leak",
+        "coupled": []
+      },
+      {
+        "subject": "holds-back-again-after-restart",
+        "coupled": [
+          "GA-BRIDGE-31"
+        ]
+      },
+      {
+        "subject": "declares-after-the-reading",
+        "coupled": [
+          "GA-BRIDGE-1"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-FIND-1",
+    "level": "MUST",
+    "conformance": "Find",
+    "verify": "wire",
+    "text": "The finder's times are as GA-BRIDGE-3 says; it connects with an authenticated identity, a clean session, a keepalive of at most 10 s and its will on {root}/finder/lwt, carrying its instanceId and cleared on connect; MQTT 5, a refused subscribe or publish reported in faults; publishes status from its main loop at least every 10 s and within 1 s of a source's change; and goes with a graceful status, lwt cleared and a clean disconnect",
+    "negative_subjects": [
+      {
+        "subject": "finder-dies-silently",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-FIND-2",
+    "level": "MUST",
+    "conformance": "Find",
+    "verify": "wire",
+    "text": "The finder sends, on every interface, its broker connection aside, nothing but mDNS questions for the manifests' service types, the records of the instances answers name and the address records of the hosts they name, and SSDP M-SEARCH, connects to no device, and publishes only under {root}/finder/; that it holds no device or account credential is *not checked by the harness*",
+    "negative_subjects": [
+      {
+        "subject": "finder-probes-devices",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-FIND-3",
+    "level": "MUST",
+    "conformance": "Find",
+    "verify": "wire",
+    "text": "A candidate is published only for a match of an installed manifest (its Bluetooth and USB keys checked on a bench), every field of the matcher matching, with id, sources, canonical keys, address from the announcement's records, a Bluetooth localName only as advertised, firstSeen, lastSeen, hints and matches, a USB candidate's connect always false; hearings that share a key are one candidate; its id is a random UUID never given to another, and never changes while it is listed",
+    "negative_subjects": [
+      {
+        "subject": "new-id-on-new-address",
+        "coupled": [
+          "GA-FIND-4"
+        ]
+      },
+      {
+        "subject": "reuses-a-candidate-id",
+        "coupled": []
+      },
+      {
+        "subject": "lists-a-partial-match",
+        "coupled": []
+      },
+      {
+        "subject": "address-from-the-packet",
+        "coupled": []
+      },
+      {
+        "subject": "offers-usb-connect",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-FIND-4",
+    "level": "MUST",
+    "conformance": "Find",
+    "verify": "wire",
+    "text": "candidates is re-published within 1 s of a change and at most once a second, a new lastSeen alone not being a change and published within the hour; a candidate is dropped at once on an mDNS goodbye or a USB unplug (a bench check), and after 7 days unheard; mDNS questions and M-SEARCH are asked at start and repeat at least hourly, never faster than RFC 6762's continuous querying; at most 512 candidates are kept, the longest unheard dropped with a faults entry of code overflow",
+    "negative_subjects": [
+      {
+        "subject": "candidates-late",
+        "coupled": []
+      },
+      {
+        "subject": "grows-without-bound",
+        "coupled": []
+      },
+      {
+        "subject": "never-drops",
+        "coupled": []
+      },
+      {
+        "subject": "waits-to-be-told",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-FIND-5",
+    "level": "MUST",
+    "conformance": "Find",
+    "verify": "wire",
+    "text": "The finder's status lists every source, off for one it cannot use; one listing Bluetooth or USB up has a bench run of that source recorded with its Find claim",
+    "negative_subjects": [
+      {
+        "subject": "hides-an-off-source",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-FIND-6",
+    "level": "MUST",
+    "conformance": "Find",
+    "verify": "wire",
+    "text": "Under the harness the finder runs only when its start-up option enables it, carries testRunId in status, takes all time from the harness's time source and its manifests from the directory the option names, and listens only on the interface it names",
+    "negative_subjects": [
+      {
+        "subject": "finder-test-unannounced",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BOX-1",
+    "level": "MUST",
+    "conformance": "Box",
+    "verify": "wire",
+    "text": "Every client authenticates, loopback included, over TLS or on one host's loopback, and the applier and bridges use MQTT 5; the broker refuses visibly with 0x87 and answers 0x10 to a publish with no subscriber; only the applier registered for bridge {b} writes its commands and requests; only bridge {b} subscribes to them and writes the rest of its tree; only the doer and its bridge read or write the doer's own topics; any other reader gets only the devices' statuses the owner granted, each by a literal subscription, and never their bridge's status or lwt; nothing else writes a command or a request, a rule engine included; only the finder the box registers writes {root}/finder/#, and only the box's applier reads it",
+    "negative_subjects": [
+      {
+        "subject": "box-denies-silently",
+        "coupled": []
+      },
+      {
+        "subject": "grants-a-wildcard-read",
+        "coupled": []
+      },
+      {
+        "subject": "grants-the-roster",
+        "coupled": []
+      },
+      {
+        "subject": "finder-topics-open",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BOX-2",
+    "level": "MUST",
+    "conformance": "Box",
+    "verify": "static",
+    "text": "The box keeps a registration record of one applier per bridge identity, the finder's identity and the one applier that reads it, and each reader's grants, which only the owner edits, refusing a second entry for a bridge; its tool, reading the applier as the owner's client, grants nothing on an unadopted device, refuses or warns on a door_lock, anything above reversible or a device with a non-empty personal, and checks every grant again on the model event whenever a device is adopted or its tiers or personal change, withdrawing one that no longer passes within 60 s with a word to the owner; no applier changes the grants; an ACL change is verified by one forbidden and one permitted publish, and a withdrawn read by a message no longer received on a held subscription, before it is relied on, and each verification is recorded; the record's honesty is the box author's word (*not checked by the harness* beyond replaying its probes)",
+    "negative_subjects": [
+      {
+        "subject": "grants-the-lock-unwarned",
+        "coupled": []
+      },
+      {
+        "subject": "grants-personal-keys-unwarned",
+        "coupled": []
+      },
+      {
+        "subject": "keeps-a-grant-on-a-new-personal-key",
+        "coupled": []
+      },
+      {
+        "subject": "trusts-an-unverified-acl",
+        "coupled": []
+      }
+    ]
+  }
+]

@@ -1,0 +1,1 @@
+{ "id": "weekday-wake", "scenario": "morning", "time": "07:00", "days": [1, 2, 3, 4, 5], "exceptions": [{ "date": "2030-01-07", "action": "skip" }, { "date": "2030-01-08", "action": "move", "time": "08:30" }] }

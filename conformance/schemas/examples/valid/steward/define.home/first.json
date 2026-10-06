@@ -1,0 +1,1 @@
+{ "timezone": "Europe/Moscow", "notice_channels": ["sim-bridge:channel"], "time_source": "127.0.0.1:12345" }

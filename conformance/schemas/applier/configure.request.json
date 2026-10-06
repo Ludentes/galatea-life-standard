@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/configure.request.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["changes", "dry_run"],
+  "properties": {
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["op", "kind"],
+        "properties": {
+          "op": { "$ref": "../common.json#/$defs/configChangeOp" },
+          "kind": { "type": "string" },
+          "value": {}
+        }
+      }
+    },
+    "expected_revision": { "type": "integer" },
+    "dry_run": { "type": "boolean" }
+  },
+  "$comment": "expected_revision is required unless every change is an ignore_candidate or unignore_candidate: a set of only ignores is never stale (applier, *Discovery*; GA-CFG-2).",
+  "if": {
+    "properties": {
+      "changes": { "minItems": 1, "items": { "properties": { "kind": { "enum": ["ignore_candidate", "unignore_candidate"] } } } }
+    }
+  },
+  "else": { "required": ["expected_revision"] }
+}

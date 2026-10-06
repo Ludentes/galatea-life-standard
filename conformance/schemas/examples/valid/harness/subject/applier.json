@@ -1,0 +1,7 @@
+{
+  "standard": "applier",
+  "claims": ["Act", "Safe"],
+  "start": { "command": "node", "args": ["dist/main.js"], "ready": { "log": "ready" } },
+  "state_dir": true,
+  "mutations": ["reissues-on-timeout", "sends-a-bare-setpoint"]
+}

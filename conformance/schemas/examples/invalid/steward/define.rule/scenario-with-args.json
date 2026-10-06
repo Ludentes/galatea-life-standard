@@ -1,0 +1,2 @@
+{ "id": "welcome", "name": "Встреча", "conditions": [{ "target": "sim-bridge:lamp", "key": "on", "op": "eq", "value": true }],
+  "actions": [{ "scenario": "welcome-home", "args": {} }] }

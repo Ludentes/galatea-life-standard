@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/provision.response.json",
+  "title": "provision's result (applier, *Provisioning*): the bridge's reply with the request's id, or unreachable. Provisional",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["request_id", "op", "status"],
+  "properties": {
+    "request_id": { "type": "string" },
+    "op": { "enum": ["join", "join_close", "commission", "connect", "remove", "unblock", "install", "uninstall"] },
+    "status": { "enum": ["ok", "accepted", "invalid_request", "failed", "unreachable"] },
+    "data": {},
+    "reason": { "type": "string" }
+  }
+}

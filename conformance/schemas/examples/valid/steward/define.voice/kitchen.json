@@ -1,0 +1,1 @@
+{ "endpoint": "kitchen-voice", "listening": "wake_server", "wake_words": [{ "word": "Галатея", "model": "transcript" }], "zone": "downstairs", "output": "speech", "follow_up": false, "heard_by": "front" }

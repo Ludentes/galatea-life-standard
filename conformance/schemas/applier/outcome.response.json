@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/outcome.response.json",
+  "type": "object",
+  "required": ["apply_id", "outcomes"],
+  "properties": {
+    "apply_id": { "type": "string" },
+    "outcomes": { "type": "array", "items": { "$ref": "outcome.json" } }
+  }
+}

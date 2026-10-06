@@ -1,0 +1,12 @@
+{
+  "bridgeType": "zigbee",
+  "name": "Zigbee",
+  "version": "0.1.0",
+  "connect": false,
+  "matchers": [
+    {
+      "source": "usb",
+      "vid": "10C4"
+    }
+  ]
+}

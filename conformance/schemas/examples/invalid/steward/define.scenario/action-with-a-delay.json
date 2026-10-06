@@ -1,0 +1,1 @@
+{ "id": "movie", "name": "Кино", "mode": "single", "steps": [{ "target": "sim-bridge:lamp", "action": "onoff.turn_on", "args": {}, "delay": 5 }] }

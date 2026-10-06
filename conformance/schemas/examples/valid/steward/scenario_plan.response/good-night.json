@@ -1,0 +1,5 @@
+{ "plan_id": "p-1", "expires_at": "2030-01-01T08:05:00.000Z", "revision": 4, "endpoint": "olga-app", "client": "olga-app",
+  "request": { "endpoint": "olga-app", "scenario": "good-night" },
+  "steps": [{ "step_id": "s1", "target": "sim-bridge:lamp", "action": "onoff.turn_off", "args": {}, "verdict": "op", "tier": "reversible", "stale": false, "basis": "real" },
+    { "step_id": "s2", "target": "sim-bridge:tv", "action": "onoff.turn_off", "args": {}, "verdict": "ask", "reason": "toggle_only", "tier": "reversible",
+      "stale": false, "basis": "real", "conditional": true }] }

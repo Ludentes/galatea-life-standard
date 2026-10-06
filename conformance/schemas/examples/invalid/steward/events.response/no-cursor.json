@@ -1,0 +1,2 @@
+{ "events": [{ "seq": 7, "time": "2026-09-27T10:00:00.000Z", "type": "outcome", "target": "sim-bridge:lamp",
+  "outcome": "acked" }] }

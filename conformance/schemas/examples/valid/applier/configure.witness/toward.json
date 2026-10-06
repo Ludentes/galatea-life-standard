@@ -1,0 +1,1 @@
+{ "device": "flat:ac", "action": "climate.set_setpoint", "sensor": "flat:living-temp", "expect": { "toward": { "arg": "celsius", "by": 1 } }, "within_s": 900 }

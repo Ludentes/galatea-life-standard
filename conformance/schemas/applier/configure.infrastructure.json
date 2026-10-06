@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/configure.infrastructure.json",
+  "title": "A configure change's value for kind infrastructure (provisional until the standard names the shape)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["device", "infrastructure"],
+  "properties": {
+    "device": { "type": "string", "minLength": 1 },
+    "infrastructure": { "type": "boolean" }
+  }
+}

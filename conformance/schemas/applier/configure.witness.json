@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/configure.witness.json",
+  "title": "A configure change's value for kind witness (provisional until the standard names the shape): the sensor that says whether a device's action did what it asked, what it should do, and within how long of dispatch",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["device", "action", "sensor", "expect", "within_s"],
+  "properties": {
+    "device": { "type": "string", "minLength": 1 },
+    "action": { "$ref": "../common.json#/$defs/action" },
+    "sensor": { "type": "string", "minLength": 1 },
+    "key": { "type": "string", "minLength": 1, "description": "The sensor key it reads; its first sensor key where absent" },
+    "expect": {
+      "anyOf": [
+        { "enum": ["rises", "falls"] },
+        { "type": "object", "additionalProperties": false, "required": ["becomes"],
+          "properties": { "becomes": { "type": ["string", "number", "boolean"] } } },
+        { "type": "object", "additionalProperties": false, "required": ["toward"],
+          "properties": { "toward": { "type": "object", "additionalProperties": false, "required": ["arg", "by"],
+            "properties": { "arg": { "type": "string", "minLength": 1 }, "by": { "type": "number", "exclusiveMinimum": 0 } } } } }
+      ]
+    },
+    "within_s": { "type": "number", "exclusiveMinimum": 0, "maximum": 86400 }
+  }
+}

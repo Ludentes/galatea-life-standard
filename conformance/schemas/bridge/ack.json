@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bridge/ack.json",
+  "title": "An ack on {root}/bridges/{b}/devices/{d}/ack (GA-BRIDGE-4)",
+  "type": "object",
+  "required": ["commandId", "source", "result", "timestamp"],
+  "properties": {
+    "commandId": { "$ref": "../common.json#/$defs/uuid" },
+    "source": { "type": "string" },
+    "result": { "$ref": "../common.json#/$defs/ackResult" },
+    "reason": { "$ref": "../common.json#/$defs/ackReason" },
+    "detail": { "type": "string" },
+    "timestamp": { "$ref": "../common.json#/$defs/wireTime" }
+  },
+  "if": { "properties": { "result": { "const": "failed" } } },
+  "then": { "required": ["reason"] },
+  "else": { "not": { "required": ["reason"] } }
+}

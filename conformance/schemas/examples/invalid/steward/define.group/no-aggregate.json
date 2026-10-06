@@ -1,0 +1,1 @@
+{ "id": "hall-lights", "name": "Свет в холле", "room": "hall", "members": ["sim-bridge:lamp"] }

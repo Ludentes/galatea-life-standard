@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bridge/devices.json",
+  "title": "The retained devices document on {root}/bridges/{b}/devices",
+  "type": "object",
+  "required": ["devices"],
+  "properties": {
+    "publishedAt": { "$ref": "../common.json#/$defs/wireTime" },
+    "devices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "stableIdentifier", "transport", "model", "capabilities", "actions", "feedback"],
+        "properties": {
+          "id": { "type": "string" },
+          "stableIdentifier": { "type": "string" },
+          "transport": { "type": "string" },
+          "model": {
+            "type": "object",
+            "required": ["vendor", "model"],
+            "properties": { "vendor": { "type": "string" }, "model": { "type": "string" } }
+          },
+          "capabilities": { "type": "array", "items": { "type": "string" } },
+          "sensorKeys": { "type": "array", "items": { "type": "string" } },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["action", "idempotent", "stateless", "confirms"],
+              "properties": {
+                "action": { "anyOf": [{ "$ref": "../common.json#/$defs/action" }, { "$ref": "../common.json#/$defs/extensionAction" }] },
+                "idempotent": { "type": "boolean" },
+                "stateless": { "type": "boolean" },
+                "toggles": { "type": "boolean" },
+                "wholeState": { "type": "boolean" },
+                "args": { "type": "object" },
+                "confirms": { "type": "boolean" },
+                "confirmedBy": { "type": "object" },
+                "requestedTier": { "type": "string" },
+                "toolHash": { "type": "string" }
+              }
+            }
+          },
+          "feedback": { "$ref": "../common.json#/$defs/feedback" },
+          "reachMs": { "type": "number", "minimum": 0 },
+          "proposedClass": { "anyOf": [{ "$ref": "../common.json#/$defs/deviceClass" }, { "type": "null" }] },
+          "classEvidence": { "$ref": "../common.json#/$defs/classEvidence" },
+          "otherAdmins": { "$ref": "../common.json#/$defs/otherAdmins" },
+          "connections": { "type": "array", "items": { "type": "string" } },
+          "host": { "type": "string" },
+          "plugin": { "type": "string" },
+          "version": { "type": "string" },
+          "proposedInfrastructure": { "const": true },
+          "personal": { "type": "array", "items": { "type": "string" } },
+          "selfChanging": { "type": "array", "items": { "type": "string" } },
+          "settings": { "type": "array", "items": { "type": "string" } },
+          "awaitedKeys": { "type": "array", "items": { "type": "string" } },
+          "undescribed": { "type": "array", "maxItems": 32, "items": { "type": "object", "required": ["name", "firstSeen"],
+            "properties": { "name": { "type": "string", "pattern": "^[A-Za-z0-9._-]{1,64}$" }, "firstSeen": { "type": "string", "format": "date-time" } } } },
+          "internal": { "const": true },
+          "stagedFor": { "type": "string" },
+          "accounts": { "type": "object", "additionalProperties": { "type": "string" } },
+          "extensions": { "type": "array", "items": { "type": "object", "required": ["capability"],
+            "properties": { "capability": { "type": "string", "pattern": "^[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)+$" },
+              "keys": { "type": "array", "items": { "type": "object", "required": ["key"],
+                "properties": { "key": { "type": "string" }, "kind": { "enum": ["state", "event"] } } } } } } }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "standard": "applier",
+  "claims": ["Act"],
+  "start": { "command": "sh", "args": ["-c", "if [ -n \"$GALATEA_MUTATION\" ]; then echo \"exits on $GALATEA_MUTATION\"; exit 1; fi; exec node ../../../../sim/dist/applier/main.js"],
+             "ready": { "log": "ready" } },
+  "state_dir": false,
+  "mutations": ["plans-with-side-effect"]
+}

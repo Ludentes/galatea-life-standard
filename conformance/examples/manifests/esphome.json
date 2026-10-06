@@ -1,0 +1,12 @@
+{
+  "bridgeType": "esphome",
+  "name": "ESPHome",
+  "version": "0.1.0",
+  "connect": true,
+  "matchers": [
+    {
+      "source": "mdns",
+      "type": "_esphomelib._tcp.local."
+    }
+  ]
+}

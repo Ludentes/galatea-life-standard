@@ -1,0 +1,1 @@
+{ "targets": {}, "transports": [], "latches": [], "groups": { "hall-lights": { "on": "yes" } } }

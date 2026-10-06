@@ -1,0 +1,311 @@
+[
+  {
+    "id": "GA-VOICE-1",
+    "level": "MUST",
+    "conformance": "Listen",
+    "verify": "wire",
+    "text": "The front listens only on endpoints whose voice record names it in heard_by; it transcribes, keeps and passes on only what its effective setting admits, the pre-roll serving detection only, a tap window lasting the tap window, and an unconfirmed transcript at wake_server discarded unread; it counts frames read and discarded per endpoint in front_status",
+    "negative_subjects": [
+      {
+        "subject": "hears-before-the-tap",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-VOICE-2",
+    "level": "MUST",
+    "conformance": "Listen",
+    "verify": "wire",
+    "text": "The effective setting is the configured one narrowed by every narrowing in force and by what the front can do, never wider, and is reported with its reason in front_status within the status delay of a change",
+    "negative_subjects": [
+      {
+        "subject": "wider-than-configured",
+        "coupled": [
+          "GA-VOICE-1"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-VOICE-3",
+    "level": "MUST",
+    "conformance": "Listen",
+    "verify": "wire",
+    "text": "A narrowing, or any change that narrows the effective setting or removes an endpoint from the front, applies within the narrowing delay of the steward accepting it, an utterance in progress dropped unread; a front that has lost the steward never widens its last setting, kept across restarts, and with none listens nowhere",
+    "negative_subjects": [
+      {
+        "subject": "ignores-a-narrowing",
+        "coupled": [
+          "GA-VOICE-1",
+          "GA-VOICE-2",
+          "GA-VOICE-6"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-VOICE-4",
+    "level": "MUST",
+    "conformance": "Listen",
+    "verify": "wire",
+    "text": "Every wake check reads the endpoint's wake_words; an utterance is wake-addressed only when it begins with one, with no speech before it in the pre-roll, at wake_device an endpoint whose device does not declare that it sends the word's audio and at least the minimum pre-roll being no_model, and a wake without them unconfirmed; a word no model can check falls back to the transcript check at wake_server and to tap at wake_device, with the reason no_model",
+    "negative_subjects": [
+      {
+        "subject": "hardcoded-wake-word",
+        "coupled": [
+          "GA-VOICE-1",
+          "GA-VOICE-5",
+          "GA-VOICE-11"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-VOICE-5",
+    "level": "MUST",
+    "conformance": "Listen",
+    "verify": "wire",
+    "text": "Every utterance carries addressed_by, set by the front from what opened it, never taken from a device; a confirmed wake word gives wake, inside a window too; typed only for text typed at an app endpoint, phone speech addressed by what opened it; skill only for the turn opening a skill session, later turns follow_up",
+    "negative_subjects": [
+      {
+        "subject": "trusts-the-device",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-VOICE-6",
+    "level": "MUST",
+    "conformance": "Converse",
+    "verify": "wire",
+    "text": "A barge-in window opens only at the endpoint playing a reply in_reply_to an utterance, with effective follow_up on and effective listening wake_device or wider; a follow-up window opens only after the piece with invites_reply, in a reply in_reply_to an utterance of the conversation, played full, at endpoints of that zone with effective follow_up on and effective listening wake_device or wider, an app endpoint only for its own reply; it closes after the follow-up silence; a barge-in cuts playback only once the speech is not echo or machine; a conversation ends after the conversation span without a wake, tap, skill or typed turn",
+    "negative_subjects": [
+      {
+        "subject": "window-without-invitation",
+        "coupled": [
+          "GA-VOICE-1",
+          "GA-VOICE-5"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-VOICE-7",
+    "level": "MUST",
+    "conformance": "Zone",
+    "verify": "wire",
+    "text": "Copies merge when, and only when, their intervals overlap, every pair of transcripts reaches the merge agreement, each is kept, and every endpoint is served by one brain whose front_version is 0.5 or later; a merged utterance has one id across the zone, and each endpoint keeps its own addressed_by, hint and basis",
+    "negative_subjects": [
+      {
+        "subject": "merges-by-time",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-VOICE-8",
+    "level": "MUST",
+    "conformance": "Listen",
+    "verify": "wire",
+    "text": "An utterance is echo when, and only when, its interval overlaps a playback the front made anywhere in the home and its transcript reaches the echo match against the text playing then, at every device the front serves, a reply handed to a skill vendor playing for the announce hold from hand-over; an utterance overlapping one marked echo at any other device in the home and reaching the merge agreement with it is an echo, whatever its length; otherwise an utterance under the echo minimum that does not begin with a wake word is never an echo; overlap is decided on the front's clock, never from two machines' timestamps; every new mapping of that clock to wall time counts up clock_epoch, never reused, restarts included",
+    "negative_subjects": [
+      {
+        "subject": "overlap-is-echo",
+        "coupled": [
+          "GA-VOICE-9",
+          "GA-VOICE-11"
+        ]
+      },
+      {
+        "subject": "never-marks-echo",
+        "coupled": [
+          "GA-VOICE-6",
+          "GA-VOICE-11"
+        ]
+      },
+      {
+        "subject": "reuses-an-epoch",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-VOICE-9",
+    "level": "MUST",
+    "conformance": "Listen",
+    "verify": "wire",
+    "text": "An utterance is source: machine when, and only when, its interval overlaps speech or an announcement the steward reported to the front by the time it delivers the utterance and its transcript reaches the echo match against that text; an utterance under the echo minimum that does not begin with a wake word is never marked; an audio utterance that begins with a wake word or has at least the echo minimum of words is held until the source delay after its speech began",
+    "negative_subjects": [
+      {
+        "subject": "never-marks-machine",
+        "coupled": [
+          "GA-VOICE-11"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-VOICE-10",
+    "level": "MUST",
+    "conformance": "Listen",
+    "verify": "wire",
+    "text": "Every piece of speech is reported played (full, cut with heard_chars, or dropped) within the report delay of its end or drop, with ended_at on the front's clock, a piece cut by a barge-in or a wake word before the utterance that cut it, naming it in cut_by, a piece for an endpoint with no output dropped, the first piece of a reply with latency_ms; hush stops the named speech and drops its queued pieces",
+    "negative_subjects": [
+      {
+        "subject": "never-reports-played",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-VOICE-11",
+    "level": "MUST",
+    "conformance": "Listen",
+    "verify": "wire",
+    "text": "The front speaks no words but the brain's say text and the installation's fixed clips; at an endpoint with output: speech, it plays «Не могу ответить» once for a wake, tap or typed utterance that is no echo or machine and that, by the failure bound plus the clip slack after its available_at, has no reply (a piece dropped for wake_word not counting), no reply to an utterance in its zone that overlaps it or has the same normalised transcript within the arbitration window, and no hush; a later reply is still played",
+    "negative_subjects": [
+      {
+        "subject": "speaks-its-own-mind",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-VOICE-12",
+    "level": "MUST",
+    "conformance": "Listen",
+    "verify": "wire",
+    "text": "The front sends speaking { endpoint, on } to the steward within the report delay of starting and stopping speaking at an endpoint, and on: true again at least every half duck limit while it speaks",
+    "negative_subjects": [
+      {
+        "subject": "silent-speaker",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-VOICE-13",
+    "level": "MUST",
+    "conformance": "Listen",
+    "verify": "wire",
+    "text": "Device links are encrypted (the ESPHome native API's encryption, or a WebSocket over TLS) unless on one host's loopback, and each device key is bound to one endpoint",
+    "negative_subjects": [
+      {
+        "subject": "plaintext-link",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-VOICE-14",
+    "level": "MUST",
+    "conformance": "Listen",
+    "verify": "wire",
+    "text": "speaker_hint is sent only with hint_basis: gate from a declared gate model enrolled on the box on that person's voice, person only at an endpoint whose own person it names",
+    "negative_subjects": [
+      {
+        "subject": "hint-without-basis",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-VOICE-15",
+    "level": "MUST",
+    "conformance": "Listen",
+    "verify": "judged",
+    "text": "No captured audio and no model enrolled on a person's voice leaves the box; audio is kept only of delivered utterances and no longer than the home's audio_retention_s, none by default; a person's enrolled voice is deleted within the status delay of the steward no longer listing the person",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-VOICE-16",
+    "level": "MUST",
+    "conformance": "Listen",
+    "verify": "wire",
+    "text": "The skill ingress is served over TLS the vendor validates, authenticates every request as the vendor's and by the vendor's means or otherwise a secret address, one per skill_account; delivers text only at an endpoint of the authenticated account, the one whose skill_surface is the request's or, where the account names no surface, its one endpoint, else answers «Не могу ответить»; hands over the pieces that arrived before the hand-over, joined with a space, at final or at the deadline less the margin it declares in front_status under skills, at most half the deadline, a later piece dropped late; keeps a vendor session open only where the endpoint's effective follow_up is on; where that endpoint's effective listening is off it delivers nothing and answers «Не могу ответить»; with no reply by the hand-over, it answers «Не успела ответить» and reports a later reply dropped",
+    "negative_subjects": [
+      {
+        "subject": "open-skill-ingress",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-VOICE-17",
+    "level": "MUST",
+    "conformance": "Listen",
+    "verify": "wire",
+    "text": "A device link is authenticated, whichever end dialled, before a frame is read; an unauthenticated link has nothing loaded or transcribed and is closed after the admission timeout",
+    "negative_subjects": [
+      {
+        "subject": "reads-before-admission",
+        "coupled": [
+          "GA-VOICE-1"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-VOICE-18",
+    "level": "MUST",
+    "conformance": "Listen",
+    "verify": "static",
+    "text": "Each declared model's measured numbers are present, in the procedure's shape: for a wake model recall and false wakes an hour on named pools, for a gate model its person, recall and false accepts, for both the cutoff and its calibration pool",
+    "negative_subjects": [
+      {
+        "subject": "undeclared-numbers",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-VOICE-19",
+    "level": "MUST",
+    "conformance": "Listen",
+    "verify": "wire",
+    "text": "An utterance is delivered only to the brain the endpoint's served_by names, authenticated by its credential, and say and hush are taken from a brain only for endpoints it serves; a caller with no brain's credential gets nothing and speaks nowhere",
+    "negative_subjects": [
+      {
+        "subject": "tells-every-brain",
+        "coupled": [
+          "GA-VOICE-7"
+        ]
+      },
+      {
+        "subject": "serves-any-caller",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-VOICE-20",
+    "level": "MUST",
+    "conformance": "Listen",
+    "verify": "wire",
+    "text": "No piece, clip or skill response whose normalised text contains, as whole words, a wake word of any endpoint or one of the home's other_wake_words is played; it is reported dropped with reason: wake_word",
+    "negative_subjects": [
+      {
+        "subject": "says-the-wake-word",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-VOICE-21",
+    "level": "MUST",
+    "conformance": "Listen",
+    "verify": "wire",
+    "text": "The front serves listen, say and hush at MCP protocol revision 2026-07-28, answering no revision but that one, 2025-06-18 and 2025-11-25; it reaches the steward at 2026-07-28 where the steward serves it, and falls back, to one of those two only, for a steward that does not",
+    "negative_subjects": [
+      {
+        "subject": "speaks-only-2025",
+        "coupled": []
+      },
+      {
+        "subject": "calls-the-steward-at-2025",
+        "coupled": []
+      }
+    ]
+  }
+]

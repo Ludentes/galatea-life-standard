@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/configure.bridge.json",
+  "title": "A configure change's value for kind bridge (provisional until the standard names the shape). The id is at most 32 characters, so every device id it prefixes fits the standard's 128; the identity is an MQTT topic level: no `+`, `#` or `/`",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "identity"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9-]{1,32}$" },
+    "identity": { "type": "string", "pattern": "^[A-Za-z0-9._:-]{1,128}$" }
+  }
+}

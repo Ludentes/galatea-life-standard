@@ -1,0 +1,1 @@
+{ "requestId": "r8", "op": "protocolResult", "device": "lamp", "result": "refused", "reason": "refused", "detail": "UNSUP_COMMAND" }

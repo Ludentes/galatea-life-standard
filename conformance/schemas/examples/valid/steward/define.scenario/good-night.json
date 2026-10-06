@@ -1,0 +1,7 @@
+{ "id": "good-night", "name": "Спокойной ночи", "mode": "single", "owned": ["hall-lights"], "steps": [
+  { "target": "hall-lights", "action": "onoff.turn_off", "args": {} },
+  { "if": { "target": "sim-bridge:thermo", "key": "temperature", "op": "lt", "value": 19 },
+    "then": [{ "target": "sim-bridge:heater", "action": "onoff.turn_on", "args": {}, "respect_occupancy": true }],
+    "else": [{ "delay": 30 }] },
+  { "wait": { "target": "sim-bridge:door", "key": "opening", "value": false, "timeout_s": 300, "on_timeout": "continue" } },
+  { "run": "lock-up" } ] }

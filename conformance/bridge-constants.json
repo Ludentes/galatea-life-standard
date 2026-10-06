@@ -1,0 +1,452 @@
+[
+  {
+    "key": "status-interval",
+    "name": "Status interval",
+    "value": "at most 10 s; within 1 s of a transport or observable change",
+    "number": 10,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-BRIDGE-17; a deployed fleet's"
+  },
+  {
+    "key": "bridge-dead-after",
+    "name": "Bridge dead after",
+    "value": "30 s without a status, or its will, or a graceful offline",
+    "number": 30,
+    "unit": "s",
+    "guess": false,
+    "where": "*Liveness*; GA-STATE-2; a deployed fleet's"
+  },
+  {
+    "key": "keepalive",
+    "name": "Keepalive",
+    "value": "at most 10 s",
+    "number": 10,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-BRIDGE-18; a deployed fleet's"
+  },
+  {
+    "key": "poll-bound",
+    "name": "Poll bound",
+    "value": "basisMaxAgeMs at most 3 × cadenceMs",
+    "number": 3,
+    "unit": null,
+    "guess": false,
+    "where": "GA-BRIDGE-13; a deployed fleet's"
+  },
+  {
+    "key": "box-grant-withdrawn-after-it-stops-passing",
+    "name": "Box grant withdrawn after it stops passing",
+    "value": "60 s",
+    "number": 60,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-BOX-2 ⚠️ a guess"
+  },
+  {
+    "key": "broker-delivery-allowance-in-the-harness",
+    "name": "Broker delivery allowance in the harness",
+    "value": "measured on its own probes",
+    "number": null,
+    "unit": null,
+    "guess": false,
+    "where": "GA-BRIDGE-4, GA-BRIDGE-6; added to every 1 s bound"
+  },
+  {
+    "key": "matter-controller-s-slack",
+    "name": "Matter controller's slack",
+    "value": "about 38.5 s, added to the granted maximum interval",
+    "number": 38.5,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-BRIDGE-13 ⚠️ one bench"
+  },
+  {
+    "key": "will-delay-interval",
+    "name": "Will Delay Interval",
+    "value": "0",
+    "number": 0,
+    "unit": null,
+    "guess": false,
+    "where": "*The will*; a delay would stretch the 30 s death"
+  },
+  {
+    "key": "binding-tables-re-read",
+    "name": "Binding tables re-read",
+    "value": "at least every 24 h",
+    "number": 24,
+    "unit": "h",
+    "guess": true,
+    "where": "GA-BRIDGE-14 ⚠️ a guess"
+  },
+  {
+    "key": "devices-re-published-after-a-setting-changes-a-declaration",
+    "name": "devices re-published after a setting changes a declaration",
+    "value": "within 1 s, before the setting's new value",
+    "number": 1,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-BRIDGE-74"
+  },
+  {
+    "key": "devices-re-published-after-an-awaited-key-s-first-report",
+    "name": "devices re-published after an awaited key's first report",
+    "value": "within 1 s (⚠️ a guess for a loaded box), before its first value",
+    "number": 1,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-BRIDGE-80"
+  },
+  {
+    "key": "one-occurrence-a-repeated-frame",
+    "name": "One occurrence: a repeated frame",
+    "value": "the same transaction and payload within 10 s",
+    "number": 10,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-BRIDGE-75 ⚠️ a guess"
+  },
+  {
+    "key": "duplicate-request-window",
+    "name": "Duplicate request window",
+    "value": "10 s",
+    "number": 10,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-BRIDGE-4"
+  },
+  {
+    "key": "reply-and-fast-ack-within",
+    "name": "Reply and fast ack within",
+    "value": "1 s; snapshot 10 s",
+    "number": 1,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-BRIDGE-4, GA-BRIDGE-6, GA-BRIDGE-30 ⚠️ a guess for a loaded box"
+  },
+  {
+    "key": "device-status-published",
+    "name": "Device status published",
+    "value": "within 1 s of a report",
+    "number": 1,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-BRIDGE-37"
+  },
+  {
+    "key": "clock-ahead-of-true-time",
+    "name": "Clock ahead of true time",
+    "value": "at most 1 s",
+    "number": 1,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-BRIDGE-3"
+  },
+  {
+    "key": "longest-reach-for-an-action",
+    "name": "Longest reach for an action",
+    "value": "145 s",
+    "number": 145,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-BRIDGE-7 ⚠️ twice it plus 10 s fits the applier's longest ack bound, 300 s; not measured"
+  },
+  {
+    "key": "transport-up-window",
+    "name": "Transport up window",
+    "value": "30 s",
+    "number": 30,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-BRIDGE-23 ⚠️ a guess"
+  },
+  {
+    "key": "health-exchange-when-quiet",
+    "name": "Health exchange when quiet",
+    "value": "at least every 10 s",
+    "number": 10,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-BRIDGE-23 ⚠️ a guess"
+  },
+  {
+    "key": "reconnection-backoff-ceiling",
+    "name": "Reconnection backoff ceiling",
+    "value": "at least 60 s, reached within 180 s",
+    "number": 60,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-BRIDGE-11; a deployed fleet's"
+  },
+  {
+    "key": "zigbee-join-window-cap",
+    "name": "Zigbee join window cap",
+    "value": "254 s",
+    "number": 254,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-BRIDGE-25"
+  },
+  {
+    "key": "command-message-expiry",
+    "name": "Command Message Expiry",
+    "value": "resultWithinMs",
+    "number": null,
+    "unit": null,
+    "guess": false,
+    "where": "*The MQTT binding*"
+  },
+  {
+    "key": "other-requests-message-expiry",
+    "name": "Other requests' Message Expiry",
+    "value": "10 s",
+    "number": 10,
+    "unit": "s",
+    "guess": false,
+    "where": "*The MQTT binding*"
+  },
+  {
+    "key": "issuedat-discard-optional",
+    "name": "issuedAt discard, optional",
+    "value": "120 s",
+    "number": 120,
+    "unit": "s",
+    "guess": false,
+    "where": "*Commands*: a command that old was asked for a moment that has passed"
+  },
+  {
+    "key": "the-applier-s-fast-clock-tolerance",
+    "name": "The applier's fast-clock tolerance",
+    "value": "5 s",
+    "number": 5,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-BUS-2 ⚠️ a guess"
+  },
+  {
+    "key": "the-finder-s-status-interval",
+    "name": "The finder's status interval",
+    "value": "at most 10 s; within 1 s of a source's change",
+    "number": 10,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-FIND-1"
+  },
+  {
+    "key": "candidates-re-published",
+    "name": "Candidates re-published",
+    "value": "within 1 s of a change, at most once a second",
+    "number": 1,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-FIND-4"
+  },
+  {
+    "key": "a-candidate-unheard-is-dropped-after",
+    "name": "A candidate unheard is dropped after",
+    "value": "7 days",
+    "number": 7,
+    "unit": "days",
+    "guess": true,
+    "where": "GA-FIND-4 ⚠️ a guess"
+  },
+  {
+    "key": "mdns-questions-and-m-search-repeated",
+    "name": "mDNS questions and M-SEARCH repeated",
+    "value": "at least once an hour",
+    "number": null,
+    "unit": null,
+    "guess": true,
+    "where": "GA-FIND-4 ⚠️ a guess"
+  },
+  {
+    "key": "candidates-kept",
+    "name": "Candidates kept",
+    "value": "at most 512",
+    "number": 512,
+    "unit": null,
+    "guess": true,
+    "where": "GA-FIND-4 ⚠️ a guess"
+  },
+  {
+    "key": "a-new-lastseen-alone-published",
+    "name": "A new lastSeen alone published",
+    "value": "within an hour",
+    "number": null,
+    "unit": null,
+    "guess": true,
+    "where": "GA-FIND-4 ⚠️ a guess"
+  },
+  {
+    "key": "a-connect-ends-within",
+    "name": "A connect ends within",
+    "value": "60 s of its receipt",
+    "number": 60,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-BRIDGE-40 ⚠️ a guess"
+  },
+  {
+    "key": "a-pc-s-own-host-observed",
+    "name": "A PC's own host observed",
+    "value": "at least every 10 s; bound 30 s",
+    "number": 10,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-BRIDGE-37, GA-BRIDGE-13"
+  },
+  {
+    "key": "a-plugin-device-s-bound",
+    "name": "A plugin device's bound",
+    "value": "3 × its manifest's cadenceMs",
+    "number": 3,
+    "unit": null,
+    "guess": false,
+    "where": "GA-BRIDGE-13"
+  },
+  {
+    "key": "a-session-s-idle-threshold",
+    "name": "A session's idle threshold",
+    "value": "300 s by default, the bridge's own setting",
+    "number": 300,
+    "unit": "s",
+    "guess": false,
+    "where": "*Sessions*"
+  },
+  {
+    "key": "a-pc-s-administrators-re-read",
+    "name": "A PC's administrators re-read",
+    "value": "at least every 24 h, beside the OS's change reports",
+    "number": 24,
+    "unit": "h",
+    "guess": true,
+    "where": "GA-BRIDGE-53 ⚠️ a guess, as for binding tables"
+  },
+  {
+    "key": "an-install-ends-within",
+    "name": "An install ends within",
+    "value": "600 s of its accepted",
+    "number": 600,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-BRIDGE-68 ⚠️ a guess"
+  },
+  {
+    "key": "a-plugin-s-cadencems",
+    "name": "A plugin's cadenceMs",
+    "value": "at most 300 000 ms",
+    "number": 300,
+    "unit": null,
+    "guess": true,
+    "where": "GA-BRIDGE-68 ⚠️ a guess"
+  },
+  {
+    "key": "a-plugin-server-s-answer",
+    "name": "A plugin server's answer",
+    "value": "within 10 s, to a state read or a probe (ping, or server/discover from MCP 2026-07-28), once it has served",
+    "number": 10,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-BRIDGE-58 ⚠️ a guess"
+  },
+  {
+    "key": "a-plugin-server-probed",
+    "name": "A plugin server probed",
+    "value": "at least every 10 s when no state read has passed",
+    "number": 10,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-BRIDGE-58 ⚠️ a guess"
+  },
+  {
+    "key": "a-plugin-server-s-start",
+    "name": "A plugin server's start",
+    "value": "has served within 120 s of its start",
+    "number": 120,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-BRIDGE-58 ⚠️ a guess"
+  },
+  {
+    "key": "a-plugin-device-read-after-a-start-or-a-resume",
+    "name": "A plugin device read after a start or a resume",
+    "value": "within 10 s of the server having started, or of the first status after resuming",
+    "number": 10,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-BRIDGE-60 ⚠️ a guess"
+  },
+  {
+    "key": "a-plugin-server-s-restart-backoff",
+    "name": "A plugin server's restart backoff",
+    "value": "ceiling at least 60 s, reached within 180 s, and at most 300 s; timed on a clock that stops in suspend",
+    "number": 60,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-BRIDGE-58 ⚠️ a guess, as GA-BRIDGE-11's; the maximum ⚠️ a guess"
+  },
+  {
+    "key": "a-failed-plugin-state-read-after-a-start-or-a-resume-retried",
+    "name": "A failed plugin state read after a start or a resume retried",
+    "value": "at least every 10 s until one succeeds",
+    "number": 10,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-BRIDGE-60 ⚠️ a guess"
+  },
+  {
+    "key": "a-plugin-device-read-after-a-successful-tool-call",
+    "name": "A plugin device read after a successful tool call",
+    "value": "within 1 s of the tool's result, beside the late read-back",
+    "number": 1,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-BRIDGE-51 ⚠️ a guess"
+  },
+  {
+    "key": "clock-step-awaited-on-resume",
+    "name": "Clock step awaited on resume",
+    "value": "at most 10 s",
+    "number": 10,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-BRIDGE-59 ⚠️ a guess"
+  },
+  {
+    "key": "a-session-reported-locked-after-a-session-lock",
+    "name": "A session reported locked after a session.lock",
+    "value": "within 5 s of the request, else failed(not_locked)",
+    "number": 5,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-BRIDGE-66 ⚠️ a guess"
+  },
+  {
+    "key": "a-plugin-server-s-failed-starts-before-a-fault",
+    "name": "A plugin server's failed starts before a fault",
+    "value": "5 in a row",
+    "number": 5,
+    "unit": null,
+    "guess": true,
+    "where": "GA-BRIDGE-58 ⚠️ a guess"
+  },
+  {
+    "key": "a-plugin-device-published-available-true",
+    "name": "A plugin device published available: true",
+    "value": "within 1 s of its server having served, after the activation and every restart",
+    "number": 1,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-BRIDGE-58 ⚠️ a guess"
+  },
+  {
+    "key": "wake-relay-s-gateway-arp",
+    "name": "Wake relay's gateway ARP",
+    "value": "answered within the last 30 s; at least every 10 s",
+    "number": 30,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-BRIDGE-55, GA-BRIDGE-23 ⚠️ a guess, as the transport window is"
+  }
+]

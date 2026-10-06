@@ -1,0 +1,4 @@
+{ "steward_id": "demo-steward", "standard_version": "0.9", "revision": 3, "home": { "timezone": "Europe/Moscow" },
+  "rooms": [], "targets": [], "groups": [], "endpoints": [], "persons": [{ "id": "owner", "name": "Owner", "role": "owner" }],
+  "scenarios": [], "rules": [], "schedules": [], "modes": ["single"],
+  "applier": { "applier_id": "sim-applier", "levels": ["Act"], "ungoverned": [] } }

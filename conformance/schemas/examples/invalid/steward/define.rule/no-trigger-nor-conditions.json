@@ -1,0 +1,1 @@
+{ "id": "idle", "name": "Ничего", "actions": [{ "target": "sim-bridge:lamp", "action": "onoff.turn_off", "args": {} }] }

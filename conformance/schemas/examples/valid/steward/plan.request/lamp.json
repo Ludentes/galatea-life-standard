@@ -1,0 +1,1 @@
+{ "endpoint": "demo-panel", "actions": [{ "target": "sim-bridge:lamp", "action": "onoff.turn_on", "args": {} }] }

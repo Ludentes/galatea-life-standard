@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/configure.max_on_s.json",
+  "title": "A configure change's value for kind max_on_s (provisional until the standard names the shape)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["device", "max_on_s"],
+  "properties": {
+    "device": { "type": "string", "minLength": 1 },
+    "max_on_s": { "type": "number", "exclusiveMinimum": 0 }
+  }
+}

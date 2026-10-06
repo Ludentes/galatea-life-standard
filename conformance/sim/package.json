@@ -1,0 +1,37 @@
+{
+  "name": "@ludentes/galatea-life-sim",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ludentes/galatea-life-standard.git",
+    "directory": "conformance/sim"
+  },
+  "files": [
+    "dist",
+    "subjects"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ludentes/galatea-life-binding": "workspace:*",
+    "@ludentes/galatea-life-schemas": "workspace:*",
+    "@ludentes/galatea-life-test-clock": "workspace:*",
+    "@modelcontextprotocol/node": "2.1.0",
+    "@modelcontextprotocol/server": "2.2.0",
+    "mqtt": "5.16.0"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.2.0"
+  }
+}

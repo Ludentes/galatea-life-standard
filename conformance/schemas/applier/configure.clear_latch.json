@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/configure.clear_latch.json",
+  "title": "A configure change's value for kind clear_latch: the safety rule whose held latch the owner clears, for a sensor that will never report again (provisional until the standard names the shape)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["rule_id"],
+  "properties": {
+    "rule_id": { "type": "string", "minLength": 1 }
+  }
+}

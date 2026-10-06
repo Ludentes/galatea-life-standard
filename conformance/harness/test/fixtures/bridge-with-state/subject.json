@@ -1,0 +1,7 @@
+{
+  "standard": "bridge",
+  "claims": ["Serve"],
+  "start": { "command": "sh", "args": ["-c", "echo \"$GALATEA_STATE_DIR\" >> \"$FIXTURE_STATE_FILE\"; exec node ../../../../sim/dist/bridge/main.js"],
+             "ready": { "log": "ready" } },
+  "state_dir": true
+}

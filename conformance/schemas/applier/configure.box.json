@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/configure.box.json",
+  "title": "A configure change's value for kind box: the owner's word that the box passes GA-BOX-1 (provisional until the standard names the shape)",
+  "type": "boolean"
+}

@@ -1,0 +1,7 @@
+{
+  "standard": "applier",
+  "claims": ["Act"],
+  "start": { "command": "node", "args": ["../../../../sim/dist/applier/main.js"], "ready": { "log": "ready" } },
+  "database": { "migrate": { "command": "node", "args": ["migrate.mjs"] } },
+  "mutations": ["speaks-only-2025"]
+}

@@ -1,0 +1,7 @@
+{
+  "standard": "applier",
+  "claims": ["Act"],
+  "start": { "command": "sh", "args": ["-c", "node ../../../../sim/dist/applier/main.js & P=$!; (while [ ! -e \"$FIXTURE_EXIT_FILE\" ]; do sleep 0.05; done; kill -9 $P) & wait $P"],
+             "ready": { "log": "ready" } },
+  "state_dir": false
+}

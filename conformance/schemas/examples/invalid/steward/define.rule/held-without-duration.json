@@ -1,0 +1,6 @@
+{
+  "id": "unheld",
+  "name": "Без длительности",
+  "trigger": { "held": { "target": "sim-bridge:motion", "key": "motion", "op": "eq", "value": false } },
+  "actions": [{ "target": "sim-bridge:lamp", "action": "onoff.turn_off", "args": {} }]
+}

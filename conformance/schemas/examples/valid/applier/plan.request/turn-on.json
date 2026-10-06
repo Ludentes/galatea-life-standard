@@ -1,0 +1,2 @@
+{ "actions": [{ "target": "sim-bridge:lamp", "action": "onoff.turn_on", "args": {}, "via": "app",
+  "brain": false, "for": { "person": "demo" } }] }

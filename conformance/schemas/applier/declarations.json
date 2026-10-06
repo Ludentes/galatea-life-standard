@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/declarations.json",
+  "title": "A device's declarations, in adopt and as the configure kinds set them (provisional until the standard names the shape)",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "tiers": { "type": "object", "propertyNames": { "$ref": "../common.json#/$defs/action" },
+      "additionalProperties": { "$ref": "../common.json#/$defs/tier" } },
+    "load": { "$ref": "../common.json#/$defs/load" },
+    "max_on_s": { "type": "number", "exclusiveMinimum": 0 },
+    "infrastructure": { "type": "boolean" },
+    "fresh_s": { "type": "number", "exclusiveMinimum": 0 },
+    "ack_within_s": { "type": "object", "propertyNames": { "$ref": "../common.json#/$defs/action" },
+      "additionalProperties": { "type": "number" } },
+    "self_changing": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "personal": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "opens_with": { "enum": ["onoff.turn_on", "onoff.turn_off"] }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/configure.client.json",
+  "title": "A configure change's value for kind client (provisional until the standard names the shape)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "credential", "kind"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "credential": { "type": "string", "minLength": 8 },
+    "kind": { "enum": ["steward", "parent"] },
+    "token_key": { "type": "string", "minLength": 16 }
+  }
+}

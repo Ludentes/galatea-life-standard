@@ -1,0 +1,1 @@
+{ "requestId": "r3", "op": "occur", "device": "bed", "key": "org.galatea.test.vibration.alarm", "value": true, "frameId": "tsn-17", "observedAt": "2030-01-01T08:00:02.000Z" }

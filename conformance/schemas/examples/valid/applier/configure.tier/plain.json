@@ -1,0 +1,1 @@
+{ "device": "hall:lamp", "action": "onoff.turn_on", "tier": "confirm" }

@@ -1,0 +1,11 @@
+{
+  "bridgeType": "tuya",
+  "name": "Tuya",
+  "version": "0.1.0",
+  "connect": false,
+  "matchers": [
+    {
+      "source": "dhcp"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{ "requestId": "r1", "op": "describe", "device": "pusher",
+  "entry": { "capabilities": [], "feedback": "closed",
+    "extensions": [{ "capability": "org.galatea.test.pusher", "description": "A button pusher's mode",
+      "actions": [{ "action": "org.galatea.test.pusher.set_mode", "description": "Sets the mode", "schema": { "enum": ["click", "switch"] } }],
+      "keys": [{ "key": "org.galatea.test.pusher.mode", "kind": "state", "description": "The mode", "schema": { "enum": ["click", "switch"] } }] }] },
+  "bySetting": { "key": "org.galatea.test.pusher.mode", "entries": { "click": { "capabilities": ["onoff"] } } } }

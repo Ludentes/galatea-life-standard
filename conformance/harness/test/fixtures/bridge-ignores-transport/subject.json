@@ -1,0 +1,7 @@
+{
+  "standard": "bridge",
+  "claims": ["Serve"],
+  "start": { "command": "sh", "args": ["-c", "GALATEA_TEST_TRANSPORT=demo/elsewhere/control exec node ../../../../sim/dist/bridge/main.js"],
+             "ready": { "log": "ready" } },
+  "state_dir": false
+}

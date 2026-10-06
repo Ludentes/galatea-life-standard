@@ -1,0 +1,1 @@
+{ "requestId": "r11", "op": "reporting", "device": "leak", "configuredMs": [300000, 3600000], "modelMs": null }

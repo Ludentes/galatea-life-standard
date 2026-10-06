@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/configure.route.json",
+  "title": "A configure change's value for kind route: the bridge that carries a stable identifier two bridges report (applier, *configure*, GA-BUS-11). Provisional until the standard names the shape; a delete names the identifier alone",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["stable_identifier", "bridge"],
+  "properties": {
+    "stable_identifier": { "type": "string", "minLength": 1 },
+    "bridge": { "type": "string", "pattern": "^[a-z0-9-]{1,32}$" }
+  }
+}

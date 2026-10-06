@@ -1,0 +1,2 @@
+{ "endpoint": "demo-panel", "speaker": "demo", "actions": [{ "selector": { "room": "kitchen", "capability": "onoff" },
+  "action": "onoff.turn_off", "args": {} }] }

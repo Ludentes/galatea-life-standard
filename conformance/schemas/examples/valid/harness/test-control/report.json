@@ -1,0 +1,2 @@
+{ "requestId": "c1", "op": "report", "device": "lamp", "values": { "on": true },
+  "observedAt": "2026-09-27T10:00:00.000Z" }

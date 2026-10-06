@@ -1,0 +1,3 @@
+{ "steward_id": "demo-steward", "standard_version": "0.7", "revision": 12, "home": { "name": "demo" },
+  "rooms": [], "targets": [], "groups": [], "endpoints": [], "scenarios": [], "rules": [], "schedules": [],
+  "modes": [], "applier": { "applier_id": "sim-applier", "levels": ["Act"], "ungoverned": [] }, "test_run_id": "run-1" }

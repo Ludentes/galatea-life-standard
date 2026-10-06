@@ -1,0 +1,6 @@
+{
+  "standard": "applier",
+  "claims": ["Act"],
+  "start": { "command": "node", "args": ["dist/main.js"], "ready": { "log": "ready on " } },
+  "database": { "migrate": { "command": "node", "args": ["dist/migrate-main.js"] } }
+}

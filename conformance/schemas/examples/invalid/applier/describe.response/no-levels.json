@@ -1,0 +1,9 @@
+{ "applier_id": "sim-applier", "standard_version": "0.12", "revision": 3,
+  "descendants": [], "ungoverned": [], "box": null, "clients": [], "safety_rules": [], "children": [],
+  "test_run_id": "run-1",
+  "transports": [{ "id": "sim-bridge:test", "kind": "other", "up": true, "state": "up", "bridge": "sim-bridge" }],
+  "devices": [{ "id": "sim-bridge:lamp", "label": "lamp", "class": "light", "capabilities": ["onoff"],
+    "sensor_keys": [], "protocol": "other", "adopted": true, "feedback": "closed", "fresh_s": 60,
+    "fresh_slack_s": 11, "fresh_basis": "declared", "bridge_device": { "bridge": "sim-bridge", "id": "lamp" },
+    "actions": [{ "action": "onoff.turn_on", "tier": "reversible", "idempotent": true, "stateless": false,
+      "ack_within_s": 10, "confirms": true }] }] }

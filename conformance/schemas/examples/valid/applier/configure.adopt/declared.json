@@ -1,0 +1,1 @@
+{ "device": "hall:valve", "class": "water_valve", "declarations": { "opens_with": "onoff.turn_off" } }

@@ -1,0 +1,8 @@
+{
+  "standard": "applier",
+  "claims": ["Act"],
+  "start": { "command": "env", "args": ["-u", "GALATEA_TEST_RUN_ID", "node", "../../dist/applier/main.js"],
+             "ready": { "log": "ready" } },
+  "state_dir": false,
+  "mutations": []
+}

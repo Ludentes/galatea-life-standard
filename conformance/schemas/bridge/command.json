@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bridge/command.json",
+  "title": "A command on {root}/bridges/{b}/devices/{d}/command",
+  "type": "object",
+  "required": ["commandId", "issuedAt", "resultWithinMs", "value"],
+  "properties": {
+    "commandId": { "$ref": "../common.json#/$defs/uuid" },
+    "issuedAt": { "$ref": "../common.json#/$defs/wireTime" },
+    "resultWithinMs": { "type": "integer", "minimum": 0 },
+    "value": {
+      "type": "object",
+      "required": ["action"],
+      "properties": {
+        "action": { "anyOf": [{ "$ref": "../common.json#/$defs/action" }, { "$ref": "../common.json#/$defs/extensionAction" }] },
+        "value": {},
+        "state": { "type": "object" }
+      }
+    }
+  }
+}

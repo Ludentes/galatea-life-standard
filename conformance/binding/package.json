@@ -1,0 +1,27 @@
+{
+  "name": "@ludentes/galatea-life-binding",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ludentes/galatea-life-standard.git",
+    "directory": "conformance/binding"
+  },
+  "files": [
+    "dist",
+    "vectors"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./vectors/token.json": "./vectors/token.json"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  }
+}

@@ -1,0 +1,2 @@
+{ "id": "welcome", "name": "Встреча", "trigger": { "event": { "target": "sim-bridge:door", "type": "occurrence", "key": "opening", "value": true } },
+  "actions": [{ "scenario": "welcome-home" }, { "target": "sim-bridge:lamp", "action": "onoff.turn_on", "args": {} }] }

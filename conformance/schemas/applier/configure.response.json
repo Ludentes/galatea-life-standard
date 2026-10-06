@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/configure.response.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "revision": { "type": "integer" },
+    "diff": { "type": "string" }
+  },
+  "anyOf": [{ "required": ["revision"] }, { "required": ["diff"] }]
+}

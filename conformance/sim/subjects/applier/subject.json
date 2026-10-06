@@ -1,0 +1,7 @@
+{
+  "standard": "applier",
+  "claims": ["Act"],
+  "start": { "command": "node", "args": ["../../dist/applier/main.js"], "ready": { "log": "ready" } },
+  "state_dir": false,
+  "mutations": ["plans-with-side-effect", "speaks-only-2025"]
+}

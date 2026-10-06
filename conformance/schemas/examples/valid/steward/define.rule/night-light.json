@@ -1,0 +1,7 @@
+{
+  "id": "night-light-off",
+  "name": "Ночник гаснет сам",
+  "trigger": { "held": { "target": "sim-bridge:motion", "key": "motion", "op": "eq", "value": false, "for_s": 180 } },
+  "conditions": [{ "target": "sim-bridge:lamp", "key": "on", "op": "eq", "value": true }],
+  "actions": [{ "target": "sim-bridge:lamp", "action": "onoff.turn_off", "args": {} }]
+}

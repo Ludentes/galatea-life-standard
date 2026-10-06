@@ -1,0 +1,2 @@
+{ "changes": [{ "op": "upsert", "kind": "adopt", "value": { "device": "sim-bridge:lamp", "class": "light" } }],
+  "expected_revision": 2, "dry_run": false }

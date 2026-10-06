@@ -1,0 +1,1 @@
+{ "notice_id": "n-1", "cause": "bridge_fault", "devices": ["hall:lock"], "text": "The hall lock has no PIN for remote operation." }

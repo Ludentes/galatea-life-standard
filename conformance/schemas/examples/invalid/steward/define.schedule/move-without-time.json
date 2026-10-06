@@ -1,0 +1,1 @@
+{ "id": "wake", "scenario": "morning", "time": "07:00", "exceptions": [{ "date": "2030-01-07", "action": "move" }] }

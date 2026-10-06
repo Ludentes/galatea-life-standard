@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/configure.ack_within_s.json",
+  "title": "A configure change's value for kind ack_within_s (provisional until the standard names the shape)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["device", "action", "ack_within_s"],
+  "properties": {
+    "device": { "type": "string", "minLength": 1 },
+    "action": { "$ref": "../common.json#/$defs/action" },
+    "ack_within_s": { "type": "number" }
+  }
+}

@@ -1,0 +1,1737 @@
+[
+  {
+    "id": "GA-DESC-1",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "describe returns the device model valid against its schema, with standard_version, levels and revision",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-DESC-2",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "revision changes on every model change and never on a state change",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-DESC-3",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "static",
+    "text": "Every action on every device declares a tier no lower than the default table gives, loads, gate classes, infrastructure power, a computer's shutdown and extension actions included; configure only raises it, except an extension action, which it may lower to its floor, the higher of its requested_tier (where it has one) and the highest tier any row naming the device's class, a flag or its load gives any action (reversible where none names it), no_voice on a door_lock, water_valve, gas_valve, gate or garage_door and on a device whose host is a computer with infrastructure: true, and no lower (ruling 5); a computer with proposed_infrastructure takes the infrastructure: true rows until the owner sets the flag either way; a standard action on a hosted device takes the higher of its own row and its host's infrastructure: true or computer row for that action",
+    "negative_subjects": [
+      {
+        "subject": "extension-under-the-box",
+        "coupled": [
+          "GA-DESC-13"
+        ]
+      },
+      {
+        "subject": "sleeps-the-box-through-its-player",
+        "coupled": []
+      },
+      {
+        "subject": "sleeps-the-proposed-broker-host",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-DESC-4",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "static",
+    "text": "Every action on every device declares idempotency; notify, media.announce, power.shutdown and media.launch are never idempotent, and an extension action is not idempotent unless the owner declared it so at adoption, whatever its bridge or manifest says",
+    "negative_subjects": [
+      {
+        "subject": "trusts-a-plugins-idempotent",
+        "coupled": [
+          "GA-APPLY-6"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-DESC-5",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "static",
+    "text": "Every matter, zigbee or zwave device declares stable_identifier",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-DESC-6",
+    "level": "MUST",
+    "conformance": "Safe",
+    "verify": "static",
+    "text": "An adapter lists in ungoverned every way its engine changes a device unseen (not checked by the harness); an applier claiming Safe has an empty ungoverned of its own, and a path a bridge declares counts as its own; a child's is listed under that child; over bridges, it claims Safe only with describe.box true, which it refuses while its own broker connection is plain TCP off loopback",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-DESC-7",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "static",
+    "text": "Every ir device declares feedback: open",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-DESC-8",
+    "level": "MUST",
+    "conformance": "Safe",
+    "verify": "static",
+    "text": "An applier claiming Safe declares a load on every socket, and treats one never configured as heating",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-DESC-9",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "static",
+    "text": "A device's self_changing and personal hold every key this standard declares so (every computer key self_changing; app, camera_in_use, microphone_in_use and speech personal on every device that reports them, and a computer's session keys; a player's playing, title and started_at, and speech on every device that reports it, self_changing) and every key its bridge declares so, and internal every device its bridge declares so; configure adds to them and never removes one of these, except a key a plugin's manifest declares self_changing",
+    "negative_subjects": [
+      {
+        "subject": "drops-a-standard-declaration",
+        "coupled": []
+      },
+      {
+        "subject": "drops-a-plugins-camera",
+        "coupled": []
+      },
+      {
+        "subject": "removes-a-plugin-personal",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-DESC-10",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "configure refuses a wake_via naming a device that is not adopted, does not offer power.wake, or belongs to another applier than the computer, and a forget of a device a wake_via names; a computer declares power.wake exactly while it has a wake_via, the applier adding it with its default tier and ack_within_s and removing it",
+    "negative_subjects": [
+      {
+        "subject": "offers-no-wake",
+        "coupled": [
+          "GA-APPLY-12"
+        ]
+      },
+      {
+        "subject": "wakes-through-anything",
+        "coupled": []
+      },
+      {
+        "subject": "forgets-a-wake-path",
+        "coupled": []
+      },
+      {
+        "subject": "wakes-across-appliers",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-DESC-11",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "When a replacement changes an action's tool hash, argument schema or requested_tier, a tier the owner set for it below what its formula gives without the owner's value is dropped, and the action falls back to the formula until the owner sets it again; a tier the owner raised is kept; a replacement that lowers an action's requested_tier keeps the tier it had, as the owner's, until the owner deletes that value; the tool hash compared is the action's tool_hash, kept across restarts",
+    "negative_subjects": [
+      {
+        "subject": "lowers-by-a-new-manifest",
+        "coupled": []
+      },
+      {
+        "subject": "keeps-a-lowered-tier",
+        "coupled": []
+      },
+      {
+        "subject": "forgets-a-tool-hash",
+        "coupled": [
+          "GA-PERSIST-1"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-DESC-12",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "static",
+    "text": "An adapter maps an engine's entity to power or session only through its allowlist by the agent's model and unique_id pattern, lists the rest of what the engine can do to a computer in ungoverned, and maps no entity that runs arbitrary commands to any capability; whether the allowlist holds is not checked by the harness",
+    "negative_subjects": [
+      {
+        "subject": "maps-a-shell",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-DESC-13",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A configure change of a device's load or infrastructure re-applies *Default tiers* to its actions, and a computer's infrastructure to the actions of the devices it hosts, extension and standard, in the same change set, raising every tier now below its new floor to that floor; a tier at or above it is kept",
+    "negative_subjects": [
+      {
+        "subject": "keeps-a-tier-below-a-new-load",
+        "coupled": [
+          "GA-DESC-3"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-DESC-14",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "configure refuses an extension action's tier below its floor (*Default tiers*) with invalid_request, nothing changed, never clamping it to the floor",
+    "negative_subjects": [
+      {
+        "subject": "lowers-a-lock-extension",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-DESC-15",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "An owner's idempotent: true on a plugin's extension action falls back to false when a replacement changes the action's tool hash",
+    "negative_subjects": [
+      {
+        "subject": "keeps-an-idempotent-over-a-new-tool",
+        "coupled": [
+          "GA-APPLY-6"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-DESC-16",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A plugin device's replacement keeps in personal every key an earlier version's manifest declared so, and in self_changing every such key the owner has not removed, a removal standing across replacements until the owner adds the key again",
+    "negative_subjects": [
+      {
+        "subject": "drops-a-plugin-declaration",
+        "coupled": []
+      },
+      {
+        "subject": "restores-a-removed-self-changing",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-DESC-17",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A computer's session.lock declares account's args as the tokens its accounts lists, so a step naming any other token, a retired one included, is refuse(invalid_args) in a plan and never dispatched",
+    "negative_subjects": [
+      {
+        "subject": "locks-a-retired-account",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-DESC-18",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A bridge's devices that changes a known device's declarations (standard/bridge.md, *Declarations and settings*) is a model change with a model event naming the device; an undispatched step whose action's declarations changed is refused(declaration_changed); a dispatched action keeps its dispatch-time outcome rules and is re-sent only where old and new both say idempotent; an owner's idempotent: true and a tier the owner lowered on a changed action fall back",
+    "negative_subjects": [
+      {
+        "subject": "plans-on-a-stale-declaration",
+        "coupled": [
+          "GA-APPLY-2",
+          "GA-DESC-2"
+        ]
+      },
+      {
+        "subject": "dispatches-a-changed-step",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-DESC-19",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A bridge's device carries its bridge's awaitedKeys, undescribed and settings in describe as awaited_keys, undescribed and settings, a meta-applier's too, and relays the bridge's undescribed event as its own, once per name, a name it first meets in a devices it receives (live, or the retained one at connect) announced too, and which names it has announced kept across restarts; a change to awaited_keys or settings is a model change, as one of sensor_keys is, and a change to undescribed alone moves no revision",
+    "negative_subjects": [
+      {
+        "subject": "hides-awaited-keys",
+        "coupled": []
+      },
+      {
+        "subject": "drops-the-undescribed-event",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-STATE-1",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "Every state value carries the basis time of its observation, never the time of the response",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-STATE-2",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A bridged device reads dead within 1 s of its bridge going 30 s without a status, its will on lwt, or a graceful offline, its transport going down, the applier losing the broker, the bridge reporting it available: false, or its leaving devices or the roster or its retained status being cleared",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-STATE-3",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "An adapter calls its engine at least every 5 s; an engine 10 s unanswered or refusing connection makes every device it exposes dead within 1 s, live again when it answers; a device the engine has not yet loaded after its restart is dead until it has; a computer the engine marks unavailable is dead, not stale",
+    "negative_subjects": [
+      {
+        "subject": "unavailable-computer-reads-stale",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-STATE-4",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A feedback: open device's state is assumed, marked assumed: true wherever the applier gives it, and changes when an action ends sent or unanswered, never when one ends unreachable or failed; it is live while its bridge is alive and its transport up or unknown; any action on it ends sent, failed(reason) or unanswered, never acked or failed(no_ack); it is never already; a computer's power.wake sent through one ends as GA-APPLY-13 says",
+    "negative_subjects": [
+      {
+        "subject": "kills-a-mute-transmitters-devices",
+        "coupled": []
+      },
+      {
+        "subject": "assumes-a-failed-write",
+        "coupled": []
+      },
+      {
+        "subject": "forgets-the-unanswered",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-STATE-5",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A device past its effective fresh_s reads stale no later than 1 s after its fresh_s plus its fresh_slack_s (11 s for a bridged device), and MAY from its fresh_s, and one whose fresh_s is not known reads stale; an adapter gives a bound for every occupancy sensor or it reads stale; an adapter exposes an engine's sensor as occupancy only where its engine or the owner (configure) says it sees a person keeping still, and otherwise as motion; an adapter's computer whose engine's availability the adapter reads is live while the engine marks it available, with no time bound, and one whose availability it cannot read is refused adoption until the owner sets its fresh_s",
+    "negative_subjects": [
+      {
+        "subject": "live-before-known",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-STATE-6",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "An owner-set fresh_s is the effective bound, over a declared one or none",
+    "negative_subjects": [
+      {
+        "subject": "ignores-owner-bound",
+        "coupled": [
+          "GA-STATE-5"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-AUTH-3",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A request from a client not registered through configure, or whose registration a configure has removed, is not_permitted, at every MCP revision and whatever session it arrives in",
+    "negative_subjects": [
+      {
+        "subject": "session-outlives-revocation",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-TOKEN-1",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A confirm or no_voice action without a token is refuse(token) in a plan and refused(token) on apply",
+    "negative_subjects": [
+      {
+        "subject": "applies-without-token",
+        "coupled": [
+          "GA-TOKEN-2",
+          "GA-APPLY-9",
+          "GA-META-10",
+          "GA-SAFE-7"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-TOKEN-2",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A token for another target, action, args, via, brain or for, expired past the skew, expiring more than 300 s ahead, already used, issued by another client, or not verifiable with the sending client's key counts as no token",
+    "negative_subjects": [
+      {
+        "subject": "trusts-any-token",
+        "coupled": [
+          "GA-TOKEN-1",
+          "GA-APPLY-9",
+          "GA-META-10"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-TOKEN-3",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A no_voice action with via: voice or brain: true is refuse(tier), with or without a token",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-TOKEN-4",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A token is used only when its action is dispatched, and stays used whatever outcome follows; it is dispatched at most once, even by applies running at once; a used (issuer, token_id) is remembered until a persisted deadline 3600 s after use",
+    "negative_subjects": [
+      {
+        "subject": "reuses-token-after-late-unreachable",
+        "coupled": [
+          "GA-TOKEN-2"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-PLAN-1",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "plan changes nothing: state and events are identical before and after",
+    "negative_subjects": [
+      {
+        "subject": "plans-with-side-effect",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-PLAN-2",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "One step per distinct target, action, args, via, brain, for and token; an unknown target is skip(unknown_target), never an error",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-PLAN-3",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "Each step says real or emulated",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-PLAN-4",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "When several reasons apply, the first in the fixed order is reported; for power.wake on a computer, dead is its wake_via device's, already is the computer being live, and already is evaluated before dead, at plan and at dispatch",
+    "negative_subjects": [
+      {
+        "subject": "skips-a-live-wake-as-dead",
+        "coupled": [
+          "GA-APPLY-12"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-PLAN-7",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "Steps are dispatched in request order, within each child for a meta-applier",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-PLAN-8",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "An action declared toggles: true on a feedback: open device is never dispatched without a token for its step: without one the step is refuse(toggle_only), after already and before token; a token whose for names a rule, or a run with neither a person nor an endpoint, is taken as none for it; on a feedback: closed device such an action is planned from its observed state, with no toggle_only; it is declared idempotent: false",
+    "negative_subjects": [
+      {
+        "subject": "toggles-to-reach-a-state",
+        "coupled": []
+      },
+      {
+        "subject": "answers-a-toggle-by-rule",
+        "coupled": []
+      },
+      {
+        "subject": "asks-a-closed-loop-toggle",
+        "coupled": []
+      },
+      {
+        "subject": "refuses-a-panel-toggle",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-APPLY-1",
+    "level": "SHOULD",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "Apply's synchronous response returns within 500 ms for up to 20 targets, plus 300 ms per meta-applier hop",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-APPLY-2",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "An expired plan, one made at an older revision, or one made by another client is a request error; nothing is dispatched",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-APPLY-4",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A repeated idempotency key from the same client, with the same body apart from tokens, within 3600 s returns the first apply and dispatches nothing",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-APPLY-5",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A dead target is unreachable, never dispatched, except a computer's power.wake, which is unreachable only when its wake_via device is dead; a bridge's failed(unreachable) or failed(expired) after dispatch is reported unreachable within 1 s",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-APPLY-6",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "No reissue on ack timeout for an action the device declares non-idempotent, counted in physical actuations, not command ids",
+    "negative_subjects": [
+      {
+        "subject": "reissues-on-timeout",
+        "coupled": [
+          "GA-SAFE-5"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-APPLY-7",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A stateless action on a feedback: closed device ends delivered (for an adapter's device, on the engine's word that it sent the command), sent where the action is declared confirms: false, or failed, never acked, except power.wake (GA-APPLY-13); a sent for any action declared confirms: true, stateful or stateless, is a bridge_fault event",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-APPLY-8",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A dispatched action on a feedback: closed device with no other final outcome within its ack_within_s becomes failed(no_ack), reported within 1 s after, or within 1 s of its bridge, engine or child being found dead while the step still waits (for power.wake, the wake_via device's, until that device's terminal ack, and after it none), a bridge's failed(no_confirmation) being no final outcome; the first final outcome wins",
+    "negative_subjects": [
+      {
+        "subject": "fails-a-wake-at-the-relay-ack",
+        "coupled": [
+          "GA-APPLY-13"
+        ]
+      },
+      {
+        "subject": "never-fails-a-silent-ack",
+        "coupled": [
+          "GA-APPLY-11",
+          "GA-SAFE-2",
+          "GA-SAFE-3",
+          "GA-SAFE-8",
+          "GA-SAFE-12"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-APPLY-9",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "Apply re-evaluates not_adopted, dead, safety, latched, already, toggle_only (reported refused(toggle_only)), the token and a changed declaration (reported refused(declaration_changed), GA-DESC-18) at dispatch, for op steps and steps planned skip(already); for a computer's power.wake, dead is its wake_via device's",
+    "negative_subjects": [
+      {
+        "subject": "re-checks-no-toggle",
+        "coupled": [
+          "GA-PLAN-8"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-APPLY-10",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A repeated idempotency key with a different body is idempotency_conflict; nothing is dispatched",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-APPLY-11",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A device report matching an action that ended failed(no_ack) within 60 s is a late_ack with that apply as cause, never external; so is a report matching a session.lock that ended failed(not_locked), within its ack_within_s",
+    "negative_subjects": [
+      {
+        "subject": "no-late-ack-for-a-slow-lock",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-APPLY-12",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "power.wake on a computer is dispatched to its wake_via device, planned and dispatched while the computer is dead, skip(dead) or unreachable only when the wake_via device is dead, and already on a live computer",
+    "negative_subjects": [
+      {
+        "subject": "skips-a-sleeping-computer",
+        "coupled": [
+          "GA-PLAN-4",
+          "GA-APPLY-5",
+          "GA-APPLY-9"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-APPLY-13",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A power.wake step is acked when the computer is live and each adopted hosted device live at its death is live on a last_check_in other than the one it held at the death, or reported available: false in a status received since, a hosted device not yet checked in since being waited for, within ack_within_s, else failed(no_ack); on a computer stale at dispatch, dispatch stands for the death, the computer's own last_check_in included, so the step is acked on its next check-in that makes it live; the wake_via device's final ack or its silence only moves it along, and its failed(unreachable) or failed(expired) ends it unreachable, any other failed or unsupported as itself",
+    "negative_subjects": [
+      {
+        "subject": "acks-a-wake-on-the-packet",
+        "coupled": [
+          "GA-APPLY-7",
+          "GA-STATE-4"
+        ]
+      },
+      {
+        "subject": "acks-a-wake-before-the-player",
+        "coupled": []
+      },
+      {
+        "subject": "never-acks-a-stale-wake",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-APPLY-14",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A notify without from is accepted; from is sent in the command's value only when the request carries it and only to a device whose notify declaration lists from among its args, and left out for any other; a meta-applier passes it to a child only when the child's standard_version is 0.10 or later and the child's device lists it, and leaves it out otherwise",
+    "negative_subjects": [
+      {
+        "subject": "sends-from-to-an-old-bridge",
+        "coupled": []
+      },
+      {
+        "subject": "sends-from-to-an-old-child",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-APPLY-15",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "The detail of the terminal ack taken for a step is carried in that step's final outcome and its outcome event, whatever the outcome, which it never changes",
+    "negative_subjects": [
+      {
+        "subject": "drops-the-ack-detail",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-APPLY-16",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A command for an action declared whole_state: true carries in state the device's assumed value of every key the applier holds one for, across a restart too, each key's value being the one the latest earlier action on the device sets, from any apply, once dispatched and unless it ended failed or unreachable, otherwise the assumed value, the action's own key carrying the value it asks for; no step waits for another to build it; when such a command ends sent or unanswered, every key it carried becomes assumed",
+    "negative_subjects": [
+      {
+        "subject": "sends-a-bare-setpoint",
+        "coupled": []
+      },
+      {
+        "subject": "sends-the-old-mode",
+        "coupled": []
+      },
+      {
+        "subject": "keeps-a-failed-mode",
+        "coupled": []
+      },
+      {
+        "subject": "forgets-what-the-frame-said",
+        "coupled": [
+          "GA-STATE-4"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-EVT-1",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "Every state change the applier did not make, other than a self_changing key, appears with cause external; a report moving towards a dispatched action's value, until it matches or ack_within_s passes, is that apply's, after a failed(no_confirmation) or failed(not_locked) ack too; the key session.lock sets is its argument's session.<account>",
+    "negative_subjects": [
+      {
+        "subject": "externalises-a-late-lock",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-EVT-2",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "Every change event carries a cause; history returns the same causes in order",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-EVT-3",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "acked arrives only after the device's reported state matches within its tolerance, on the key the action sets (for session.lock, its argument's, matched by locked, disconnected or none; for an extension action, its confirmed_by); media.launch and power.wake are acked only as GA-EVT-7 and GA-APPLY-13 say",
+    "negative_subjects": [
+      {
+        "subject": "acks-without-state",
+        "coupled": []
+      },
+      {
+        "subject": "lock-fails-on-logout",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-EVT-4",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "Events are kept at least 3600 s; an older cursor is cursor_expired",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-EVT-5",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "history returns state, outcome, late_ack, liveness, route_conflict, rule_fired, latch, model, provision, freshness, transport, other_admins, bridge_fault and occurrence events with their causes, kept at least 7 days, a state event's speech key and an occurrence of a key in the device's personal excepted, which are kept in events only",
+    "negative_subjects": [
+      {
+        "subject": "history-keeps-a-personal-occurrence",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-EVT-6",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A change of a key the device declares self_changing has cause device, except a report GA-EVT-1 gives to a dispatched action on a key that action sets, which carries that apply's cause",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-EVT-7",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "media.launch is acked only on a report received after dispatch in which playing is true and started_at differs from the value held at dispatch, or is present where none was held; it is never already",
+    "negative_subjects": [
+      {
+        "subject": "acks-launch-on-old-item",
+        "coupled": [
+          "GA-EVT-3"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-EVT-8",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "Each occurrence a bridge publishes is one occurrence event; it is never a state value, never returned by state, never the match of already or acked; configure refuses a safety rule that reads it with invalid_request; the event moves no liveness or freshness, while the check-in that carried it moves last_check_in",
+    "negative_subjects": [
+      {
+        "subject": "stores-an-occurrence-as-state",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-LVL-1",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "An operation, or a configure change, above the claimed level returns not_claimed",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-CFG-1",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "Only the owner's configuration credential may configure",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-CFG-2",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "configure with dry_run changes nothing; at a stale revision it returns stale_revision, except for a change set of only ignore_candidate and unignore_candidate; a change set applies whole or not at all",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-CFG-3",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "configure refuses an ack_within_s below 2, below twice a device's reach_s plus 10, or above 300, a max_on_s above 86400, or an applier_host set on a device that is not a computer or on a second computer while another holds it",
+    "negative_subjects": [
+      {
+        "subject": "marks-two-applier-hosts",
+        "coupled": [
+          "GA-SAFE-6"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-SEC-1",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "Every connection to an applier, at any MCP revision, and a meta-applier's to its children, uses TLS with the server certificate validated, unless both ends are on one host's loopback",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-BIND-1",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "The applier serves MCP protocol revision 2026-07-28 to every caller, the owner's configuration credential included; it answers no revision but that one, 2025-06-18 and 2025-11-25",
+    "negative_subjects": [
+      {
+        "subject": "speaks-only-2025",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-HARN-1",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "Under the harness, the subject takes all time, elapsed time included, from the harness's time_source; outside it, time_source is refused",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-PERSIST-1",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "Configuration, idempotency keys with outcomes, or with the requestId and result of a provision, used tokens, latches, unacknowledged notices, heating on-times, assumed states, incomplete safety rules, ack deadlines, the id map, retired identifiers, adoption state, ignored_keys, the bridges' last connections, the last basis_time per safety-read key, which of a computer's hosted devices were live at its death and the last_check_in each held then, each plugin action's tool_hash, each GA-PROV-4 plugin tombstone, the undescribed names announced per device (GA-DESC-19), and whether each adopted plugin version's activate, a cancelling one included, has had its ok survive a restart",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-SAFE-1",
+    "level": "MUST",
+    "conformance": "Safe",
+    "verify": "wire",
+    "text": "A safety rule fires with no client connected",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-SAFE-2",
+    "level": "MUST",
+    "conformance": "Safe",
+    "verify": "wire",
+    "text": "From firing until complete, a request for a device a safety rule actuates is refuse(safety); nothing refuses or undoes the rule's action",
+    "negative_subjects": [
+      {
+        "subject": "lets-a-client-undo-safety",
+        "coupled": [
+          "GA-SAFE-7"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-SAFE-3",
+    "level": "MUST",
+    "conformance": "Safe",
+    "verify": "wire",
+    "text": "A safety rule is complete once each actuation has a final outcome: acked, delivered, sent, unanswered, failed, unreachable, skipped or refused, with no GA-SAFE-12 re-send pending",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-SAFE-5",
+    "level": "MUST",
+    "conformance": "Safe",
+    "verify": "wire",
+    "text": "A safety rule issues each non-idempotent actuation once, with no reissue",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-SAFE-6",
+    "level": "MUST",
+    "conformance": "Safe",
+    "verify": "wire",
+    "text": "configure refuses a safety rule the applier does not own every device of, that one of its children owns entirely, or that actuates a device with another admin or other_admins: unknown without accepts_other_admins: true; the os entries, or the unknown, of a computer whose infrastructure is true, a proposal included, count as another admin of every device a safety rule actuates, not as ungoverned, except on a computer the owner marks applier_host, whose entries count only for it and its hosted devices, and one added to it, or its applier_host cleared, is an other_admin notice for each such rule without accepts_other_admins",
+    "negative_subjects": [
+      {
+        "subject": "ignores-the-broker-hosts-admins",
+        "coupled": []
+      },
+      {
+        "subject": "counts-the-applier-hosts-admins",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-SAFE-7",
+    "level": "MUST",
+    "conformance": "Safe",
+    "verify": "wire",
+    "text": "A latch clears only on reported values, never on an assumed one; while a latch is held, any action changing a key the rule set, and any extension action on a device the rule actuated, is refuse(latched); after, until it next runs, its tier is no_voice and its token's for has a person",
+    "negative_subjects": [
+      {
+        "subject": "clears-a-latch-on-an-assumed-value",
+        "coupled": []
+      },
+      {
+        "subject": "latch-misses-an-extension",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-SAFE-8",
+    "level": "MUST",
+    "conformance": "Safe",
+    "verify": "wire",
+    "text": "A notice with an id is issued when the rule completes, saying each final outcome, and at once when an actuation waits for GA-SAFE-12's re-send; it stays in notices until notice_taken names it, channel or not; a failed actuation's later late_ack gets a second notice",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-SAFE-9",
+    "level": "MUST",
+    "conformance": "Safe",
+    "verify": "wire",
+    "text": "A latch event is emitted when a latch is set and when it clears; state lists held latches",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-SAFE-10",
+    "level": "MUST",
+    "conformance": "Safe",
+    "verify": "wire",
+    "text": "A device a safety rule reads or actuates that stops being live, is live again, or has no known fresh_s when the rule is configured or the device adopted, or is given an owner fresh_s longer than the declared one, is a notice, a graceful bridge reload or a broker loss only after 60 s, unless it is that bridge's second within 10 min; a newer one for the same rule and device replaces an untaken older one",
+    "negative_subjects": [
+      {
+        "subject": "floods-reload-notices",
+        "coupled": []
+      },
+      {
+        "subject": "silent-on-liveness",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-SAFE-11",
+    "level": "MUST",
+    "conformance": "Safe",
+    "verify": "wire",
+    "text": "A safety rule fires once per trigger becoming true, on any new report (a basis_time later than the last seen, a fast-clock value never setting it) whatever the device's liveness, never on an assumed value, which holds none of its conditions, not again while it runs or is latched; configure refuses two safety rules setting one key of one device differently",
+    "negative_subjects": [
+      {
+        "subject": "fires-on-an-assumed-value",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-SAFE-12",
+    "level": "MUST",
+    "conformance": "Safe",
+    "verify": "wire",
+    "text": "While a safety rule's latch is held, or its trigger's condition is true on the latest reported values, an actuation that did not land is sent again by its final outcome: after skipped(dead), unreachable or a failed saying it was not carried out, any action once its device is not dead; after failed(no_ack), an idempotent one while the device's latest report does not match; after unanswered, an idempotent one once more; never after refused or a failed for an unsupported, invalid or unknown target; one attempt in flight, spaced by ack_within_s, except at once on the device's return from dead; the rule is not complete while a re-send is pending",
+    "negative_subjects": [
+      {
+        "subject": "gives-up-on-dead",
+        "coupled": [
+          "GA-SAFE-3",
+          "GA-SAFE-8"
+        ]
+      },
+      {
+        "subject": "resends-what-may-have-run",
+        "coupled": [
+          "GA-SAFE-5"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-SAFE-13",
+    "level": "MUST",
+    "conformance": "Safe",
+    "verify": "wire",
+    "text": "No actuation of the applier's own (a cap's turn-off, a safety rule's action or re-send, a retry) sends an action declared toggles: true; configure refuses a safety rule with such an action and a load: heating on a socket whose onoff.turn_off is one; on a declaration change a safety rule that no longer passes is disabled with a rule_disabled notice, and a cap that cannot act is a load_cap notice; a socket with such a turn-off and no configured load is a load_cap notice at adoption",
+    "negative_subjects": [
+      {
+        "subject": "toggles-by-safety-rule",
+        "coupled": []
+      },
+      {
+        "subject": "toggles-a-cap-off",
+        "coupled": []
+      },
+      {
+        "subject": "keeps-a-rule-on-a-re-taught-code",
+        "coupled": []
+      },
+      {
+        "subject": "adopts-an-uncappable-socket-quietly",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-SAFE-14",
+    "level": "MUST",
+    "conformance": "Safe",
+    "verify": "wire",
+    "text": "configure refuses, with invalid_request and changing nothing, a safety rule, latch or witness that reads a key its device does not declare, its data { key, device, awaited }, awaited true where the device's awaited_keys lists the key; on a declaration change a safety rule, latch or witness that then reads an undeclared key is disabled with a rule_disabled notice naming the key",
+    "negative_subjects": [
+      {
+        "subject": "accepts-a-safety-rule-on-an-undeclared-key",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-LOAD-2",
+    "level": "MUST",
+    "conformance": "Safe",
+    "verify": "wire",
+    "text": "A heating load on continuously for max_on_s, counted across restarts, on a feedback: open socket from the first onoff.turn_on the applier sends that ends sent or unanswered until an onoff.turn_off ends sent, is turned off by the applier itself with cause load_cap and no client, retried while the socket is not dead until it reports off (on an open socket, until one ends sent), a turn-off declared idempotent: false sent once; a failed turn-off is a notice",
+    "negative_subjects": [
+      {
+        "subject": "leaves-heat-on",
+        "coupled": []
+      },
+      {
+        "subject": "never-caps-a-silent-heater",
+        "coupled": []
+      },
+      {
+        "subject": "retries-a-pulse-off",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-WIT-1",
+    "level": "MUST",
+    "conformance": "Safe",
+    "verify": "wire",
+    "text": "A witnessed action reports confirmed, unconfirmed, or unknown when its sensor was not live, within 1 s after within_s counted from dispatch; a witness configured over a sensor with no known fresh_s, or whose sensor is given an owner fresh_s longer than the declared one, is a notice",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-META-1",
+    "level": "MUST",
+    "conformance": "Meta",
+    "verify": "wire",
+    "text": "describe is the union of the children's; a device with a stable identifier is sid:<its oldest identifier>, one declared by a device key key:<key>, both kept across a re-route and a replacement; a retired identifier, or one a child's other device already holds, never mints a sid:; others are namespaced by child",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-META-2",
+    "level": "MUST",
+    "conformance": "Meta",
+    "verify": "wire",
+    "text": "One oldest identifier under two children without a route: steps refuse(duplicate_route) and one route_conflict event; once routed, one device",
+    "negative_subjects": [
+      {
+        "subject": "actuates-both-routes",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-META-3",
+    "level": "MUST",
+    "conformance": "Meta",
+    "verify": "wire",
+    "text": "A safety rule within one child's devices is refused at the meta-applier; one spanning children is hosted there and fires with no client connected, unless a child it actuates has a non-empty ungoverned or another client, which is refused at configure and disables the rule with a notice later",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-META-4",
+    "level": "MUST",
+    "conformance": "Meta",
+    "verify": "wire",
+    "text": "real / emulated passes through from the child unchanged",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-META-5",
+    "level": "MUST",
+    "conformance": "Meta",
+    "verify": "wire",
+    "text": "Registering a child whose id or descendants include the meta-applier's own id is refused with cycle",
+    "negative_subjects": [
+      {
+        "subject": "accepts-a-cycle",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-META-6",
+    "level": "MUST",
+    "conformance": "Meta",
+    "verify": "wire",
+    "text": "A change made on a child directly is relayed as external and not undone",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-META-7",
+    "level": "MUST",
+    "conformance": "Meta",
+    "verify": "wire",
+    "text": "Children are polled with wait_s ≤ 5; a call unanswered 10 s or a refused connection reads dead within 1 s; a quiet child answering empty stays live",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-META-8",
+    "level": "MUST",
+    "conformance": "Meta",
+    "verify": "wire",
+    "text": "A child's outcome, state, late_ack, liveness, rule_fired, latch, model, route_conflict, provision, freshness, transport, other_admins, bridge_fault, occurrence and undescribed events and its notices are relayed; those caused by the meta-applier's delegation carry its own cause, never external",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-META-9",
+    "level": "MUST",
+    "conformance": "Meta",
+    "verify": "wire",
+    "text": "The meta-applier's revision changes whenever a child's does",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-META-10",
+    "level": "MUST",
+    "conformance": "Meta",
+    "verify": "wire",
+    "text": "The meta-applier verifies each token before delegating, holding it from verification until the child's outcome, so a second apply with it meanwhile is refused(token), re-issues it under its own key for the child, expires unchanged, its args those actually delegated and its token_id derived from the original's issuer and token_id, and records the original used when the delegated step is dispatched",
+    "negative_subjects": [
+      {
+        "subject": "delegates-a-token-with-from",
+        "coupled": []
+      },
+      {
+        "subject": "reissues-under-a-fresh-id",
+        "coupled": [
+          "GA-TOKEN-4"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-META-11",
+    "level": "MUST",
+    "conformance": "Meta",
+    "verify": "static",
+    "text": "A meta-applier does not claim Safe while a child owning a socket claims only Act",
+    "negative_subjects": []
+  },
+  {
+    "id": "GA-BIND-3",
+    "level": "MUST",
+    "conformance": "Meta",
+    "verify": "wire",
+    "text": "A meta-applier reaches each child at MCP protocol revision 2026-07-28 where the child serves it, and falls back, to 2025-06-18 or 2025-11-25 only, for a child that does not",
+    "negative_subjects": [
+      {
+        "subject": "meta-calls-a-child-at-2025",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-ADOPT-1",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A device new to the applier is adopted: false until the owner adopts it; every action on it is refuse(not_adopted) in a plan and refused(not_adopted) at apply; configure refuses a safety rule that reads or actuates it, and a forget of a device still in its bridge's devices or named by a safety rule",
+    "negative_subjects": [
+      {
+        "subject": "acts-unadopted",
+        "coupled": [
+          "GA-APPLY-9"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-ADOPT-2",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "adopt with replaces keeps the replaced device's id, declarations and safety rules, for a plugin device only the declarations the owner set, its manifest's being the new version's; the old identifier goes to previous_identifiers and never takes the id back; a new device lacking an action or key they use, or under another child, is refused, except that a plugin device's replacement may lack an action no safety rule uses",
+    "negative_subjects": [
+      {
+        "subject": "replaces-without-rules",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-ADOPT-3",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A device with an action above reversible and another admin, or other_admins: unknown, is a notice with cause other_admin at adoption, the tier judged before the same change set lowers it, whenever an admin is added, and once for each such adopted device when the applier starts supporting adoption; its becoming [] is a notice that replaces an untaken earlier one",
+    "negative_subjects": [
+      {
+        "subject": "hides-a-second-door",
+        "coupled": []
+      },
+      {
+        "subject": "hides-a-door-behind-a-lowered-tier",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-ADOPT-4",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "The applier sends a plugin's bridge activate { plugin, version } when the owner adopts the first device of that version, for a version with staged devices only on an adoption with replaces, never for a version with no adopted device, and again each time the bridge is found live and at least every 60 s while it stays live, until an ok; a failed(unknown_plugin) is a notice with cause bridge_fault naming the version's adopted devices, once until an ok; any activate that will remove an adopted device of another version of the plugin on that host, not replaced in the same change set, staged version or not, is preceded by a notice with cause plugin_update naming each such device; an adoption whose activate would remove a device a safety rule names, not replaced in the same change set, is refused with invalid_request, nothing changed",
+    "negative_subjects": [
+      {
+        "subject": "activates-on-a-new-key",
+        "coupled": []
+      },
+      {
+        "subject": "activates-once",
+        "coupled": []
+      },
+      {
+        "subject": "evicts-a-safety-device",
+        "coupled": []
+      },
+      {
+        "subject": "evicts-without-a-word",
+        "coupled": []
+      },
+      {
+        "subject": "evicts-a-sibling-without-a-word",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-ADOPT-5",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "An adoption of a staged plugin device with replaces is pending until the swap (the old version's devices leave the bridge's devices): until then the old device keeps the id, its declarations and its rules, and the new device stays unadopted; if before the swap the bridge reports the new device available: false after publishing it available: true following its ok to the activate, or names it in a faults entry of code pin_mismatch, crash_loop or account_deleted, never on a status from before the ok, the pending adoption is dropped, a notice with cause plugin_update names both devices, the old device stays as it was, and an activate naming the old device's version, which cancels the new version's, is sent and re-sent as GA-ADOPT-4's until an ok, with no further activate of the new version; if the old devices leave before that ok, the adoption takes effect as at any swap, with a plugin_update notice, and the cancel's failed(unknown_plugin) is no bridge_fault",
+    "negative_subjects": [
+      {
+        "subject": "repoints-before-the-swap",
+        "coupled": []
+      },
+      {
+        "subject": "keeps-a-failed-swap",
+        "coupled": []
+      },
+      {
+        "subject": "leaves-a-failed-swap-pending",
+        "coupled": []
+      },
+      {
+        "subject": "drops-on-a-stale-status",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-ADOPT-6",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "Adopting a device on an unknown transport, an adopted device's transport first reading unknown, and configure of a safety rule actuating a device on one are each a notice with cause open_loop naming it, saying that nothing will show if it stops working",
+    "negative_subjects": [
+      {
+        "subject": "upgrades-a-mute-device-quietly",
+        "coupled": []
+      },
+      {
+        "subject": "adopts-a-mute-device-quietly",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-DISC-1",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A candidate is never a device: no step names one, nothing is planned on it, and it reaches the model only through a bridge's devices and adoption",
+    "negative_subjects": [
+      {
+        "subject": "plans-on-a-candidate",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-DISC-2",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "candidates answers only the owner's configuration credential, gives the finder's latest sources and faults, and lists every candidate sharing no key with ignored_keys nor with the connections last seen, and kept across a restart, on a device or transport of any bridge registered with this applier, live or dead, offering only this applier's live bridges that can take it; an adapter answers finder: none; no event reveals a candidate",
+    "negative_subjects": [
+      {
+        "subject": "shows-candidates-to-a-client",
+        "coupled": []
+      },
+      {
+        "subject": "hides-the-finders-sources",
+        "coupled": []
+      },
+      {
+        "subject": "lists-a-held-candidate",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-DISC-3",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "ignore_candidate adds the candidate's keys to ignored_keys, hiding every candidate that shares one, across restarts of the applier and the finder and changes of address, until unignore_candidate removes the key; an id not listed, or a key not in ignored_keys, is invalid_request; neither is a model change",
+    "negative_subjects": [
+      {
+        "subject": "forgets-an-ignore",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-DISC-4",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "provision.connect goes only to a bridge of this applier whose latest status claims Provision and gives a bridgeType the candidate matches with connect: true, with the address the owner gave; otherwise not_claimed; unreachable for such a bridge that is dead; the bridge's connect carries that address and the candidate's keys; invalid_request for a candidate not listed, or an address missing where the candidate has one, or not the candidate's; a connect with no end within 70 s of its publish, or whose bridge dies, ends connect_failed(lost), and a connected after it is still issued; both events carry the request_id provision returned, unreachable included",
+    "negative_subjects": [
+      {
+        "subject": "connects-to-the-wrong-bridge",
+        "coupled": [
+          "GA-PROV-1"
+        ]
+      },
+      {
+        "subject": "event-without-request-id",
+        "coupled": []
+      },
+      {
+        "subject": "never-ends-a-connect",
+        "coupled": []
+      },
+      {
+        "subject": "ignores-the-address",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-DISC-5",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "The finder is dead 30 s after its last status, at once on its will (one naming the latest status's instanceId) or a graceful status, or on a status without a known v, which is no bridge_fault; a publishedAt more than 5 s off its arrival is clock in finder_faults; live again only as GA-BUS-8 says; a dead finder's last list is shown marked finder: dead",
+    "negative_subjects": [
+      {
+        "subject": "trusts-a-dead-finder",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-PROV-1",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "provision is the owner's configuration credential's only, is passed to the bridge that owns the transport, device or host, or for connect the bridge it names, returns unreachable with no reply within 2 s, and is not_claimed against an adapter or a bridge without the level the operation needs: Host for install and uninstall, Provision for the rest",
+    "negative_subjects": [
+      {
+        "subject": "provisions-for-anyone",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-PROV-2",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A closed join window is a notice with cause window_closed naming every device that joined, kept until taken",
+    "negative_subjects": [
+      {
+        "subject": "hides-new-devices",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-PROV-3",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "For each provision idempotency_key the applier keeps, persisted, the requestId it sent and what came of it (the reply, accepted on an event carrying that requestId, or unreachable, updated by a later reply or event); a repeat within 3600 s with the same body, bodies compared as their RFC 8785 serialisations without the key, never byte for byte, is answered from that record and never sent to a bridge again; a different body is idempotency_conflict, nothing sent",
+    "negative_subjects": [
+      {
+        "subject": "provisions-twice",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-PROV-4",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "On uninstalled, on the accepted reply to the applier's own uninstall, or when no device of an adopted plugin is left in its host's bridge's devices parsed with no entry dropped and still listing the host, every device of that plugin on that host is forgotten (model, id map, activate record), so a later install's devices arrive unadopted, on accepted a named exception to forget's refusal of a device still in devices, except, without the event, a device a safety rule names, kept dead, and a forgetting without the event is a notice with cause plugin_update naming the plugin; any wake_via naming a forgotten device is cleared first, with a plugin_update notice naming the computer; an uninstall while a safety rule names one of them is refused with invalid_request, nothing sent; forgotten on accepted, a tombstone for the plugin and host, kept across a restart, until uninstalled, failed(unknown_plugin) or a counting devices without them, makes the applier ignore the plugin's devices in any devices publish or snapshot, with no GA-BUS-6 notice for them",
+    "negative_subjects": [
+      {
+        "subject": "resurrects-an-uninstalled-plugin",
+        "coupled": [
+          "GA-ADOPT-1"
+        ]
+      },
+      {
+        "subject": "resurrects-after-a-lost-uninstall",
+        "coupled": [
+          "GA-ADOPT-1"
+        ]
+      },
+      {
+        "subject": "resurrects-before-the-snapshot",
+        "coupled": [
+          "GA-ADOPT-1"
+        ]
+      },
+      {
+        "subject": "forgets-on-a-bad-entry",
+        "coupled": []
+      },
+      {
+        "subject": "forgets-unseen",
+        "coupled": []
+      },
+      {
+        "subject": "forgets-a-wake-path-device",
+        "coupled": []
+      },
+      {
+        "subject": "readmits-an-uninstalling-plugin",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BUS-1",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "The retained devices document is parsed entry by entry and a message field by field; a bad entry or field drops only itself",
+    "negative_subjects": [
+      {
+        "subject": "one-bad-entry-silences",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BUS-2",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A basis_time or last_check_in more than 5 s ahead of the applier's clock is a bridge fault, and the device reads stale until a correctly stamped report; a live status whose publishedAt is more than 5 s from its arrival, either way, is a bridge fault",
+    "negative_subjects": [
+      {
+        "subject": "trusts-a-fast-clock",
+        "coupled": [
+          "GA-STATE-5",
+          "GA-SAFE-11"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BUS-3",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "An unknown enumerated value from a bridge is taken as the least it can mean, never a reason to reject the message",
+    "negative_subjects": [
+      {
+        "subject": "rejects-unknown-kind",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BUS-4",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "No command is reissued inside its result_within_s; with no terminal ack, a received included, the step waits until result_within_s, or its bridge is found dead, then ends as the outcomes say",
+    "negative_subjects": [
+      {
+        "subject": "reissues-inside-the-bound",
+        "coupled": [
+          "GA-APPLY-6"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BUS-5",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A command or request is never published retained; a command carries a Message Expiry of its result_within_s, any other request 10 s",
+    "negative_subjects": [
+      {
+        "subject": "retains-request",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BUS-6",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A seq gap, an instanceId not seen before or the applier's reconnection sends snapshot, and missed notices are raised from it; an event with an (instanceId, seq) already seen, or a second terminal ack for one command_id, is ignored; a received ack is not terminal",
+    "negative_subjects": [
+      {
+        "subject": "ignores-seq-gap",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BUS-7",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "While the applier has lost the broker, every bridged device reads dead",
+    "negative_subjects": [
+      {
+        "subject": "plans-through-broker-loss",
+        "coupled": [
+          "GA-APPLY-5",
+          "GA-STATE-2"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BUS-8",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A bridge found dead for any reason, and every bridge after the applier reconnects, is live again only on a status arriving live after that whose publishedAt is no earlier than the death less 5 s, a status that does not revive changing nothing, never on a retained one delivered on subscribing; a will whose instanceId is not the latest status's is ignored; a graceful offline makes its devices dead but raises no bridge_fault",
+    "negative_subjects": [
+      {
+        "subject": "trusts-retained-online",
+        "coupled": [
+          "GA-STATE-2"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BUS-9",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "Dispatch is a success PUBACK; 0x10 or 0x87 is unreachable with the token unused, and 0x87 a bridge_fault event; a connection lost before PUBACK is dispatched, and the command is never re-sent; the applier never subscribes to a filter matching a command or request/ topic",
+    "negative_subjects": [
+      {
+        "subject": "resends-after-reconnect",
+        "coupled": [
+          "GA-APPLY-6"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BUS-10",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A value's age is judged from its basis_time and a device's liveness from its last_check_in, never from a message's arrival; only the bridge's own liveness is judged from its status's arrival (GA-STATE-2)",
+    "negative_subjects": [
+      {
+        "subject": "fresh-by-arrival",
+        "coupled": [
+          "GA-STATE-5"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BUS-11",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "An adopted device keeps its bridge: its identifier under another bridge is a separate unadopted device with a route_conflict event, never merged; only with neither adopted, steps refuse(duplicate_route) until routed; the same identifier twice under one bridge is a route_conflict event too, except a staged plugin device (GA-BUS-15)",
+    "negative_subjects": [
+      {
+        "subject": "merges-a-claimant",
+        "coupled": [
+          "GA-ADOPT-1"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BUS-12",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A bridge faults entry naming an adopted device is a notice with cause bridge_fault naming it, once while the entry stands",
+    "negative_subjects": [
+      {
+        "subject": "swallows-device-fault",
+        "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-BUS-13",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "An ack whose source is not the bridgeId of the bridge whose topic carried it is a bridge_fault, and not an ack",
+    "negative_subjects": [
+      {
+        "subject": "trusts-a-foreign-ack",
+        "coupled": [
+          "GA-APPLY-8"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BUS-14",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A status without v, with an unknown v, or naming another bridgeId than its topic's is a bridge_fault, and the bridge's devices read dead until a valid status arrives live",
+    "negative_subjects": [
+      {
+        "subject": "plans-for-a-faulted-bridge",
+        "coupled": [
+          "GA-APPLY-5"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "GA-BUS-15",
+    "level": "MUST",
+    "conformance": "Act",
+    "verify": "wire",
+    "text": "A device whose bridge declares stagedFor naming a plugin device on the same bridge and host with an equal stable_identifier, compared whole, raises no route_conflict event or notice, after its version's activation too, and any other stagedFor exempts nothing; an exempt device's staged version is one notice with cause plugin_update, kept until taken",
+    "negative_subjects": [
+      {
+        "subject": "conflicts-on-a-staged-version",
+        "coupled": [
+          "GA-BUS-11"
+        ]
+      },
+      {
+        "subject": "conflicts-on-a-sibling",
+        "coupled": [
+          "GA-BUS-11"
+        ]
+      },
+      {
+        "subject": "trusts-a-foreign-staging",
+        "coupled": [
+          "GA-BUS-11"
+        ]
+      }
+    ]
+  }
+]

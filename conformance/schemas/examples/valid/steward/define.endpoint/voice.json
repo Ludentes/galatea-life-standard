@@ -1,0 +1,1 @@
+{ "id": "kitchen-voice", "name": "Кухня", "type": "voice", "room": "kitchen", "person": null, "served_by": "brain", "confirm_on": "olga-app" }

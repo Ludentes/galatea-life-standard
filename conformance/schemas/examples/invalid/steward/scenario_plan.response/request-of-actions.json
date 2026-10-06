@@ -1,0 +1,2 @@
+{ "plan_id": "p-1", "expires_at": "2030-01-01T08:05:00.000Z", "revision": 4, "endpoint": "olga-app",
+  "request": { "endpoint": "olga-app", "actions": [{ "target": "sim-bridge:lamp", "action": "onoff.turn_off", "args": {} }] }, "steps": [] }

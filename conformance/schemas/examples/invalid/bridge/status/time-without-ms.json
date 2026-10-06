@@ -1,0 +1,7 @@
+{ "bridgeId": "sim-bridge", "instanceId": "7c1e6b1a-3f0e-4a57-9b7d-2d5a3c4b5e6f", "v": 1, "state": "online",
+  "version": "0.0.0", "levels": ["Serve"], "faults": [], "ungoverned": [], "blocked": [], "testRunId": "run-1",
+  "transports": [{ "id": "test", "kind": "other", "state": "up", "since": "2026-09-27T10:00:00.000Z" }],
+  "devices": [{ "id": "lamp", "transport": "test", "basis": "report", "cadenceMs": null, "basisMaxAgeMs": 60000,
+    "timestamp": "2026-09-27T10:00:00.000Z", "lastCheckIn": "2026-09-27T10:00:00.000Z", "observable": true,
+    "since": "2026-09-27T10:00:00.000Z" }],
+  "publishedAt": "2026-09-27T10:00:01Z" }

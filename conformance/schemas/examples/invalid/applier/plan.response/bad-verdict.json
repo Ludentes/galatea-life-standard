@@ -1,0 +1,5 @@
+{ "plan_id": "p1", "expires_at": "2026-09-27T10:01:00.000Z", "revision": 3, "client": "harness",
+  "request": { "actions": [{ "target": "sim-bridge:lamp", "action": "onoff.turn_on", "args": {}, "via": "app",
+    "brain": false, "for": { "person": "demo" } }] },
+  "steps": [{ "step_id": "s1", "target": "sim-bridge:lamp", "action": "onoff.turn_on", "args": {}, "verdict": "maybe",
+    "tier": "reversible", "stale": false, "basis": "real" }] }

@@ -1,0 +1,4 @@
+{ "targets": {}, "transports": [], "latches": [], "groups": {},
+  "rooms": { "hall": { "occupancy": "occupied" }, "kitchen": { "occupancy": "unknown" } },
+  "leases": { "sim-bridge:lamp": { "holder": { "person": "olga", "endpoint": "olga-app" }, "precedence": "person", "expires": "2030-01-01T10:00:00Z" },
+    "sim-bridge:heater": { "holder": "load_cap", "precedence": "person", "expires": "2030-01-01T10:00:00Z" } } }

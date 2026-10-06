@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "applier/candidates.response.json",
+  "type": "object",
+  "required": ["finder", "finder_sources", "finder_faults", "candidates", "ignored_keys"],
+  "properties": {
+    "finder": { "enum": ["live", "dead", "none"] },
+    "finder_sources": { "type": "array" },
+    "finder_faults": { "type": "array" },
+    "candidates": { "type": "array" },
+    "ignored_keys": { "type": "array" }
+  }
+}
