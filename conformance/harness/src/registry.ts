@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import type { BridgeFaults } from "@ludentes/galatea-life-sim";
 import type { TestContext } from "./context.js";
 
@@ -34,12 +35,40 @@ export interface RequirementTest {
   ids: string[];
   opts: TestOptions;
   fn: (ctx: TestContext) => Promise<void>;
+  /**
+   * The module that registered the test, as a path: its check file (built, or the source under
+   * vitest). The change-scoped matrix maps a graded id to it (`changed.ts`).
+   */
+  file?: string;
 }
 
 const tests: RequirementTest[] = [];
 
 export function requirement(ids: string | string[], opts: TestOptions, fn: (ctx: TestContext) => Promise<void>): void {
-  tests.push({ ids: Array.isArray(ids) ? ids : [ids], opts, fn });
+  const file = callerFile(new Error().stack ?? "");
+  tests.push({ ids: Array.isArray(ids) ? ids : [ids], opts, fn, ...(file ? { file } : {}) });
+}
+
+/**
+ * The first module in `stack` other than this one: the one that called `requirement`. This module may
+ * show as built or, source-mapped (under vitest), as its source.
+ */
+export function callerFile(stack: string, self: string = import.meta.url): string | undefined {
+  const same = (path: string) => path.replace(/\/dist\/(.+)\.js$/, "/src/$1.ts");
+  const me = same(fileURLToPath(self));
+  for (const line of stack.split("\n")) {
+    // A V8 frame: `at <function> (<location>)` or `at <location>`, the location ending `:<line>:<column>`.
+    // The function never holds " (", so the location is all after the first; a path may hold spaces.
+    const frame = line.match(/^\s*at (.*)$/)?.[1];
+    if (!frame) continue;
+    const open = frame.indexOf(" (");
+    const location = open >= 0 && frame.endsWith(")") ? frame.slice(open + 2, -1) : frame;
+    const path = location.match(/^(.*):\d+:\d+$/)?.[1];
+    if (!path || !(path.startsWith("file://") || path.startsWith("/"))) continue;
+    const at = path.startsWith("file://") ? fileURLToPath(path) : path;
+    if (same(at) !== me) return at;
+  }
+  return undefined;
 }
 
 export function registered(): RequirementTest[] {

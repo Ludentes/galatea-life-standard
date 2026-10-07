@@ -15,7 +15,8 @@ const shipped = (p: string) => pkg.files.some((f) => p.replace(/^\.\//, "") === 
 describe("the package a build reaches", () => {
   it("exports the subpaths the reference builds use, and no deep path", () => {
     expect(Object.keys(pkg.exports).sort()).toEqual([
-      ".", "./database", "./package.json", "./reach", "./scripts/matrix-timing.mjs", "./scripts/reach.mjs", "./seams/mcp",
+      ".", "./changed", "./database", "./package.json", "./reach", "./scripts/changed.mjs", "./scripts/matrix-timing.mjs", "./scripts/reach.mjs",
+      "./seams/mcp",
     ]);
   });
 

@@ -1,6 +1,6 @@
 {
   "name": "@ludentes/galatea-life-harness",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": false,
   "type": "module",
   "license": "Apache-2.0",
@@ -15,6 +15,7 @@
     "scripts/with-postgres.mjs",
     "scripts/postgres-profile.mjs",
     "scripts/reach.mjs",
+    "scripts/changed.mjs",
     "scripts/matrix-timing.mjs"
   ],
   "bin": {
@@ -38,7 +39,12 @@
       "types": "./dist/reach.d.ts",
       "default": "./dist/reach.js"
     },
+    "./changed": {
+      "types": "./dist/changed.d.ts",
+      "default": "./dist/changed.js"
+    },
     "./scripts/reach.mjs": "./scripts/reach.mjs",
+    "./scripts/changed.mjs": "./scripts/changed.mjs",
     "./scripts/matrix-timing.mjs": "./scripts/matrix-timing.mjs",
     "./package.json": "./package.json"
   },
