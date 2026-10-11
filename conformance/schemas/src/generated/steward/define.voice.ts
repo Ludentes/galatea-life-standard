@@ -2,15 +2,15 @@
 
 export interface StewardDefineVoice {
   endpoint: string;
-  listening: "off" | "tap" | "wake_device" | "wake_server";
-  wake_words: {
+  listening?: "off" | "tap" | "wake_device" | "wake_server";
+  wake_words?: {
     word: string;
     model: string;
   }[];
-  zone: string | null;
-  output: "speech" | null;
-  follow_up: boolean;
-  heard_by: string;
-  skill_account?: string;
-  skill_surface?: string;
+  zone?: string | null;
+  output?: "speech" | null;
+  follow_up?: boolean;
+  heard_by?: string;
+  skill_account?: string | null;
+  skill_surface?: string | null;
 }

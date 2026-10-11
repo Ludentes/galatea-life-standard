@@ -8,38 +8,32 @@ export interface StewardDefineSchedule {
   /**
    * The scenario a run of the schedule runs
    */
-  scenario: string;
+  scenario?: string;
   /**
    * HH:MM in the home's timezone
    */
-  time: string;
-  /**
-   * ISO weekday numbers the schedule runs on, every day when absent
-   */
-  days?: [number, ...number[]];
-  /**
-   * @maxItems 64
-   *
-   * Items: Suppresses (skip) or moves (move, to time on the same date) exactly the run on its date, in the home's timezone (GA-SCHED-1)
-   */
-  exceptions?: ((
-    | {
-        action?: "skip";
-        [k: string]: unknown | undefined;
-      }
-    | {
-        action?: "move";
-        [k: string]: unknown | undefined;
-      }
-  ) & {
-    /**
-     * YYYY-MM-DD, a date in the home's timezone
-     */
-    date: string;
-    action: "skip" | "move";
-    /**
-     * HH:MM in the home's timezone
-     */
-    time?: string;
-  })[];
+  time?: string;
+  days?: [number, ...number[]] | null;
+  exceptions?:
+    | ((
+        | {
+            action?: "skip";
+            [k: string]: unknown | undefined;
+          }
+        | {
+            action?: "move";
+            [k: string]: unknown | undefined;
+          }
+      ) & {
+        /**
+         * YYYY-MM-DD, a date in the home's timezone
+         */
+        date: string;
+        action: "skip" | "move";
+        /**
+         * HH:MM in the home's timezone
+         */
+        time?: string;
+      })[]
+    | null;
 }

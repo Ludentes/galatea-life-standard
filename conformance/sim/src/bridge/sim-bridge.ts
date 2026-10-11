@@ -49,6 +49,9 @@ export interface ProvisionAnswer {
 }
 
 /** The provisioning ops; one the bridge's levels do not cover (Provision) is `invalid_request`. */
+/** Its transport's kind, as a real bridge names its own: the Zigbee bridge's. */
+export const TRANSPORT_KIND = "zigbee";
+
 const PROVISION_OPS = new Set(["join", "join_close", "commission", "connect", "remove", "unblock"]);
 /** The longest join window a bridge opens (bridge, *Provisioning*): a longer one is capped. */
 const MAX_WINDOW_MS = 254_000;
@@ -73,6 +76,8 @@ export interface CommandSeen {
   commandId?: string;
   retained: boolean;
   expiryS?: number;
+  /** The command's own `resultWithinMs`, which its Message Expiry rounds up (bridge, *Message Expiry*). */
+  resultWithinMs?: number;
   realAt: number;
 }
 
@@ -150,6 +155,8 @@ export class SimBridge {
   readonly requests: RequestSeen[] = [];
   private client?: MqttClient;
   private readonly devices = new Map<string, Device>();
+  /** The device ids it removed: a `remove` of one again is accepted, and of an id never had refused. */
+  private readonly gone = new Set<string>();
   private transport: { state: "up" | "down" | "unknown"; since: number };
   private faults: BridgeFaults;
   private readonly timers = new Set<number>();
@@ -304,12 +311,25 @@ export class SimBridge {
   }
 
   /**
+   * The device is interviewed again, and what the bridge kept of it is dropped: its status goes out
+   * with no reading, `{ deviceId, timestamp, available }`, never empty, as an empty retained status is
+   * its removal (GA-BRIDGE-21). The Zigbee bridge's re-interview does this.
+   */
+  async reinterview(id: string): Promise<void> {
+    const d = this.device(id);
+    d.values = {};
+    d.times = {};
+    await this.publishDeviceStatus(d, true);
+  }
+
+  /**
    * The device leaves: out of the `devices` document and the roster, its retained status cleared
    * (GA-BRIDGE-21), and a `left` event.
    */
   async removeDevice(id: string): Promise<void> {
     this.device(id);
     this.devices.delete(id);
+    this.gone.add(id);
     await this.publishDevices();
     await this.publish(`${this.base}/devices/${id}/status`, "", true);
     await this.publishEvent("left", { device: id });
@@ -500,7 +520,8 @@ export class SimBridge {
       faults: [...(this.faults.statusFaults ?? [])],
       ungoverned: this.faults.ungoverned ?? [],
       blocked: [],
-      transports: [{ id: "test", kind: "other", state: this.transport.state, since: wire(this.transport.since),
+      // Its kind as a real bridge names it (GA-BUS-3's `other` is only what an unknown kind is taken as).
+      transports: [{ id: "test", kind: TRANSPORT_KIND, state: this.transport.state, since: wire(this.transport.since),
         ...(this.opts.transportConnections ? { connections: this.opts.transportConnections } : {}) }, ...this.extraTransports],
       devices: devices.map((d) => this.roster(d)),
       publishedAt: wire(now + (this.faults.clockSkewMs ?? 0)),
@@ -615,7 +636,8 @@ export class SimBridge {
     }
     await this.publish(`${this.base}/devices/${d.spec.id}/status`, {
       deviceId: d.spec.id,
-      ...(d.spec.capabilities.includes("onoff") ? { state: d.values.on ? "on" : "off" } : {}),
+      // A status with no reading carries no state either (a re-interview's, `reinterview`).
+      ...(d.spec.capabilities.includes("onoff") && Object.hasOwn(d.values, "on") ? { state: d.values.on ? "on" : "off" } : {}),
       ...d.values,
       timestamp: wire(keys.length ? timestamp : now),
       ...(timestamps ? { timestamps } : {}),
@@ -653,7 +675,8 @@ export class SimBridge {
       return;
     }
     this.commands.push({ device: id, ...(typeof cmd.commandId === "string" ? { commandId: cmd.commandId } : {}), retained,
-      ...(expiryS !== undefined ? { expiryS } : {}), realAt: Date.now() });
+      ...(expiryS !== undefined ? { expiryS } : {}), ...(typeof cmd.resultWithinMs === "number" ? { resultWithinMs: cmd.resultWithinMs } : {}),
+      realAt: Date.now() });
     if (validate("bridge/command.json", cmd).length) {
       if (typeof cmd.commandId === "string") await this.ack(id, cmd.commandId, "failed", "invalid_request");
       return;
@@ -672,12 +695,17 @@ export class SimBridge {
     if (!d) return this.ack(id, cmd.commandId, "failed", "unknown_device");
     // A command whose time has already run out is never started (GA-BRIDGE-7).
     if (Date.parse(cmd.issuedAt) + cmd.resultWithinMs < now) return this.ack(id, cmd.commandId, "failed", "expired");
-    // A device unreachable when the command arrives (its transport down, or it not observable)
-    // is failed at once, nothing transmitted (GA-BRIDGE-6).
-    if (!d.observable) return this.ack(id, cmd.commandId, "failed", "unreachable");
+    // A device unreachable when the command arrives (its transport down, or it available: false) is
+    // failed at once, nothing transmitted (GA-BRIDGE-6). One merely not observable (a sleeper not checked
+    // in) is tried, as a real bridge tries it: the text names only those two.
+    if (this.transport.state === "down" || !d.available) return this.ack(id, cmd.commandId, "failed", "unreachable");
     const action: string = cmd.value.action;
     const decl = d.spec.actions.find((a) => a.action === action);
     if (!decl) return this.ack(id, cmd.commandId, "unsupported");
+    // A value that does not fit the action's arguments (a one-argument action's value wrapped in an
+    // object) is refused at once, nothing done, as a real bridge refuses it (bridge, *Commands*, `invalid_request`).
+    const args = fromWire(decl, cmd.value.value);
+    if (typeof args === "string") return this.ack(id, cmd.commandId, "failed", "invalid_request", { result: "rejected", detail: args });
     if (d.silent) {
       this.later(() => void this.ack(id, cmd.commandId, "failed", "no_confirmation"), cmd.resultWithinMs);
       return;
@@ -692,7 +720,6 @@ export class SimBridge {
     // Nothing transmitted: no actuation, and the ack says why.
     if (how.result === "unreachable" || how.result === "expired") return answer("failed", how.result);
     if (how.result === "unsupported") return answer("unsupported");
-    const args = fromWire(action, cmd.value.value);
     this.received.push({ device: id, action, args, state: cmd.value.state, commandId: cmd.commandId, realAt: Date.now() });
     await this.publish(`${this.controlTopic}/received`, { device: id, action, args, ...(cmd.value.state ? { state: cmd.value.state } : {}) }, false);
     if (how.result === "none") return;
@@ -797,8 +824,12 @@ export class SimBridge {
         const byIdentifier = typeof req.identifier === "string"
           ? [...this.devices.values()].find((d) => bridgeDoc(d.spec).stableIdentifier === req.identifier)?.spec.id : undefined;
         if (typeof req.identifier === "string" && byIdentifier === undefined) return answer("failed", "unknown_device");
-        await answer("accepted");
         const id = byIdentifier ?? String(req.device ?? "");
+        // A device id it never had is failed(unknown_device), as the real bridge answers it; one it
+        // removed before is accepted again, and ends in left (idempotent, GA-BRIDGE-27).
+        if (!this.devices.has(id) && !this.gone.has(id)) return answer("failed", "unknown_device");
+        await answer("accepted");
+        this.gone.add(id);
         if (this.devices.delete(id)) {
           await this.publishDevices();
           await this.publish(`${this.base}/devices/${id}/status`, "", true);

@@ -114,14 +114,15 @@ const FIXTURE: Record<string, FixtureDevice> = {
 // state key, set by its own extension action and confirmed by it.
 const PUSH = "org.galatea.test.pusher";
 const setMode: FixtureAction = { action: `${PUSH}.set_mode`, idempotent: false, stateless: false, confirms: true,
-  confirmedBy: { key: `${PUSH}.mode`, value: { arg: "mode" } } };
+  args: { mode: ["switch", "click"] }, confirmedBy: { key: `${PUSH}.mode`, value: { arg: "mode" } } };
 const pushActions = (idempotent: boolean): FixtureAction[] => [...declare(["onoff"], "closed", { idempotent }), setMode];
 FIXTURE.pusher = device({ id: "pusher", capabilities: ["onoff"], feedback: "closed", proposedClass: "socket",
   initial: { on: false, [`${PUSH}.mode`]: "switch" }, actions: pushActions(true),
   extensions: [{ capability: PUSH, description: "The pusher's own settings.",
     actions: [{ action: `${PUSH}.set_mode`, description: "Sets whether it holds a position or presses once.",
       schema: { type: "object", properties: { mode: { enum: ["switch", "click"] } }, required: ["mode"] } }],
-    keys: [{ key: `${PUSH}.mode`, kind: "state", description: "switch or click.", schema: { type: "string" } }] }],
+    // Its mode's schema an enum without a type, as the Zigbee bridge gives an enum expose (the Fingerbot's mode).
+    keys: [{ key: `${PUSH}.mode`, kind: "state", description: "switch or click.", schema: { enum: ["switch", "click"] } }] }],
   modes: { key: `${PUSH}.mode`, actions: { switch: pushActions(true), click: pushActions(false) } } });
 // A vibration sensor whose alarms are events, never state (bridge, *Occurrences*); its presence is personal,
 // and its sensitivity, a state key no confirmedBy names, selfChanging.
@@ -137,6 +138,40 @@ FIXTURE.speaker = device({ id: "speaker", capabilities: ["media"], feedback: "cl
   initial: { playing: false, volume: 20 } });
 
 export const FIXTURE_IDS = Object.keys(FIXTURE);
+
+/**
+ * Devices a test gets only by naming them, never in the default fixture. A climate sensor in the shape
+ * of the Zigbee bridge's (bridge 0.6): its humidity awaited, never reported yet (GA-BRIDGE-80), and its
+ * reporting interval a setting (GA-BRIDGE-79). What it sends that no key describes it lists as
+ * undescribed and announces (GA-BRIDGE-76), as every simulated device does.
+ */
+const R = "org.galatea.test.climate";
+/**
+ * A button pusher in the Zigbee bridge's shape (bridge 0.6): in click mode its onoff actions vanish
+ * and a stateless press, a toggle, appears; in switch mode the press vanishes and onoff returns. Its
+ * `onoff` capability stays either way. Its bridge describes only the extension actions it offers.
+ */
+const PRESS = "org.galatea.test.presser";
+const pressMode: FixtureAction = { action: `${PRESS}.set_mode`, idempotent: false, stateless: false, confirms: true,
+  args: { mode: ["switch", "click"] }, confirmedBy: { key: `${PRESS}.mode`, value: { arg: "mode" } } };
+const pressActions: Record<string, FixtureAction[]> = {
+  switch: [...declare(["onoff"], "closed"), pressMode],
+  click: [pressMode, { action: `${PRESS}.press`, idempotent: false, stateless: true, toggles: true, confirms: true }],
+};
+const NAMED: Record<string, FixtureDevice> = {
+  climate: device({ id: "climate", capabilities: ["sensor"], sensorKeys: ["temperature"], feedback: "closed", proposedClass: "sensor",
+    initial: { temperature: 21, [`${R}.interval`]: 60 }, actions: [], awaitedKeys: ["humidity"], settings: [`${R}.interval`],
+    extensions: [{ capability: R, description: "The sensor's own settings.", actions: [],
+      keys: [{ key: `${R}.interval`, kind: "state", description: "Seconds between its reports.", schema: { type: "integer" } }] }] }),
+  presser: device({ id: "presser", capabilities: ["onoff"], feedback: "closed", proposedClass: "socket",
+    initial: { on: false, [`${PRESS}.mode`]: "switch" }, actions: pressActions.switch, settings: [`${PRESS}.mode`],
+    extensions: [{ capability: PRESS, description: "The pusher's own press and mode.",
+      actions: [{ action: `${PRESS}.set_mode`, description: "Sets whether it holds a position or presses once.",
+        schema: { type: "object", properties: { mode: { enum: ["switch", "click"] } }, required: ["mode"] } },
+      { action: `${PRESS}.press`, description: "Presses the button: the arm goes down, then up.", schema: { type: "object", properties: {} } }],
+      keys: [{ key: `${PRESS}.mode`, kind: "state", description: "switch or click.", schema: { enum: ["switch", "click"] } }] }],
+    modes: { key: `${PRESS}.mode`, actions: pressActions } }),
+};
 
 /**
  * Devices only the scripted stand-in scripts, never a simulated bridge's defaults: a room's motion
@@ -169,7 +204,9 @@ export function bridgeDoc(spec: FixtureDevice, undescribed: { name: string; firs
     classEvidence: spec.proposedClass ? "protocol" : "none",
     otherAdmins: [],
     connections: spec.connections ?? [],
-    ...(spec.extensions ? { extensions: spec.extensions } : {}),
+    // An extension action is described only where it is offered, as the Zigbee bridge describes one.
+    ...(spec.extensions ? { extensions: spec.extensions.map((x) => (!x.actions ? x
+      : { ...x, actions: (x.actions as { action: string }[]).filter((a) => spec.actions.some((d) => d.action === a.action)) })) } : {}),
     ...(spec.personal ? { personal: spec.personal } : {}),
     ...(spec.selfChanging ? { selfChanging: spec.selfChanging } : {}),
     ...(spec.accounts ? { accounts: spec.accounts } : {}),
@@ -181,7 +218,7 @@ export function bridgeDoc(spec: FixtureDevice, undescribed: { name: string; firs
 
 export function fixtureDevices(ids: string[] = FIXTURE_IDS): FixtureDevice[] {
   return ids.map((id) => {
-    const d = FIXTURE[id] ?? SCRIPTED[id];
+    const d = FIXTURE[id] ?? NAMED[id] ?? SCRIPTED[id];
     if (!d) throw new Error(`no fixture device ${id}`);
     return structuredClone(d);
   });

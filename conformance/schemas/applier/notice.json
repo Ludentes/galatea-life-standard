@@ -8,6 +8,12 @@
     "notice_id": { "type": "string", "minLength": 1 },
     "cause": { "type": "string", "minLength": 1 },
     "rule_id": { "type": "string" },
+    "witness": {
+      "type": "object",
+      "description": "For a rule_disabled notice of a witness (GA-SAFE-14): the device and action it watches. The reference build's shape until the standard names one",
+      "required": ["device", "action"],
+      "properties": { "device": { "type": "string" }, "action": { "type": "string" } }
+    },
     "devices": { "type": "array", "items": { "type": "string" } },
     "text": { "type": "string" },
     "outcomes": { "type": "array" }

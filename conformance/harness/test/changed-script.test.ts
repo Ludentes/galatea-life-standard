@@ -4,10 +4,14 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
 // @ts-expect-error a script without types
 import { checkFiles, gitRunner, harnessImports, scopeOfChange, sharedPaths } from "../scripts/changed.mjs";
 import { sharedClosure, sharedFor } from "../src/changed.js";
+
+// Every test here runs git, some over the whole repository: under a loaded machine one took 7 s, past
+// vitest's default 5 s.
+vi.setConfig({ testTimeout: 60_000 });
 
 const repo = realpathSync(mkdtempSync(join(tmpdir(), "galatea-changed-")));
 afterAll(() => rmSync(repo, { recursive: true, force: true }));
@@ -310,7 +314,7 @@ describe.skipIf(!workshop)("the preflight's probes, on this repository", () => {
   it("C5, H, I, J: the checks' index, the build's package.json, the subject's other code and the binding scope by their sites only", async () => {
     expect((await scoped([touch("conformance/harness/src/tests/index.ts")])).mutations).toEqual([]);
     expect((await scoped([{ file: "reference/applier/package.json", edit: (t) => `${t}\n` }])).mutations).toEqual([]);
-    expect((await scoped([touch("reference/applier/src/main.ts")])).mutations.map((m) => m.mutation)).toEqual(["retains-request"]);
+    expect((await scoped([touch("reference/applier/src/start.ts")])).mutations.map((m) => m.mutation)).toEqual(["retains-request"]);
     expect((await scoped([touch("conformance/binding/src/index.ts")])).mutations).toEqual([]);
   });
 });

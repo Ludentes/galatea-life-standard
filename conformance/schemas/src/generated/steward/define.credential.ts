@@ -2,8 +2,8 @@
 
 export interface StewardDefineCredential {
   id: string;
-  kind: "app" | "panel" | "brain" | "front";
-  secret: string;
-  endpoint?: string;
-  confirm_on?: string;
+  kind?: "app" | "panel" | "brain" | "front";
+  secret?: string;
+  endpoint?: string | null;
+  confirm_on?: string | null;
 }

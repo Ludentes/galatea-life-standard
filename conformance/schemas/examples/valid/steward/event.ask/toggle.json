@@ -1,0 +1,3 @@
+{ "seq": 41, "time": "2026-10-07T21:05:00+03:00", "type": "ask", "plan_id": "p-17", "step_ids": ["s1"],
+  "steps": [{ "step_id": "s1", "target": "ir:living-tv", "action": "onoff.turn_off", "args": {}, "tier": "reversible", "reason": "toggle_only" }],
+  "endpoint": "olga-app" }

@@ -1,3 +1,4 @@
+import { TRANSPORT_KIND } from "@ludentes/galatea-life-sim";
 import { randomUUID } from "node:crypto";
 import { must, mustEqual } from "../../assert.js";
 import { requirement } from "../../registry.js";
@@ -105,7 +106,7 @@ requirement("GA-BUS-3", {
   const doc = lastDevices(bridge);
   await bridge.publishRaw("devices", { ...doc, devices: [...doc.devices,
     newcomer(doc.devices[0]!, "oddity", { feedback: "psychic", classEvidence: "rumour", transport: "radio2" })] }, true);
-  await bridge.publishStatus({ state: "hibernating", transports: [{ id: "test", kind: "other", state: "up", since },
+  await bridge.publishStatus({ state: "hibernating", transports: [{ id: "test", kind: TRANSPORT_KIND, state: "up", since },
     { id: "radio2", kind: "lora", state: "up", since }] });
   await pollUntil(async () => (await mcp.callOk("describe")).transports
     .some((t: { id: string; kind: string }) => t.id === "sim-bridge:radio2" && t.kind === "other"), oneSecond(ctx),

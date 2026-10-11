@@ -590,7 +590,7 @@ export class SimApplier {
     const commandId = randomUUID();
     const args = (step.args ?? {}) as Record<string, unknown>;
     const value: BridgeCommand["value"] = { action: step.action };
-    const wire = toWire(step.action, args);
+    const wire = toWire(decl, args);
     if (wire !== undefined) value.value = wire;
     const expect = setsOf(decl, args);
     if (decl.wholeState) value.state = { ...d.assumed, ...expect };

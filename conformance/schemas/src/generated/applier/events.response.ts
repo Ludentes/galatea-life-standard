@@ -30,6 +30,14 @@ export interface ApplierEventsResponse {
     notice_id: string;
     cause: string;
     rule_id?: string;
+    /**
+     * For a rule_disabled notice of a witness (GA-SAFE-14): the device and action it watches. The reference build's shape until the standard names one
+     */
+    witness?: {
+      device: string;
+      action: string;
+      [k: string]: unknown | undefined;
+    };
     devices?: string[];
     text: string;
     outcomes?: unknown[];

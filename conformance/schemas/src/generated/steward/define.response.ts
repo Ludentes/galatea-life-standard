@@ -250,7 +250,7 @@ export type StewardDefineResponse = (
             basis: "real" | "emulated";
             from_replaced?: true;
             /**
-             * A step of brain_authored work (GA-DEF-7): above reversible it is refuse(tier), and it is sent with brain: true (provisional: the standard names no field for it)
+             * A step of brain_authored work (GA-DEF-7): above reversible it is refuse(tier), and it is sent with brain: true (steward, Steps)
              */
             brain_authored?: true;
             /**
@@ -273,7 +273,11 @@ export type StewardDefineResponse = (
   revision?: number;
   diff?: string;
   /**
-   * define { plan_id } of a plan whose confirm_define no one answered yes: nothing changed, and the plan is spent (GA-DEF-6; provisional)
+   * The house, after this define, has no notify channel, so notices are held (GA-NOTE-1)
+   */
+  no_notify_channel?: true;
+  /**
+   * define { plan_id } of a plan whose confirm_define no one answered yes: nothing changed, and the plan is spent (GA-DEF-6; steward, Operations)
    */
   skipped?: "not_confirmed";
   [k: string]: unknown | undefined;

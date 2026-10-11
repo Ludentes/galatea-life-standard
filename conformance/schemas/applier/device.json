@@ -61,7 +61,7 @@
           "stateless": { "type": "boolean" },
           "toggles": { "type": "boolean" },
           "whole_state": { "type": "boolean" },
-          "args": { "type": "object" },
+          "args": { "type": "object", "additionalProperties": { "$ref": "../common.json#/$defs/argConstraint" } },
           "tolerance": { "type": "number", "minimum": 0 },
           "ack_within_s": { "type": "number", "minimum": 0 },
           "confirms": { "type": "boolean" },

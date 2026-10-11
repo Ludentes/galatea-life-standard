@@ -115,7 +115,20 @@ export interface ApplierDevice {
     toggles?: boolean;
     whole_state?: boolean;
     args?: {
-      [k: string]: unknown | undefined;
+      /**
+       * One argument's constraint in an action's args, the table ruled 2026-10-06: a list is the allowed values (an empty one allows none); an object holding min, max or step a numeric range (step from min, else 0); "any" or {} no limit; an object of named fields an object argument, each field's own constraint; optional: true beside a range's or fields' keys an argument that may be left out. Not JSON Schema.
+       */
+      [k: string]:
+        | "any"
+        | (string | number | boolean)[]
+        | {
+            min?: number;
+            max?: number;
+            step?: number;
+            optional?: boolean;
+            [k: string]: unknown | undefined;
+          }
+        | undefined;
     };
     tolerance?: number;
     ack_within_s: number;

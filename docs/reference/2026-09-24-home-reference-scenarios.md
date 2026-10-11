@@ -273,7 +273,7 @@ get full light. In the morning he asks: «Галатея, почему свет 
 | Wall switch → device → bridge | The wall switch cuts and restores the dimmer module's power; when power returns, the module reports `on, 100 %` with no command behind it | Bridge |
 | Applier | A `state` event with cause `external` (GA-EVT-1) | Applier |
 | Steward | A person-precedence lease on the light, held by `external`, for the hold time (GA-LEASE-2). The 02:10 rule action took no lease (GA-LEASE-5) | Steward |
-| Steward | The off rule's action is refused while the lease holds (GA-LEASE-3). When the lease ends, level-triggered rules naming the light are re-evaluated (GA-LEASE-4, GA-RULE-1): the hall has been still, so the light goes off, with the rule as its cause | Steward |
+| Steward | The off rule's action is refused while the lease holds (GA-LEASE-3). The lease records the off rule as one it refused (at about 02:15, once the hall has been still 180 s); should a second flick of the switch replace the lease, the refusal passes to the new one. When the lease ends, the rules it refused are re-evaluated (GA-LEASE-4, GA-RULE-1): the hall has been still, so the light goes off, with the rule as its cause | Steward |
 | Morning: person → brain → steward | The LLM calls the steward's `history` for the hall light (GA-STW-7) and answers from the causes it returns: «В 02:10 его включило ночное правило, в 02:12 — не через меня, на полную. В 04:12 его выключило ночное правило» | Brain; Steward |
 
 **Trust and guardrails.** The flat's dimmers have no neutral at the switch, so a flick of the wall
@@ -936,7 +936,7 @@ At 21:25 Лиза opens the lid. At 21:26 she goes to the hall satellite and say
 | Steward → applier → PC bridge | The condition becomes true, and the rule fires (GA-RULE-1). The bridge's system service locks every graphical session of Лиза's account, without her helper, and the step is `acked` when each reads `locked`, or `disconnected` on Windows (GA-BRIDGE-52, GA-BRIDGE-66, GA-EVT-3); an SSH login of hers has no screen and does not hold up the ack. A lock no session takes (on Linux, one no screen locker honours) ends `failed(not_locked)` within 5 s (GA-BRIDGE-66), which the rule does not retry (GA-RULE-7); a notice on the home's channels names the rule and the failure, so Ольга learns the limit did not hold (GA-RULE-8). The lock takes no lease, so nothing keeps the rule from locking again (GA-LEASE-1, GA-LEASE-3) | Steward; Applier; Bridge |
 | Лиза → hall satellite → brain → steward | «Ещё полчасика». The satellite gives no hint for her voice, so she is a guest there (GA-AUTH-2). She may not change a rule. The brain sends a `notify` to Ольга's channel instead, which is `reversible` | Brain; Steward |
 | Ольга → app → steward | She grants it: a rule exception `{ from: now, until: 21:56 }` (GA-RULE-6), as her own `define` | Steward |
-| Лиза → laptop | She types her password; `session.liza` reads `active`. At 21:56 the exception ends, the rule's condition holds, and it fires (GA-RULE-6, as GA-LEASE-4 does when a lease ends) | Steward |
+| Лиза → laptop | She types her password; `session.liza` reads `active`. At 21:56 the exception ends, the rule's condition holds, and it fires (GA-RULE-6) | Steward |
 
 **Trust and guardrails.** A child's limit that a sleeping laptop escapes is not a limit. That is
 why the rule is a condition to hold, not an event at 21:00. The lock targets a person's session, so

@@ -6,7 +6,7 @@ import { requirement } from "../../registry.js";
 import { BridgeWatcher } from "../../seams/bridge-watcher.js";
 import { pollUntil, sleep } from "../../util.js";
 import { sign, type Asked } from "../token.js";
-import { DIMMER, eventsOf, LAMP, livenessWithin, oneSecond, ownerConfigure, reviveWithin, TV, wire } from "../util.js";
+import { DIMMER, eventsOf, LAMP, lastDevices, livenessWithin, oneSecond, ownerConfigure, reviveWithin, TV, wire } from "../util.js";
 
 const CHANNEL = "sim-bridge:channel";
 const PAGER = "sim-bridge:pager";
@@ -451,10 +451,18 @@ requirement("GA-BUS-4", {
 
 requirement("GA-BUS-5", {
   seam: "applier", fixture: { devices: ["lamp"] },
-  covers: "a command arrives unretained with a Message Expiry no longer than its result_within_s, and a snapshot request unretained with one no longer than 10 s; a client subscribing afterwards is given neither as retained",
+  covers: "the lamp's reach made 1.25 s, so its bound is no whole number of seconds where the subject takes twice the reach plus 10: a command arrives unretained with a Message Expiry of its resultWithinMs rounded up to whole seconds, and a snapshot request unretained with one no longer than 10 s; a client subscribing afterwards is given neither as retained",
 }, async (ctx) => {
   const bridge = ctx.bridge!;
-  const bound = await ackWithinS(ctx, LAMP, "onoff.turn_on");
+  // A reach of 1.25 s: a subject whose bound is twice it plus 10 sends 12 500 ms, which tells rounding up from down.
+  // A snapshot's answer would re-publish the bridge's own document over it: the bridge answers none meanwhile.
+  bridge.holdRequests(true);
+  await sleep(oneSecond(ctx));
+  const doc = lastDevices(bridge);
+  await bridge.publishRaw("devices", { ...doc, devices: doc.devices.map((d) => (d.id === "lamp" ? { ...d, reachMs: 1250 } : d)) }, true);
+  await pollUntil(async () => ((await ackWithinS(ctx, LAMP, "onoff.turn_on")) >= 12.5 ? true : undefined), oneSecond(ctx),
+    "the lamp's ack_within_s at least twice its reach of 1.25 s plus 10");
+  bridge.holdRequests(false);
   const mark = bridge.commands.length;
   await apply(ctx, [ask(LAMP)]);
   const [cmd] = await pollUntil(async () => {
@@ -463,7 +471,9 @@ requirement("GA-BUS-5", {
   }, oneSecond(ctx), "the lamp's command at the bridge");
   ctx.evidence(`command: ${JSON.stringify(cmd)}`);
   must(!cmd!.retained, "the command arrived retained", cmd);
-  must(cmd!.expiryS !== undefined && cmd!.expiryS > 0 && cmd!.expiryS <= bound, `the command's Message Expiry is ${cmd!.expiryS}, not within 1..${bound} s`, cmd);
+  // Its resultWithinMs rounded up to whole seconds, as the bridge standard's *Message Expiry* says.
+  must(typeof cmd!.resultWithinMs === "number", "the command carries resultWithinMs", cmd);
+  mustEqual(cmd!.expiryS, Math.ceil(cmd!.resultWithinMs! / 1000), `the Message Expiry of a command whose resultWithinMs is ${cmd!.resultWithinMs}`);
   const requests = bridge.requests.length;
   await bridge.restart();
   const req = await pollUntil(async () => bridge.requests.slice(requests).find((x) => x.op === "snapshot"), 10_000, "a snapshot request after a new instance");

@@ -5,7 +5,7 @@ last_verified:
 area: architecture
 audience: dev
 author: Galatea maintainers
-version: 0.10
+version: 0.11
 related:
   - standard/applier.md
   - standard/brain.md
@@ -14,6 +14,7 @@ related:
   - conformance/steward-requirements.json
   - CONTEXT.md
   - docs/reviews/2026-10-06-bridge-0.6-applier-0.15.md
+  - docs/reviews/2026-10-07-steward-0.11.md
 ---
 
 # The Galatea steward standard
@@ -22,6 +23,7 @@ related:
 
 | Date | Version | Change |
 |---|---|---|
+| 2026-10-07 | 0.11 | Where the reference build departed from the text, by the maintainer's rulings: open plans survive a restart only with an `ask` step, a lost plan being `unknown_plan` (GA-PERSIST-2); a steward MAY replay a state edge from a gap once, within the `edge_replay_s` it states in `describe` (at most 300 s), its conditions judged now, the gap defined for restarts too (GA-RULE-1); it MAY coalesce the `skipped(occupancy_unknown)` notice per rule and room while the room stays unknown (GA-RULE-8); a lease's end re-evaluates only the rules it refused, a replaced lease handing them on (GA-LEASE-4); a latchless safety lease MAY end after the `safety_lease_s` it states, no shorter than its actuation's `ack_within_s` plus the late-ack window (GA-LEASE-6); `scenario_stop` of a run no person started is never a visitor's (GA-SCN-9). `notice_channels` may be empty until first set, then never empty; notices are held until a channel exists and kept across restarts, `describe` counts them, and a channel that stops qualifying is noticed (GA-DEF-8, GA-NOTE-1, GA-NOTE-4, GA-PERSIST-2). The `ask` event carries the asked steps, to readers who may see the plan, personal values withheld (GA-CONF-5, GA-AUTH-7). The shapes the shared schemas held as provisional are written in and bind (*Change sets*, GA-DEF-13; every upsert merges, GA-DEF-14), with a step's `brain_authored` and `answer`, the `confirm_define` step, `define`'s `skipped` and `no_notify_channel`, and `describe`'s `persons`; from the maintainer's walk of the deferred items, a held duration holds afresh after a restart before its rule fires (GA-RULE-1), GA-RULE-7's bound past 300 s is `ack_within_s` plus 60 s, the `define` event's diff goes only to the readers an ask's `steps` would (GA-STW-7), one record answers one plan, the harness checks GA-NOTE-1 at 7 stepped days, and renewable leases are a known gap. Reviewed in `docs/reviews/2026-10-07-steward-0.11.md`: two rounds, each of two readers (Kimi; a no-context Claude reader) and a scenario walk; round 1 found blockers, round 2 none, so round 2's fixes were not re-read (the stopping rule); 89 finding rows, 80 fixed, 8 deferred (to 0.12 and the backlog's *Measurement*), 1 recorded with no text change, 0 rejected; the deferred items walked by the maintainer on 2026-10-07. **PASS** 2026-10-07 |
 | 2026-10-06 | — | Editorial: private references removed for publication; no requirement changed. Decisions once credited to another system now state what was decided and why; links to documents that are not public are reworded |
 | 2026-10-06 | 0.10 | For applier 0.15 and bridge 0.6, from the Zigbee bridge's live bench run: a `live` motion sensor reading motion now keeps its room occupied, as a PIR holding `true` does (GA-OCC-1, the maintainer's ruling); `define` refuses a trigger or condition on a key its device does not declare, its `data` naming the key, the device and whether its bridge awaits it (GA-DEF-12, a partial guard); the applier's `undescribed` event relayed and kept; the vocabulary's `contact` is now `opening`. Reviewed with the `standard-review` procedure in five rounds (change record `docs/reviews/2026-10-06-bridge-0.6-applier-0.15.md`): Kimi (k3) and a no-context Claude reader, and a scenario walk each round; 183 findings: 151 fixed (round 5's highs not re-read, by the stopping rule), 24 deferred to the backlog, 6 no change, 2 rejected; the maintainer's rulings of 2026-10-06 on held-back keys (numeric only), kept settings (A), GA-OCC-1 (a motion sensor reading motion now) and cross-topic order (applier 0.16). **PASS** 2026-10-06 |
 | 2026-10-01 | 0.9 | For applier 0.14 (change record `docs/reviews/2026-10-01-bridge-0.5-applier-0.14.md`): the owner may lower any extension action's tier to its floor, not only a plugin's, as the applier's extension row now covers a bridge's own extensions; the applier's `occurrence` events relayed and kept in `history`, a personal key's excepted, and withheld from a guest or visitor as its `state` events are (GA-STW-7, GA-AUTH-7 amended). Reviewed in `docs/reviews/2026-10-01-bridge-0.5-applier-0.14.md`: one round of two readers (Kimi `k3`; Claude, no context) and a scenario walk (no grade changed); 30 finding rows, 26 fixed (one in part), 3 deferred, 1 rejected; no blocker; round 1's fixes not re-read by a further round (the stopping rule); **PASS** 2026-10-01 (the maintainer, after walking the deferred items) |
@@ -80,7 +82,7 @@ change of state (GA-HOUSE-1).
 
 | Object | Fields |
 |---|---|
-| Home | `timezone` (an IANA zone), `hold_time_s` (default 7200), `occupancy_hold_s` (default 300), `ask_expiry_s` (default 300), `notice_channels` (channel ids, at least one: targets with `notify`, or with `media.announce`, which speak the notice's text), `other_wake_words` (default: the assistants listed under *Listening*), `answer_words` (default: the words listed under *Listening*), `audio_retention_s` (default 0: a voice front keeps no audio), `time_source` (harness only, GA-HARN-2) |
+| Home | `timezone` (an IANA zone), `hold_time_s` (default 7200), `occupancy_hold_s` (default 300), `ask_expiry_s` (default 300), `notice_channels` (channel ids: adopted targets with `notify`, or with `media.announce`, which speak the notice's text; empty until the owner first sets it, and from then on never empty, GA-DEF-8), `other_wake_words` (default: the assistants listed under *Listening*), `answer_words` (default: the words listed under *Listening*), `audio_retention_s` (default 0: a voice front keeps no audio), `time_source` (harness only, GA-HARN-2) |
 | Room | `id`, `name` |
 | Target | `id` (the applier's device id), `name`, `aliases`, `room` or null, and everything the applier describes for it, `adopted`, `other_admins`, `internal` and `personal` included; on a `computer`, the applier's `accounts` and the steward's `account_persons` (*Sessions belong to persons*) |
 | Group | `id`, `name`, `aliases`, `room` or null, `members` (target ids), `aggregate` (`any` · `all`) |
@@ -204,8 +206,18 @@ The steward owns every ask. The plan that contains the ask is the question; the 
 an `ask` event for it.
 
 - **The question.** The steward MUST emit an `ask` event for every plan with an `ask` step,
-  `{ plan_id, step_ids, endpoint, time }`, where `endpoint` is where the question is put: the
-  plan's endpoint, or the `confirm_on` that applies to it (GA-CONF-5).
+  `{ plan_id, step_ids, steps, endpoint, time }`, where `endpoint` is where the question is put: the
+  plan's endpoint, or the `confirm_on` that applies to it; and `steps` holds one object per asked
+  step, in the order of `step_ids`, `{ step_id, target, action, args, tier, reason }`, each field as
+  the plan's step gives it (*Steps*), or, for a `confirm_define` step, that step's own shape,
+  `{ step_id, reason: confirm_define, diff }`, so that the asked endpoint sees what it confirms on
+  the event itself, with no read of the plan (GA-CONF-5). A run's toggle step asked again
+  (GA-SCN-3) MAY carry `run_id`, the scenario run that asked. `steps` go only to readers who may
+  already see the plan, decided by the endpoint a read names or derives, never by its credential:
+  a read at the ask's endpoint, one whose derived role is `owner`, and one whose derived person is
+  the plan's `speaker`; every other reader of `events` and `history` gets the event without `steps`,
+  so a pending `notify` text reaches only those (a guest's panel only when it is the ask's endpoint)
+  (GA-CONF-5). Personal values in them are withheld as in the plan (GA-AUTH-7).
 - **Who may answer.** A brain credential MAY carry its own `confirm_on`, which then applies to every
   endpoint it serves that has none. An answer is accepted only for an open plan (made, not yet applied, not expired), after the plan was made, from the
   credential and endpoint the plan was made from; or, when that endpoint's `confirm_on` (or else its
@@ -232,8 +244,9 @@ an `ask` event for it.
   already answered another plan, or whose `endpoint`, `time` and `transcript`
   together did, is `invalid_request` and counts for nothing. A record without `addressed_by`
   counts as `follow_up`, so that an older brain fails closed. An `utterance_id` is a UUID, unique
-  within the home: a front that merges what several endpoints heard gives it one id, so one yes
-  answers one plan. The steward may forget a record once every plan whose `ask` event came before its
+  within the home: a front that merges what several endpoints heard gives it one id, so one record
+  answers one plan. The steward cannot tell a re-minted record from a new yes; that rests on the
+  trust given the brain. The steward may forget a record once every plan whose `ask` event came before its
   `time` plus the clock tolerance has expired, since the timing check refuses it for any later plan. An answer naming a
   step not in the ask's `step_ids` is `invalid_request`. Both are the brain's word, so this catches mistakes, not
   lies. When the plan named a `speaker`, an answer through a brain naming a different one, or none,
@@ -252,12 +265,13 @@ an `ask` event for it.
   `addressed_by` and a `gate` hint are the front's word, relayed by the brain: the steward cannot
   check them, and this catches mistakes, not lies, as for the rest of the record. What it can
   check, it does, against the configured record and the narrowings in force for longer than the
-  narrowing delay: `typed` from an endpoint not `type: app`, `skill`
+  narrowing delay (`standard/voice.md`, *Constants*): `typed` from an endpoint not `type: app`, `skill`
   from one without a `skill_account`, `follow_up` at an endpoint with a voice record whose
   `follow_up` is off or whose listening is narrower than `wake_device`, `tap` where `listening` is
   `off`, `wake` where it is `off` or `tap`, a `gate` basis where `describe`
   shows no gate model for that person at that endpoint, and a `person` basis at an endpoint whose
-  person is another, are `not_permitted` (GA-CONF-6). The record also names the asking `say` and
+  person is another, are `not_permitted` (GA-CONF-6). The gate models `describe` shows are the
+  front's own report, so this clause too catches mistakes, not lies. The record also names the asking `say` and
   what the front reported of it (`asked_by { say_id, status, cut_by?, ended_at?, clock_epoch? }`), so that `history` shows
   whether the question was heard. The steward MUST keep
   the record in `history` with the step it answered, and refuse as `invalid_request` a record
@@ -267,7 +281,7 @@ an `ask` event for it.
   `clock_epoch`, a missing epoch counting as one (both are the front's times, so no tolerance
   applies; a «да» begun within the interval slack of the question's end may be refused, an answer
   lost and asked again, never a false one) (GA-CONF-2). Times are RFC 3339 with an offset;
-  endpoints, their fronts and the steward SHOULD share one time source. The
+  the checks assume that endpoints, their fronts and the steward share one time source. The
   steward cannot check that the brain heard what it says it heard. **Ruling (2026-09-24):** a
   brain's yes is trusted for `confirm`, as people trust their assistants; an owner who does not
   trust a satellite points its `confirm_on` at an app, and `no_voice` never passes through a brain.
@@ -292,7 +306,8 @@ brain can write a standing order only for what it could do without asking (GA-DE
 whoever wrote the scenario it runs, so a brain cannot reach an owner's steps through a standing
 order of its own (GA-DEF-7). A step of authored work that reaches a device through a room or a
 group the device joined through a brain is `brain_authored` for that device, until a `define` from
-an endpoint not served by a brain sets the device's room and groups again, so a brain cannot move a
+an endpoint not served by a brain upserts the device's `target` naming `room`, and upserts each
+group that contains the device naming `members`, so a brain cannot move a
 device under an owner's step (GA-DEF-7). A schedule exception that moves a run, made through a
 brain, makes that run `brain_authored`; one that skips a run never marks anything. The mark holds
 whoever applies or runs the work, an owner at their own app included, and `describe` shows it as
@@ -325,7 +340,18 @@ The steward:
   that rule's latch `cleared` or `cleared_by_owner`, or, for a rule with no latch, until the rule is complete; after a
   `cursor_expired`, it reads held latches from the applier's `state`, and releases a latchless rule's
   lease once the applier's `history` shows that rule's first `rule_fired` event after the lease was
-  granted, which the applier issues when the rule completes (GA-LEASE-6);
+  granted, which the applier issues when the rule completes (GA-LEASE-6). It MAY also end a
+  latchless rule's lease once a bound of its own has passed since the lease was granted, which it
+  states in `describe` as `safety_lease_s` and omits when it never ends one early, and it MUST end
+  none early while it omits it. The bound MUST be no shorter, for each lease, than the `ack_within_s`
+  of the rule's actuation on that device plus the late-ack window (60 s, GA-APPLY-11), so the
+  steward applies to each lease the larger of `safety_lease_s` and that actuation's floor; the lease
+  then outlasts a late ack of the actuation, and a completion the steward never sees does not hold
+  the device for ever. A re-send that waits for a dead device is still guarded by the applier's
+  `refuse(safety)` (GA-SAFE-2). Ordinary rules may then plan on the device again, but the applier still answers them
+  `refuse(safety)` until the rule completes (GA-SAFE-2); a level-triggered rule so refused is
+  re-evaluated, and fires if its condition holds, when the steward sees that safety rule's
+  `rule_fired` relayed (GA-LEASE-6);
 - MUST lease a running scenario's `owned` targets until the run ends, and release only the leases
   that run holds (GA-SCN-2);
 - MUST NOT give a rule's action a lease (GA-LEASE-5);
@@ -333,9 +359,16 @@ The steward:
   and replace the lease, except a `session.lock`, which a lease never refuses and which replaces
   none, so that a lease someone else took on the laptop does not stop a rule from locking it again
   (GA-LEASE-3);
-- MUST, when a lease ends, re-evaluate every level-triggered rule whose trigger or actions name one
-  of its devices, and fire it if its condition holds; MUST NOT re-run edge-triggered rules
-  (GA-LEASE-4).
+- MUST, when a lease ends, re-evaluate every level-triggered rule the lease refused an action of
+  while it held, and fire it if its condition holds; MUST NOT re-evaluate a rule the lease refused
+  nothing of, nor re-run edge-triggered rules (GA-LEASE-4). A lease that refused nothing ends with
+  nothing re-evaluated, so a rule that fired before the lease, and still holds, does not fire again.
+  When a lease is replaced, nothing is re-evaluated for the devices the new lease covers: the
+  rules the replaced lease refused on them pass to the new lease, so that a second touch of a switch
+  does not lose the rule the first one held back; the rules it refused on devices the new lease does
+  not cover are re-evaluated then, as at an end (GA-LEASE-4). A re-evaluation fires a rule only
+  outside its exceptions (GA-RULE-6). Each lease's refused rules are kept with it across a restart
+  (GA-PERSIST-2).
 
 A **level-triggered** rule's trigger is a state held for a duration ("no motion in the hall for
 180 s"), or, for a rule of conditions only, its conditions held for 0 s (*Rules*); an
@@ -370,7 +403,7 @@ consulted (GA-OCC-1).
 `power.sleep` or `power.shutdown` on a computer:
 - is `ask(in_use)` when any account **mapped to a person** reads `active` or `idle`;
 - is `ask(in_use_unknown)` when none does, but a mapped account reads `unknown` or its key is
-  absent, or, with an account mapped, the computer is `stale`; and always when the computer has no
+  absent, or, with an account mapped, the computer is not `live`; and always when the computer has no
   `session` capability at all, whether or not an account is mapped, since no mapping can then be
   read (fails closed, as GA-OCC-1 does; an adapter's computer that cannot report sessions, HS24);
 - otherwise (a computer with a `session` capability, and every mapped account `locked`,
@@ -438,8 +471,9 @@ moves the endpoint into a zone or another zone.
   has a reason other than `configured`, a narrowing or a mute, as when a wake word has no model on
   this box, the steward MUST issue a notice naming the endpoint and the
   reason, once per change of reason, the reason `offline` only once it has held for the offline
-  grace; and so when narrowings not made from an owner's own endpoint have kept an endpoint
-  narrowed for 24 h in a row, since a narrowing can be renewed (GA-LISTEN-2).
+  grace; and so when narrowings not made from an owner's own endpoint (an endpoint whose `person`
+  is an owner) have kept an endpoint narrowed for the narrowing notice span (*Constants*) in a row,
+  since a narrowing can be renewed (GA-LISTEN-2).
 - **What `describe` shows.** Each endpoint's voice record, its effective record as the front last
   reported it, the models its front declared (`standard/voice.md`, *How a model is measured*), and
   the narrowings in force, each `{ narrowing_id, listening?, follow_up?, until,
@@ -462,7 +496,8 @@ moves the endpoint into a zone or another zone.
   assistant. A `media.announce`, or a notice spoken through a `notify` channel whose target speaks (class
   `speaker` or `tv`), whose text, normalised as the voice standard's *Constants* say but
   with no word removed, contains as whole words, each normalised the same way, or has a run of words within the echo
-  match (voice, *Constants*) of, with the listed word taken as the transcript and in either reading, a
+  match (voice, *Constants*) of, with the listed word taken as the transcript and in either reading
+  (voice, *Constants*), a
   wake word of any endpoint, or a word in the home's `other_wake_words` (the assistants
   in the home: by default «Алиса», «Алекса», «Alexa», «Салют», «Сбер», «Джой», «Афина»,
   «Маруся», «Окей, Гугл», which the owner edits), MUST be `refuse(invalid_args)`
@@ -502,7 +537,7 @@ moves the endpoint into a zone or another zone.
 - A steward SHOULD issue a notice, at `define`, for a name, alias or scenario name that contains
   a wake word of any endpoint or a word in `other_wake_words`, or a run within the echo match of
   one: the house can never say it, and every
-  mention of it would address an assistant.
+  mention of it would address an assistant (GA-LISTEN-6).
 
 ## Plans
 
@@ -539,6 +574,13 @@ selector's or group's targets in the Unicode code-point order of their ids (GA-S
 | `holder` | the lease holder, with `refuse(leased)` |
 | `stale`, `basis` | from the applier's plan |
 | `from_replaced` | `true` on a `notify` step whose caller-set `from` the steward overwrote (GA-NOTE-2) |
+| `brain_authored` | `true` on a step of `brain_authored` work (GA-DEF-7); absent otherwise |
+| `answer` | `yes` · `no`, on an asked step once an answer stands for it (*The confirmation dialogue*); absent before |
+
+A `define` through a brain has one step of its own shape, with no target or action:
+`{ step_id, verdict: ask, reason: confirm_define, diff, answer? }`, where `diff` is the readable
+diff the change set would apply, its `brain_authored` marks shown in it; that plan's `request` is
+the `define`'s, `{ endpoint, speaker?, changes, expected_revision }` (GA-DEF-6).
 
 The steward plans on its applier and adds its own reasons. When more than one applies, it MUST report
 the first in this order (GA-STW-4):
@@ -591,7 +633,8 @@ request and its steps. Apply uses the plan's request.
   error (`plan_expired`, `stale_revision`, `plan_not_yours`); nothing is dispatched (GA-STW-5). The
   same holds for `define { plan_id }`, whose plan's endpoint and speaker govern: a `define` naming
   others is `invalid_request`. `answer` returns these errors, checked in this order:
-  `invalid_request` (an unknown `plan_id`, a bad utterance record, a step not asked);
+  `unknown_plan` (a `plan_id` the steward does not hold); `invalid_request` (a bad utterance
+  record, a step not asked);
   `not_permitted` (another credential, endpoint or speaker, GA-CONF-1); `plan_expired`;
   `stale_revision`.
 - An `idempotency_key` is scoped to the credential, and bodies are compared as the applier's are.
@@ -637,7 +680,7 @@ duck while the front speaks), or `safety_rule`, `load_cap`,
 `events` and `history` work as the applier's (`standard/applier.md`, *Events and history*), with the
 steward's causes and its own `seq`, relayed events included; they carry the applier's `state`,
 `outcome`, `late_ack`, `latch`, `liveness`, `model`, `route_conflict`, `provision`, `freshness`,
-`transport`, `other_admins`, `bridge_fault`, `occurrence` and `undescribed` events, and add these event types: `define` (the diff applied, with its cause), `ask` (as *The
+`transport`, `other_admins`, `bridge_fault`, `occurrence` and `undescribed` events, and add these event types: `define` (the diff applied, with its cause; the diff given only to the readers an ask's `steps` would go to, by the endpoint a read names or derives: a read at the `define`'s endpoint, one whose derived role is `owner`, and one whose derived person is its `speaker`, personal values in it withheld as in a plan, and every other reader getting the event without it, GA-STW-7), `ask` (as *The
 confirmation dialogue*), `answer` (with its utterance record), `lease` (granted, replaced, ended),
 `narrowed` (a narrowing granted, lifted or expired, with its cause),
 `refused` (a rule's or run's step refused, with its reason), `rule_fired` (the steward's rules, and
@@ -649,7 +692,8 @@ types, and the applier's `state`, `outcome`, `late_ack`, `latch`, `liveness`, `m
 `freshness`, `transport`, `other_admins`, `bridge_fault`, `occurrence` and `undescribed` events, with their causes, oldest first, for
 at least 7 days (GA-STW-7); `undescribed` events as received live, since the applier's history does
 not keep them (the device's `undescribed` holds the list). A `state` event's `speech` key is kept only in `events`, never in
-`history`: what a television said is not the house's record. The applier's history says what
+`history`: what a television said is not the house's record; so is an `occurrence` of a personal
+key (*Personal keys*). The applier's history says what
 happened; the steward's says why.
 
 ## Personal keys
@@ -669,7 +713,9 @@ it only marks them; the steward holds the floor on who reads them.
 - **The floor.** The steward MUST NOT return a personal key's value to a call whose derived role is
   `guest` or `visitor`, or to a brain credential's call that names no endpoint (GA-AUTH-7). The value is replaced
   by `withheld` wherever it appears: in `state`, `history` and `events`, in `rule_fired`, in a plan's
-  steps, and in outcomes. A personal key's `state` events are left out of such a call's `events`
+  steps, in the `ask` event's `steps` (an `args` value that sets a personal key; and a literal a
+  `diff` shows compared with, or set on, a personal key, a clause *not checked by the harness*,
+  since a `diff` is free text), and in outcomes. A personal key's `state` and `occurrence` events are left out of such a call's `events`
   and `history` entirely, not only their values: their times alone would give a boolean back, as
   `camera_in_use` alternating does, and a session's logins. GA-STW-7's `history` is read with
   this floor; a gap left in `seq` shows that something was left out, not what. An `if` or `wait`
@@ -699,12 +745,26 @@ Rules may read personal keys. A rule is the owner's, or one the owner's policy l
 The steward takes each notice in the `notices` list of the applier's `events` responses, whatever
 its `cause` (a safety rule, a closed join window, another admin),
 delivers it on the home's `notice_channels` (`define` refuses, with `invalid_request`, a change
-set that leaves them without a `notify` channel), retrying at least every 60 s, and never giving up, until at
+set that leaves them, once set, empty, GA-DEF-8), retrying at least every 60 s, and never giving up, until at
 least one channel's `notify` ends `delivered`, or `sent` on a channel that never reports receipt, and only then sends `notice_taken` with its
 `notice_id`, so that a notice is never lost between the two
 layers (GA-NOTE-1). A channel that announces speaks each notice once, is not retried, and never
 counts as delivery: a kitchen is not told of a fault every minute, and a refused announcement
-(GA-LISTEN-4) loses nothing.
+(GA-LISTEN-4) loses nothing. A notice raised while no channel is set is held, and delivered as
+above once the first channel is set; while the channels include no adopted channel offering
+`notify`, an announcing channel speaks it once and it stays held, since an announcement never
+counts as delivery, until a `notify` channel set later delivers it. Held notices coalesce per kind
+(an applier notice's `cause`, or the requirement that raised the steward's own) and target, the
+latest kept with a count of those it replaced, so at most one per kind and target is held. While
+no adopted channel offers `notify`, `describe` shows `held_notices`, the count of notices held, and
+a `define` whose change set leaves none says so in its response, `no_notify_channel: true`
+(GA-NOTE-1). Every notice of the steward's own not yet delivered survives a restart (GA-PERSIST-2).
+
+When a channel in `notice_channels` leaves adoption, or offers neither `notify` nor
+`media.announce`, and when the list loses its last adopted channel offering `notify`, the steward
+MUST raise a notice naming it, delivered on the remaining channels as GA-NOTE-1 delivers an
+applier's, and held if none remain (GA-NOTE-4). `define` does not refuse the
+list for it until a change set sets the list again (GA-DEF-8).
 
 ### Who sent a notify
 
@@ -789,8 +849,10 @@ a cycle: `define` refuses such a change set with `cycle` (GA-DEF-4).
   ended `skipped(occupancy_unknown)` or `skipped(in_use_unknown)` is: a run that knows nothing about
   a room or a PC has not succeeded with it. So is `skipped(not_confirmed)`, a declined ask included,
   and `skipped(toggle_only)`, a toggle no one could confirm (GA-SCN-11).
-- `scenario_stop` by a principal of lower precedence than the run's, or by a role lower than that of
-  the person who started it, is `not_permitted`; an unknown
+- `scenario_stop` by a role lower than that of the person who started the run is `not_permitted`.
+  Who may stop a run no person started (a schedule's or a rule's) is otherwise the steward's
+  policy, *not checked by the harness*, except that a `visitor` never may: its `scenario_stop` is
+  `not_permitted`. An unknown
   `run_id` is `unknown_run`; a stopped run ends `ended(stopped)` (GA-SCN-9).
 
 ## Rules
@@ -802,14 +864,27 @@ a request's, with an optional `respect_occupancy`), `active` and `exceptions`. S
 steward's (`standard/applier.md`, *Safety rules*); the steward never hosts one.
 
 A level-triggered rule MUST fire once when its condition becomes true, and not again until it has
-been false; a lease ending counts as becoming true again (GA-RULE-1). After a restart, the steward
-starts every held duration afresh (GA-PERSIST-2). After a `cursor_expired`, it first reads the
-applier's `history` from the time of the last event it had, records the events it missed in its own
+been false; the end of a lease that refused it counts as becoming true again (GA-RULE-1,
+GA-LEASE-4). After a restart, the steward
+starts every held duration afresh (GA-PERSIST-2). After a restart or a `cursor_expired`, it first
+reads the applier's `history` from the time of the last event it had (it keeps its applier cursor
+and that time across a restart, GA-PERSIST-2), records the events it missed in its own
 `history`, and grants the leases the missed `external` and `load_cap` changes would have taken, for
 what is left of their `hold_time_s` (GA-LEASE-2). After a restart or a `cursor_expired`, it
 evaluates each level-triggered rule against current state, and one whose condition holds and has
-not fired for it since it last became true fires then; an edge-triggered rule's events inside the gap
-are lost (GA-RULE-1).
+not fired for it since it last became true fires then, outside its exceptions (GA-RULE-6), a
+firing a lease refused not counting as fired; a rule whose trigger is a state held for a duration
+fires only once that state has held for the whole duration afresh since the restart, since the
+steward did not see it hold while it was down. The **gap** is every event from before the moment the steward resumed, after a restart as
+after a `cursor_expired`, however it reaches the steward: read back from `history`, or through a
+cursor that was still valid. An edge-triggered rule's events inside the gap are lost, except that a
+steward MAY replay an edge from the gap, once per edge, every rule it triggers seeing it, judging
+each rule's conditions as they hold now, not as they held at the edge, where all of these hold: it
+states the bound in `describe` as `edge_replay_s`, at most 300 s; the edge is no older than
+`edge_replay_s` when replayed; it is a state edge (a reading's change), never a time trigger, which,
+as a schedule (GA-SCHED-2), is not run late; its reading still holds now; it fell inside none of the
+rule's exceptions; and no `rule_fired` for it is already in `history`, so an edge fired just before
+a crash is not fired twice. A steward that omits `edge_replay_s` replays none (GA-RULE-1).
 
 A rule's conditions, taken whole, are false while any device they read is not `live`, as an `if`
 step's are (GA-SCN-8); and a trigger on a state, or a state held for a duration, does not hold while
@@ -851,8 +926,8 @@ declared one, since it can then act on a dead device's last value (GA-RULE-2).
 - **Again, when an action did not land.** When an action of a rule of conditions only, one its
   device declares `idempotent: true`, ends in an outcome a retry can fix, and the rule's
   conditions still hold, the rule MUST fire again with that action, no sooner than the action's
-  `ack_within_s` after its last try and no later than 300 s after it, or its `ack_within_s` when
-  that is longer (⚠️ a guess at the spacing), and go on doing so while the
+  `ack_within_s` after its last try and no later than 300 s after it, or, when its `ack_within_s`
+  is longer than 300 s, no later than its `ack_within_s` plus 60 s (⚠️ a guess at the spacing), and go on doing so while the
   conditions hold and the action has not ended in success: `acked`, `delivered`, `sent`,
   `confirmed` or `skipped(already)` (GA-RULE-7). The outcomes a retry can fix are three of those
   GA-SAFE-12 (`standard/applier.md`) classes as "nothing ran" or "it may have run":
@@ -872,9 +947,15 @@ declared one, since it can then act on a dead device's last value (GA-RULE-2).
   rule's conditions hold, in an outcome that is neither a success GA-RULE-7 names nor one it fires
   the action again for, the steward MUST deliver a notice naming the rule, the action, its target
   and the outcome on the home's `notice_channels`, delivered and retried as GA-NOTE-1 delivers an
-  applier's, at most once for that action each time the conditions become true (GA-RULE-8). An
+  applier's, at most once for that action each time the conditions become true (GA-RULE-8); a
+  steward MAY coalesce the notice for `skipped(occupancy_unknown)` to one per rule and room (per
+  rule and target, for a target with no room) for as long as that room's occupancy stays unknown,
+  since a room no sensor can make known would otherwise raise it at every firing; the notice names
+  the action and target it was first raised for, and once the room has been known again, its next
+  `skipped(occupancy_unknown)` raises the notice again (GA-RULE-8). An
   `unanswered` action raises it after its one further try. `refused(leased)`, which the lease's end
-  re-evaluates (GA-LEASE-4), and `skipped(occupied)` and `skipped(in_use)`, which are not failures
+  re-evaluates (GA-LEASE-4), `refused(safety)` on a device whose safety lease the steward ended
+  early, which the rule's completion re-evaluates (GA-LEASE-6), and `skipped(occupied)` and `skipped(in_use)`, which are not failures
   (GA-SCN-11), raise none. A `failed(not_locked)` raises it only once the lock's `ack_within_s`
   from its dispatch, and the late-ack slack (*Constants*), have passed with no `late_ack`: the
   applier gives one when the OS locks after all (GA-APPLY-11), and a `late_ack` is a success,
@@ -897,8 +978,7 @@ declared one, since it can then act on a dead device's last value (GA-RULE-2).
 - **Exceptions.** A rule has `exceptions: [{ from, until }]`, RFC 3339 times with an offset, set
   through `define`, which refuses with `invalid_request` one whose `until` is not after its `from`. A
   rule MUST NOT fire inside an exception, from its `from` up to, not including, its `until`. When
-  an exception ends, a level-triggered rule whose condition then holds MUST fire, as when a lease
-  ends (GA-LEASE-4); an edge-triggered rule's triggers inside the exception are lost (GA-RULE-6).
+  an exception ends, a level-triggered rule whose condition then holds MUST fire; an edge-triggered rule's triggers inside the exception are lost (GA-RULE-6).
 
 **Worked example (HS20).** A child's evening limit on a laptop is one rule of conditions only:
 *between 21:00 and 07:00, days 7, 1, 2, 3 and 4, when `session.liza` is `not_in: [locked,
@@ -919,7 +999,8 @@ exactly the run on its date (GA-SCHED-1). A time that does not exist on a date (
 gap) runs at the first minute after it; a time that occurs twice runs once, at its first occurrence
 (GA-SCHED-3).
 
-A run missed while the steward was down is not run late; the steward records a `schedule_missed`
+A run missed, however the time passed it (the steward down, or its clock stepped past the
+minute), is not run late; the steward records a `schedule_missed`
 event for it when it starts again (GA-SCHED-2).
 
 ## define
@@ -940,15 +1021,26 @@ exceptions; schedules and exceptions. Device configuration (tiers, loads, `infra
 - **Through a brain.** Which change sets, if any, a steward accepts through a brain-served endpoint,
   and from which roles, is the steward's own policy; this standard does not define it. Whatever it
   accepts: it is asked first, as a plan with one `ask(confirm_define)` step carrying the diff,
-  answered with `answer` and applied with `define { plan_id }`, and unanswered it changes nothing
-  (GA-DEF-6); what it creates or changes is `brain_authored` (GA-DEF-7); and it never changes
+  answered with `answer` and applied with `define { plan_id }`, and unanswered it changes nothing:
+  while the plan is open, `define { plan_id }` with no `yes` returns `skipped: not_confirmed`, and
+  once it has expired, `plan_expired` (GA-STW-5) (GA-DEF-6); what it creates or changes is `brain_authored` (GA-DEF-7); and it never changes
   persons, endpoints, voice records, credentials or the home's settings, nor lifts a narrowing
   (GA-DEF-3).
 - `define` refuses, with `invalid_request`, a voice record whose `heard_by` names no front
   credential, an endpoint with a voice record and no `served_by`, a `skill_account` on an endpoint
   that is not `type: voice` or that has a `person`, two endpoints with one `skill_account` and
-  `skill_surface`, and voice records naming more than one front: one front serves a home, since it
-  must know every playback the house makes to mark its echoes (GA-DEF-8).
+  `skill_surface`, voice records naming more than one front, one account with both a surfaced
+  endpoint and one without, and an endpoint with a null `room` that is not an `app`: one front
+  serves a home, since it must know every playback the house makes to mark its echoes (GA-DEF-8).
+- **Notice channels.** `notice_channels` is empty until the owner first sets it, and `define`
+  accepts change sets while it is so, so that the first `define` need not name a channel. A channel
+  is a target with `notify` or with `media.announce`, so a list of announcing channels alone is
+  accepted. Once the list has been set, `define` MUST refuse, with `invalid_request` and changing
+  nothing, a change set that leaves it empty; and a change set that sets the list MUST be refused if
+  any entry it names is a device the applier has not adopted, or one that offers neither `notify`
+  nor `media.announce` (GA-DEF-8). Only the entries a change set sets are checked, so a channel that
+  later leaves adoption does not lock the owner out of `define`; the owner learns of it by a notice
+  (GA-NOTE-4). Notices raised meanwhile are held (*Notices*).
 - With `dry_run`, it MUST change nothing and return a readable diff (GA-DEF-1).
 - With an `expected_revision` that is not current, or with a `plan_id` whose plan was made at a
   revision that is no longer current, it MUST return `stale_revision` and change nothing (GA-DEF-2).
@@ -957,15 +1049,14 @@ exceptions; schedules and exceptions. Device configuration (tiers, loads, `infra
   rule) MUST be refused with `invalid_request`, and change nothing (GA-DEF-9). Adoption comes first,
   and only the owner adopts, through the applier's `configure`.
 - A change set whose rules or scenarios that it adds or changes have a trigger or conditions, an `if`
-  or a `wait` that reads a key its device does not declare (for a selector, a key no device it matches declares) MUST be refused with
+  or a `wait` that reads a key its device does not declare (the devices its triggers, conditions, `if` and `wait` steps name) MUST be refused with
   `invalid_request`, its `data` naming `{ key, device, awaited }`, and, where the device's bridge lists it as awaited
   (a key the device's model promises and the device has never sent, `standard/bridge.md`, *Keys a
   device has not yet sent*), saying so, and change nothing (GA-DEF-12). A rule on a reading that has
   never come would never fire, and no one would know. A device declares the keys of its
   capabilities' rows, its `sensor_keys`, its extensions' `state` keys, for a trigger its extensions'
   `event` keys too, and, on a computer, the `session.<token>` of each account in `accounts`; a
-  scenario a `run` step reaches is checked as its own. An adapter's device has no awaited keys. For a
-  selector, `data` names no `device`. The guard is partial: a key a model promises and no one has named as missing
+  scenario a `run` step reaches is checked as its own. An adapter's device has no awaited keys. The guard is partial: a key a model promises and no one has named as missing
   is declared, and a rule on it is accepted (`standard/bridge.md`, *Keys a device has not yet sent*). A computer's `session.<token>` key counts as
   declared while its token is in the device's `accounts` (GA-RULE-4). This is checked at `define`
   only; a key that later leaves a device a rule reads (a replacement, a changed setting) is not
@@ -978,22 +1069,90 @@ exceptions; schedules and exceptions. Device configuration (tiers, loads, `infra
   GA-PLAN-6 all the same.
 - A computer's `account_persons` is checked as *Sessions belong to persons* says (GA-DEF-11).
 
+### Change sets
+
+A change set, `changes`, is a list of `{ op, kind, value }`, applied whole or not at all
+(GA-DEF-5). `op` is `upsert` or `delete`.
+
+- **An upsert merges.** It names its item by its key (an `id`; a voice record's `endpoint`; a rule
+  exception's `rule`, `from` and `until`; a schedule exception's `schedule` and `date`) and MUST set
+  only the fields it names: a field it leaves out keeps its value, a field it gives as null returns
+  to its default (the table's last column), and a field holding a list (a scenario's `steps`, a
+  group's `members`, a rule's `actions`, `conditions` or `exceptions`, a schedule's `days` or
+  `exceptions`, `aliases`, `wake_words`, `notice_channels`) is replaced whole when named. An upsert
+  that creates an item MUST give the fields the table lists as created with, none of them null. So
+  renaming a computer keeps its room, aliases and `account_persons`, and renaming a satellite keeps
+  its `confirm_on` (GA-DEF-14).
+- **A delete** removes the item its key names: `{ id }`; for kind `voice`, `{ endpoint }`; for a rule
+  exception, `{ rule, from, until }`; for a schedule exception, `{ schedule, date }`. A delete of an
+  item that does not exist MUST be refused with `invalid_request` (GA-DEF-14).
+- **The shapes bind.** A change set any change of which does not match this section (an unknown
+  `op` or `kind`, a field its kind does not name, a value not of its kind's shape, a `secret` under
+  16 characters, more than 64 exceptions on a rule or a schedule) MUST be refused with
+  `invalid_request`, and change nothing (GA-DEF-13). *Compatibility*'s "a client ignores what it
+  does not know" governs what a client reads, not what `define` accepts.
+
+| Kind | Value | Created with | Defaults |
+|---|---|---|---|
+| `home` | The settings it sets, at least one, of the Home's fields (*The house model*) | — | As *The house model* gives them; `notice_channels` empty |
+| `room` | `{ id, name? }` | `name` | — |
+| `person` | `{ id, name?, role? }`, `role` being `owner`, `member` or `guest` | `name`, `role` | — |
+| `endpoint` | `{ id, name?, type?, room?, person?, served_by?, max_role?, confirm_on? }`, `room`, `person` and `served_by` null where there is none; its voice record is kind `voice` | `name`, `type`, `room`, `person`, `served_by` | `max_role` as *Clients, endpoints and principals* gives it; `confirm_on` `same` |
+| `voice` | `{ endpoint, listening?, wake_words?, zone?, output?, follow_up?, heard_by?, skill_account?, skill_surface? }`, the endpoint's voice record (*Listening*), each wake word `{ word, model }` | `listening`, `wake_words`, `zone`, `output`, `follow_up`, `heard_by` | `skill_account` and `skill_surface` absent |
+| `lift_narrowing` | `{ endpoint, narrowing_id? }` (*Listening*) | — | — |
+| `credential` | `{ id, kind?, secret?, endpoint?, confirm_on? }`: `kind` is `app`, `panel`, `brain` or `front`; `secret` has at least 16 characters; `endpoint` is the one endpoint an app or panel credential is bound to; `confirm_on` is a brain credential's own (*The confirmation dialogue*) | `kind`, `secret`, and `endpoint` for an app or panel | `endpoint` and `confirm_on` none |
+| `target` | `{ id, name?, aliases?, room?, account_persons? }`: the steward's overlay on the applier's device `id` | — | `name` the applier's `label` for the device, or its id; `aliases` none; `room` null; `account_persons` none |
+| `group` | `{ id, name?, room?, members?, aggregate?, aliases? }`, `room` null where there is none, `aggregate` `any` or `all` | `name`, `room`, `members`, `aggregate` | `aliases` none |
+| `rule` | `{ id, name?, trigger?, conditions?, actions?, active?, exceptions? }`, keeping a `trigger`, `conditions` or both; `exceptions`, each `{ from, until }`, are at most 64 | `name`, `actions`, and a `trigger` or `conditions` | `active` `true`; `exceptions` none |
+| `rule_exception` | `{ rule, from, until }`: one exception of a rule, added by an upsert | its key | — |
+| `scenario` | `{ id, name?, mode?, steps?, owned?, respect_occupancy? }` | `name`, `mode`, `steps` | `owned` none; `respect_occupancy` `false` |
+| `schedule` | `{ id, scenario?, time?, days?, exceptions? }`, `exceptions` at most 64, each `{ date, action, time? }` | `scenario`, `time` | `days` every day; `exceptions` none |
+| `schedule_exception` | `{ schedule, date, action, time? }`: one exception of a schedule, an upsert replacing the one on its date | its key and `action` | — |
+
+Ids are as the house model's; a `days` list is ISO weekday numbers, 1 (Monday) to 7, none twice; a
+clock time is `HH:MM` in the home's `timezone`; a schedule exception's `date` is `YYYY-MM-DD` in it,
+and its `time` is given for `move` and only for it.
+
+A rule's parts:
+- **A reading** is one device's state key, `{ target, key, op, value }`, `op` being `eq`, `ne`, `gt`,
+  `ge`, `lt` or `le`, or `{ target, key, not_in }` (GA-RULE-4); `target` is a device id.
+- **A trigger** is one of `{ state: reading }`, which fires when the reading becomes true (an edge); `{ held }`, a
+  reading with `for_s` added, the reading held for `for_s` seconds while its device is `live` (level);
+  `{ event: { target, type, new?, key?, value? } }`, `type` being `liveness` (with `new`, the
+  liveness reached) or `occurrence` (with `key` and `value`), an edge; or `{ time: { at, days? } }`,
+  an edge at that minute.
+- **A condition** is a reading or `{ between: { from, until, days? } }` (GA-RULE-3); `conditions`
+  has at least one when present.
+- **An action** is a request's action with an optional `respect_occupancy`, or `{ scenario }`, which
+  starts a run of that scenario acting as the rule (*Scenario runs*).
+
+A scenario's steps, at least one, each one of:
+- an action, `{ target | selector, action, args, respect_occupancy? }`, `target` a device's or a
+  group's id;
+- `{ if: { target, key, op, value }, then, else? }`, each branch a list of steps, at least one;
+- `{ delay: seconds }`, more than 0;
+- `{ wait: { target, key, value, timeout_s, on_timeout? } }`, `on_timeout` `continue` or `stop`, by
+  default `stop`;
+- `{ run: scenario id }`.
+
 ## Restarts
 
 The steward MUST keep across a restart: the house model; leases; idempotency keys for their
-retention; open plans and their answers; the events `history` needs; each schedule's last run; and
+retention; each lease's refused rules (GA-LEASE-4); open plans that have an `ask` step, and their
+answers (a plan with none may be lost, and an `apply` or `answer` of it is then `unknown_plan`);
+every notice of its own not yet delivered, those held for want of a channel included; the events `history` needs; each schedule's last run; and
 each notice GA-RULE-8 holds for a late ack, with the end of its wait.
 A scenario run a restart interrupted ends `ended(interrupted)`, and its leases are released; held
 durations start afresh (GA-PERSIST-2).
 
 ## Operations
 
-Errors as the applier's, plus `unknown_run`. Every connection MUST use TLS, with the server's certificate
+Errors as the applier's, `unknown_plan` among them (a plan the steward never made, or lost at a restart, GA-PERSIST-2), plus `unknown_run`. Every connection MUST use TLS, with the server's certificate
 validated, unless both ends are on one host's loopback (GA-SEC-2).
 
 | Operation | Request | Response |
 |---|---|---|
-| `describe` | `{ since_revision?, wait_s? }` (0–30; with `since_revision`, returns at the next revision or after `wait_s`) | `{ steward_id, standard_version, revision, home, rooms, targets, groups, endpoints, scenarios, rules, schedules, modes, applier: { applier_id, levels, ungoverned }, test_run_id? }`. Persons appear by id, name and role only; credentials never |
+| `describe` | `{ since_revision?, wait_s? }` (0–30; with `since_revision`, returns at the next revision or after `wait_s`) | `{ steward_id, standard_version, revision, home, rooms, targets, groups, endpoints, persons, scenarios, rules, schedules, modes, applier: { applier_id, levels, ungoverned }, edge_replay_s?, safety_lease_s?, held_notices?, test_run_id? }`. `edge_replay_s` is the bound on replaying an edge from a gap, absent when the steward replays none (GA-RULE-1); `safety_lease_s` the bound on a latchless safety lease, absent when the steward never ends one early (GA-LEASE-6); `held_notices` the count of notices held, shown while no channel has `notify` (GA-NOTE-1). `persons` is `[{ id, name, role }]`, a front's by `id` only (GA-AUTH-8); credentials never appear |
 | `state` | `{ targets?, endpoint?, speaker? }` | the applier's, plus each room's occupancy, each group's state and each device's lease; personal values as *Personal keys* |
 | `plan` | request | plan |
 | `answer` | `{ plan_id, endpoint, speaker?, answers: { step_id: yes·no }, utterance? }` | the plan, updated |
@@ -1005,7 +1164,7 @@ validated, unless both ends are on one host's loopback (GA-SEC-2).
 | `scenario_run` | `{ plan_id, idempotency_key }` | `{ run_id, ignored? }` |
 | `scenario_status` | `{ run_id }` | `running` · `ended(done)` · `ended(timeout)` · `ended(stopped)` · `ended(interrupted)`, with `failed_steps`, each `{ step_id, outcome }`, for every step that did not end `acked`, `delivered`, `sent`, `confirmed`, `skipped(already)`, `skipped(occupied)` or `skipped(in_use)` (GA-SCN-11), a step that ended `failed` and then had a `late_ack` before the run ended being left out; an `unanswered` step is in `failed_steps`; and `sent_steps`, each `{ step_id }`, for every step that ended `sent` without a witness, which nothing confirmed; a witnessed step counts by its verdict: a run goes on past a failed step, and ends only when every dispatched step has a final outcome, a witnessed step its verdict; `failed_steps` is as of the end |
 | `scenario_stop` | `{ run_id, endpoint, speaker? }` | status |
-| `define` | `{ endpoint, speaker?, changes, expected_revision, dry_run } \| { endpoint, speaker?, plan_id }` | dry run: a diff; through a brain: a plan to answer; otherwise `{ revision }` |
+| `define` | `{ endpoint, speaker?, changes, expected_revision, dry_run } \| { endpoint, speaker?, plan_id }` | dry run: `{ diff }`, a readable diff; through a brain: a plan to answer; `{ plan_id }` of a plan whose `confirm_define` no one answered `yes`: `{ revision, skipped: not_confirmed }`, nothing changed and the plan spent (GA-DEF-6); otherwise `{ revision }`; any of these with `no_notify_channel: true` when the house, after it, has no `notify` channel (GA-NOTE-1) |
 | `narrow` | `{ endpoint, speaker?, listening?, follow_up?, until? }` | `{ narrowing_id, until }` |
 | `front_status` | `{ models, clips, effective, frames, skills }` | `{}` |
 | `speaking` | `{ endpoint, on }` | `{}` |
@@ -1018,7 +1177,8 @@ serves it, falling back to one of those two only for an applier that does not (G
 `describe`, `state`, `plan`, `outcome`, `events`, `history`, `scenario_status` and `zone_sources`
 carry `readOnlyHint: true`; `answer`,
 `apply`, `scenario_run`, `scenario_stop`, `define` and `narrow` carry `destructiveHint: true`;
-`front_status` and `speaking` carry `destructiveHint: false`.
+`front_status` and `speaking` carry `destructiveHint: false`. The hints are a server's
+obligation, *not checked by the harness*.
 
 `apply` SHOULD add no more than 200 ms to its applier's synchronous bound (GA-STW-9).
 
@@ -1037,10 +1197,12 @@ carry `readOnlyHint: true`; `answer`,
 | Event retention | 3600 s | GA-STW-7 |
 | History retention | 7 days | GA-STW-7 |
 | Late-ack slack | 11 s, as the applier's `fresh_slack_s` for a bridged device, plus its 6 s for each meta-applier hop; ⚠️ a guess | GA-RULE-8 |
-| Rule retry spacing | at least the action's `ack_within_s`; at most 300 s, or the `ack_within_s` when longer; ⚠️ a guess | GA-RULE-7 |
+| Edge replay bound, at most | 300 s | GA-RULE-1 |
+| Rule retry spacing | at least the action's `ack_within_s`; at most 300 s, or the `ack_within_s` plus 60 s when it is longer than 300 s; ⚠️ a guess | GA-RULE-7 |
 | Narrowing limit | 12 h | GA-LISTEN-1 |
+| Narrowing notice span | 24 h | GA-LISTEN-2 |
 | Source delay | 1 s, a guess until measured | GA-LISTEN-3 |
-| Duck limit | 60 s | *Listening* |
+| Duck limit | 60 s | GA-LISTEN-5 |
 | Announce hold | 30 s | GA-LISTEN-3 |
 | Offline grace | 600 s | GA-LISTEN-2 |
 
@@ -1054,7 +1216,7 @@ carry `readOnlyHint: true`; `answer`,
 | GA-AUTH-4 | MUST | Steward | wire | A request from an unregistered credential is `not_permitted` |
 | GA-AUTH-5 | MUST | Steward | wire | A rule's actions carry `via: rule`, a scheduled run's `via: schedule`, a person-started run's the `via` and `brain` of its starting endpoint, a rule-started run's and a front's duck `via: rule` |
 | GA-AUTH-6 | MUST | Steward | wire | `state`, `history` and `events` take an optional `endpoint` and `speaker`, checked and derived as for a request: an endpoint the credential is not bound to is `not_permitted`, a `speaker` GA-AUTH-2 does not accept is `invalid_request`, the role is the lower of the person's and the endpoint's `max_role`; an app or panel read naming none takes its bound endpoint, and a brain read naming none has no role |
-| GA-AUTH-7 | MUST | Steward | wire | A personal key's value is `withheld` from a call whose derived role is `guest` or `visitor` and from a brain credential's call naming no endpoint, wherever it appears: `state`, `history`, `events`, `rule_fired`, plans and outcomes, `outcome` and `scenario_status` included; that key's `state` and `occurrence` events are left out of such a call's `events` and `history` entirely; an `if` or `wait` step on it is shown by its verdict (the branch taken, the `wait` met or timed out), its value `withheld`; verdicts are not withheld |
+| GA-AUTH-7 | MUST | Steward | wire | A personal key's value is `withheld` from a call whose derived role is `guest` or `visitor` and from a brain credential's call naming no endpoint, wherever it appears: `state`, `history`, `events`, `rule_fired`, plans, the `ask` event's `steps` (an `args` value setting a personal key) and outcomes, `outcome` and `scenario_status` included; that key's `state` and `occurrence` events are left out of such a call's `events` and `history` entirely; an `if` or `wait` step on it is shown by its verdict (the branch taken, the `wait` met or timed out), its value `withheld`; verdicts are not withheld |
 | GA-AUTH-8 | MUST | Steward | wire | A front credential is bound to the endpoints whose voice record's `heard_by` names it, and any operation from it but `describe`, `zone_sources`, `narrow`, `front_status` and `speaking` is `not_permitted`; `front_status`, `speaking` and `zone_sources` from any other credential, or for an endpoint not bound to that front, are `not_permitted` |
 | GA-TIER-1 | MUST | Steward | wire | A `no_voice` action through a brain-served endpoint is `refuse(tier)`, answered or not |
 | GA-TIER-2 | MUST | Steward | wire | An unanswered `confirm` or `no_voice` step is `ask(confirm_tier)` in a plan and `refused(tier)` inline |
@@ -1063,8 +1225,8 @@ carry `readOnlyHint: true`; `answer`,
 | GA-CONF-2 | MUST | Steward | wire | An answer from a brain-served endpoint without an utterance record, or with one not timed after the latest `ask` event for its step less the clock tolerance or timed after the answer's arrival plus it, or whose `utterance_id`, or whose `endpoint`, `time` and `transcript`, already answered another plan, or naming a step not in the ask's `step_ids`, or, from an endpoint with a voice record, without `asked_by`, or whose `asked_by` shows a `status` other than `full` or `cut` by this utterance, or is `full` without `ended_at` or with a `time` not after it within one `clock_epoch`, is `invalid_request`; the record is kept in `history` with its step; a record without `addressed_by` counts as `follow_up` |
 | GA-CONF-3 | MUST | Steward | wire | A token is issued only for a step answered `yes` or authored, bound to its target, action, args, `via`, `brain` and `for`, expiring 60 s after issue |
 | GA-CONF-4 | MUST | Steward | wire | `define` refuses any change set after which a `confirm_on` names a brain-served endpoint |
-| GA-CONF-5 | MUST | Steward | wire | Every plan with an ask step emits an `ask` event `{ plan_id, step_ids, endpoint, time }`, its endpoint being the plan's or the `confirm_on` that applies, the endpoint's or else its brain credential's |
-| GA-CONF-6 | MUST | Steward | wire | An answer whose record is `addressed_by: follow_up` or `skill` counts only with `hint_basis: gate` and a `speaker_hint` naming the plan's `speaker`, or any registered person for a plan that named none; against the configured record and the narrowings in force longer than the narrowing delay, `typed` outside an `app`, `skill` without a `skill_account`, `follow_up` where a voice record has it off or listening narrower than `wake_device`, `tap` where `listening` is `off`, `wake` where it is `off` or `tap`, a `gate` basis with no gate model for that person there, and a `person` basis naming another than the endpoint's person, are refused; any refused one is `not_permitted` and changes nothing |
+| GA-CONF-5 | MUST | Steward | wire | Every plan with an ask step emits an `ask` event `{ plan_id, step_ids, steps, endpoint, time }`, its endpoint being the plan's or the `confirm_on` that applies, the endpoint's or else its brain credential's, and its `steps` one `{ step_id, target, action, args, tier, reason }` per asked step, in the order of `step_ids`, as the plan's step gives them, a `confirm_define` step's being `{ step_id, reason: confirm_define, diff }`; a run's re-ask MAY carry `run_id`; `steps` are returned, by the endpoint a read names or derives, only to a read at the ask's endpoint, one whose derived role is `owner`, or one whose derived person is the plan's `speaker`, every other read getting the event without them |
+| GA-CONF-6 | MUST | Steward | wire | An answer whose record is `addressed_by: follow_up` or `skill` counts only with `hint_basis: gate` and a `speaker_hint` naming the plan's `speaker`, or any registered person for a plan that named none; against the configured record and the narrowings in force longer than the narrowing delay, `typed` outside an `app`, `skill` without a `skill_account`, `follow_up` where a voice record has it off or listening narrower than `wake_device`, `tap` where `listening` is `off`, `wake` where it is `off` or `tap`, a `gate` basis with no gate model for that person there (the front's own report, so a mistake caught, not a lie), and a `person` basis naming another than the endpoint's person, are refused; any refused one is `not_permitted` and changes nothing |
 | GA-APPLY-3 | MUST | Steward | wire | An `ask` step with no `yes` at apply, or a step that becomes an ask at dispatch, is `skipped(not_confirmed)` |
 | GA-GRP-1 | MUST | Steward | wire | A group's `on` follows its `any` / `all` rule over its `onoff` members |
 | GA-PLAN-5 | MUST | Steward | wire | A selector resolves to exactly the devices and channels matching all its fields, never a group |
@@ -1075,36 +1237,38 @@ carry `readOnlyHint: true`; `answer`,
 | GA-STW-4 | MUST | Steward | wire | When several reasons apply, the first in the steward's fixed order is reported, `in_use` and `in_use_unknown` in the occupancy place, before `occupied` and `occupancy_unknown`; the applier's `refuse(token)` on an unanswered step is reported as `ask(confirm_tier)` or `refuse(tier)`, never `token`; for `power.sleep` or `power.shutdown` on a computer with `respect_occupancy`, an `ask(in_use)` or `ask(in_use_unknown)` is reported in place of `ask(confirm_tier)`, never of `refuse(tier)`, and a `yes` to it is also the step's confirmation; the applier's `refuse(toggle_only)` is reported as `ask(toggle_only)` (inline `refused(toggle_only)`), never as a refusal, in place of any `ask(confirm_tier)`, `ask(in_use)`, `ask(in_use_unknown)` or `ask(occupancy_unknown)` the step would have, and only a `yes` to it earns the step's token |
 | GA-STW-5 | MUST | Steward | wire | An expired, stale or foreign plan, given to `apply`, `define` or `answer`, is a request error; nothing is dispatched or answered |
 | GA-STW-6 | MUST | Steward | wire | A repeated idempotency key from one credential returns the first apply within 3600 s with the same body, `idempotency_conflict` with another; nothing is dispatched |
-| GA-STW-7 | MUST | Steward | wire | Events are kept 3600 s; `history` returns define, ask, answer, lease, narrowed, refused, rule_fired, scenario, schedule_missed, schedule_skipped and notice events, and the applier's state, outcome, late_ack, latch, liveness, model, route_conflict, provision, freshness, transport, other_admins, bridge_fault, occurrence and undescribed events (`undescribed` as received live), with causes for 7 days, a `state` event's `speech` key and an `occurrence` of a personal key excepted, kept in events only |
+| GA-STW-7 | MUST | Steward | wire | Events are kept 3600 s; a `define` event's diff is given only to a read at the `define`'s endpoint, one whose derived role is `owner` or one whose derived person is its `speaker`, personal values withheld, every other read getting the event without it; `history` returns define, ask, answer, lease, narrowed, refused, rule_fired, scenario, schedule_missed, schedule_skipped and notice events, and the applier's state, outcome, late_ack, latch, liveness, model, route_conflict, provision, freshness, transport, other_admins, bridge_fault, occurrence and undescribed events (`undescribed` as received live), with causes for 7 days, a `state` event's `speech` key and an `occurrence` of a personal key excepted, kept in events only |
 | GA-STW-8 | MUST | Steward | wire | Apply re-evaluates `leased` and occupancy at dispatch, keeps the answers given, a `yes` to `ask(in_use)` or `ask(in_use_unknown)` answering the room's `occupancy_unknown` too, and passes the applier's re-evaluation through |
 | GA-STW-9 | SHOULD | Steward | wire | `apply` adds no more than 200 ms to the applier's synchronous bound |
 | GA-STW-10 | MUST | Steward | wire | The steward applies to its applier inline, re-planned at dispatch, one applier apply per steward apply, rule firing or run step, each with a key that survives a restart |
 | GA-STW-11 | MUST | Steward | wire | A `session.lock` naming a `person` resolves to one step per account that computer maps to that person, in code-point order of their tokens, the applier receiving `account` only; a person with no account mapped there is `refuse(invalid_args)` |
 | GA-STW-12 | MUST | Steward | wire | Every outcome returned by `apply`, `outcome` or `scenario_status` carries its `time`, the one its `outcome` event carries, or for the steward's own outcome the moment the steward decided it |
-| GA-NOTE-1 | MUST | Steward | wire | Every applier notice is retried on the home's `notify` channels, which `define` refuses to leave without one, at least every 60 s and without giving up, until one ends `delivered`, or `sent` where no receipt exists, before the steward sends `notice_taken` |
+| GA-NOTE-1 | MUST | Steward | wire | Every applier notice is retried on the home's `notify` channels at least every 60 s and without giving up, until one ends `delivered`, or `sent` where no receipt exists, before the steward sends `notice_taken` (checked by the harness as still retrying after 7 stepped days); `define`, once the channels are set, refuses to leave them empty; a notice raised while none is set is held until one is, and while no adopted channel offers `notify` an announcing one speaks it once and it stays held until a `notify` channel delivers it; held notices coalesce per kind and target; while no adopted channel offers `notify`, `describe` shows `held_notices`, and a `define` leaving none answers `no_notify_channel: true` |
 | GA-NOTE-2 | MUST | Steward | wire | While its applier's `standard_version` is below 0.10 no `notify` the steward dispatches carries `from`; from 0.10 on, every one carries its own `from`: `{ endpoint, role }` for a request or a person-started run, `{ rule }` for a rule or a rule-started run, `{ scenario }` for a scheduled run, `{ notice }` for a notice, a `{ rule }` or `{ scenario }` of `brain_authored` work with `brain_authored: true`; a caller's `from` is overwritten, never passed on, and the overwrite recorded as `from_replaced` on the plan's step or the inline step's outcome |
 | GA-NOTE-3 | MUST | Steward | wire | When a token a computer's `account_persons` maps leaves its `accounts`, a notice naming the person, the token and the computer is delivered and retried as GA-NOTE-1's, once each time a mapped token leaves; the mapping is kept |
+| GA-NOTE-4 | MUST | Steward | wire | When a channel in `notice_channels` leaves adoption or offers neither `notify` nor `media.announce`, and when the list loses its last adopted channel offering `notify`, a notice naming it is delivered on the remaining channels as GA-NOTE-1's, and held if none remain |
 | GA-LEASE-1 | MUST | Steward | wire | An endpoint principal's apply leases each device it dispatched a stateful action to, from dispatch, for the hold time, ending if the step ends `unreachable`; a rule's later action there is `refuse(leased)`; stateless actions and `session.lock` take no lease |
-| GA-LEASE-2 | MUST | Steward | wire | An `external` or `load_cap` change takes a person-precedence lease for the hold time, one missed in a `cursor_expired` gap included, read back from the applier's `history` for what is left of it; a `device` change takes none |
+| GA-LEASE-2 | MUST | Steward | wire | An `external` or `load_cap` change takes a person-precedence lease for the hold time, one missed in any gap (a restart's or a `cursor_expired`'s) included, read back from the applier's `history` for what is left of it; a `device` change takes none |
 | GA-LEASE-3 | MUST | Steward | wire | Equal or higher precedence replaces a lease; lower is refused; a `session.lock` is never refused by a lease and replaces none; a duck while a front speaks is refused by no lease but a `safety_rule`'s |
-| GA-LEASE-4 | MUST | Steward | wire | When a lease ends, level-triggered rules naming its devices are re-evaluated and fire if their condition holds; edge-triggered rules are not |
+| GA-LEASE-4 | MUST | Steward | wire | When a lease ends, the level-triggered rules it refused an action of are re-evaluated and fire, outside their exceptions, if their condition holds; rules it refused nothing of, and edge-triggered rules, are not; at a replacement, nothing is re-evaluated for the devices the new lease covers, the rules refused on them passing to it, and the rules refused on devices it does not cover are re-evaluated then |
 | GA-LEASE-5 | MUST | Steward | wire | No rule's action takes a lease |
-| GA-LEASE-6 | MUST | Steward | wire | A device a safety rule actuated holds a `safety_rule` lease until the rule's latch clears, by itself or by the owner, or until the rule completes when it has none; held latches are re-read after `cursor_expired`, and a latchless rule's completion read from `history` |
+| GA-LEASE-6 | MUST | Steward | wire | A device a safety rule actuated holds a `safety_rule` lease until the rule's latch clears, by itself or by the owner, or until the rule completes when it has none; held latches are re-read after `cursor_expired`, and a latchless rule's completion read from `history`; a steward MAY end a latchless rule's lease early only when it states `safety_lease_s` in `describe`, after the larger of that and, for each lease, the `ack_within_s` of the rule's actuation on that device plus the 60 s late-ack window; a level-triggered rule the applier then answers `refuse(safety)` is re-evaluated, and fires if its condition holds, when the rule's `rule_fired` is relayed |
 | GA-OCC-1 | MUST | Steward | wire | With `respect_occupancy`, an occupied room (an occupancy sensor reading presence now, or a `live` motion sensor reading motion now or within the hold) is `skip(occupied)` and an unknown one `ask(occupancy_unknown)`; vacant needs an occupancy sensor and every occupancy sensor live throughout the hold with a known `fresh_s` that, with its `fresh_slack_s`, is no greater than `occupancy_hold_s`, none reporting presence within it; a target with no room is unknown; without the flag, occupancy is not consulted |
-| GA-OCC-3 | MUST | Steward | wire | With `respect_occupancy`, a computer's `power.sleep` or `power.shutdown` is `ask(in_use)` when an account mapped to a person reads `active` or `idle`; else `ask(in_use_unknown)` when a mapped account reads `unknown` or its key is absent, or, with an account mapped, the computer is `stale`, and always when the computer has no `session` capability, an account mapped or not; else the room check applies as GA-OCC-1 says; unmapped accounts never count; the session check adds to the room check, never removes it; a `yes` to `ask(in_use)` or `ask(in_use_unknown)` also answers the room's `occupancy_unknown` for that step, and an `occupied` room still skips it |
+| GA-OCC-3 | MUST | Steward | wire | With `respect_occupancy`, a computer's `power.sleep` or `power.shutdown` is `ask(in_use)` when an account mapped to a person reads `active` or `idle`; else `ask(in_use_unknown)` when a mapped account reads `unknown` or its key is absent, or, with an account mapped, the computer is not `live`, and always when the computer has no `session` capability, an account mapped or not; else the room check applies as GA-OCC-1 says; unmapped accounts never count; the session check adds to the room check, never removes it; a `yes` to `ask(in_use)` or `ask(in_use_unknown)` also answers the room's `occupancy_unknown` for that step, and an `occupied` room still skips it |
 | GA-LISTEN-1 | MUST | Steward | wire | `narrow` is accepted from any credential bound to the endpoint, any role, and from its front, if it asks for nothing wider than the configured record, else `invalid_request`; it holds at most the narrowing limit; the effective record is the narrowest of the configured one and every narrowing in force, and returns to the configured one, never wider, when the last expires; each narrowing, lift and expiry changes the revision |
-| GA-LISTEN-2 | MUST | Steward | wire | `describe` shows each endpoint's voice record, its reported effective record, its front's models and the narrowings in force; an effective record with a reason other than `configured`, a narrowing or a mute is a notice naming the endpoint and reason, once per change of reason, `offline` after the offline grace, and so are narrowings not made from an owner's own endpoint keeping an endpoint narrowed 24 h in a row |
+| GA-LISTEN-2 | MUST | Steward | wire | `describe` shows each endpoint's voice record, its reported effective record, its front's models and the narrowings in force; an effective record with a reason other than `configured`, a narrowing or a mute is a notice naming the endpoint and reason, once per change of reason, `offline` after the offline grace, and so are narrowings not made from an owner's own endpoint (one whose `person` is an owner) keeping an endpoint narrowed for the narrowing notice span in a row |
 | GA-LISTEN-3 | MUST | Steward | wire | `zone_sources` gives a front every `media` target in the home whose `speech` is not null, with `speaking_for_ms`, within the source delay of the applier's `state` event, and every `media.announce`, and notice spoken through a `speaker` or `tv` `notify` target, dispatched anywhere in the home, with its text, from dispatch until the target's `speech` reports that text ended or, at a target reporting no speech, for the announce hold, a later `media.announce` to it meanwhile being `refuse(conflict)` and a notice's spoken copy waiting; a listing at a target that reports speech ends at the latest the announce hold after dispatch if the text was not shown within the source delay, and the announce hold after the target's last `speech` report |
 | GA-LISTEN-4 | MUST | Steward | wire | A `media.announce`, or a notice spoken through a `speaker` or `tv` `notify` target, whose text, normalised with no word removed, contains as whole words, or within the echo match of, a wake word of any endpoint or one of the home's `other_wake_words` (a default list, which the owner edits) is `refuse(invalid_args)`, the near-spelling test taking the listed word as the transcript; while an `ask` at a brain-served endpoint is open (from its `ask` event until answered, applied or expired), one whose text contains a run of `answer_words` is `refuse(invalid_args)`, a notice's spoken copy waiting at most `ask_expiry_s` and checked again at dispatch |
 | GA-LISTEN-5 | MUST | Steward | wire | A steward that ducks for a front ducks only a target whose `media.duck` is `reversible` and not declared `toggles`, and no device another cause ducked, un-ducks only what it ducked, and does so on `on: false`, a lost connection, or the duck limit without word |
-| GA-RULE-1 | MUST | Steward | wire | A level-triggered rule fires once per becoming true, and after a restart or `cursor_expired` fires once if its condition holds and it has not fired for it |
+| GA-LISTEN-6 | SHOULD | Steward | wire | `define` of a name, alias or scenario name that contains a wake word of any endpoint or a word in `other_wake_words`, or a run within the echo match of one, raises a notice |
+| GA-RULE-1 | MUST | Steward | wire | A level-triggered rule fires once per becoming true, the end of a lease that refused it counting as one, and after a restart or `cursor_expired` fires once, outside its exceptions, if its condition holds and it has not fired for it, a held-duration trigger only once it has held for the whole duration afresh since a restart, a firing a lease refused not counting as fired; the gap is every event from before the steward resumed, however it arrives; an edge from the gap is lost, unless the steward, having stated `edge_replay_s` (at most 300 s) in `describe`, replays it once per edge, every rule it triggers seeing it, conditions judged now: only a state edge, never a time trigger, no older than `edge_replay_s`, while its reading still holds, not one inside an exception, and not one whose `rule_fired` is already in `history`; a steward that omits `edge_replay_s` replays none |
 | GA-RULE-2 | MUST | Steward | wire | A rule's conditions, whole, are false while a device they read is not `live`; a state or held-state trigger does not hold over such a device, and a held duration restarts once it is live; a rule or a scenario's `if` reading a device with no known `fresh_s`, or an owner `fresh_s` longer than the declared one, is a notice at `define` and at the device's adoption; no condition (a rule's, an `if`'s, a `wait`'s) holds on an `assumed` value |
 | GA-RULE-3 | MUST | Steward | wire | A `between` window holds from `from` up to `until` in the home's timezone, on the next day when `until` is not later, `days` naming the day it starts; a time in a daylight-saving gap takes the first minute after, one that occurs twice its first occurrence; entering it is becoming true; `define` refuses a window whose `from` equals its `until` |
 | GA-RULE-4 | MUST | Steward | wire | `not_in` is true when the key reads none of its values, `unknown` (unless listed) and an absent key included; a `session.<token>` key retired from the computer's `accounts` (GA-BRIDGE-52) makes every condition that reads it, `not_in` included, read false instead, so a rule on a retired account stops firing |
 | GA-RULE-5 | MUST | Steward | wire | A rule of conditions only is level-triggered, held for 0 s: it fires when its conditions become true together and again each time they do after being false |
 | GA-RULE-6 | MUST | Steward | wire | A rule never fires inside one of its exceptions; when one ends, a level-triggered rule whose condition holds fires; `define` refuses an exception whose `until` is not after its `from` |
-| GA-RULE-7 | MUST | Steward | wire | An action of a rule of conditions only, declared idempotent, that ends `skipped(dead)`, `unreachable` or `failed(no_ack)` while the conditions hold is fired again, no sooner than its `ack_within_s` after its last try and no later than 300 s after it, or its `ack_within_s` when longer, until it ends in success or the conditions stop holding; one that ends `unanswered` on a `feedback: open` device is fired again once, at the same spacing, and then no more while the conditions hold; no other outcome, and no action that is not idempotent, is fired again |
-| GA-RULE-8 | MUST | Steward | wire | An action of a rule of conditions only that ends, while the conditions hold, in an outcome neither a success GA-RULE-7 names nor one it fires again for raises a notice naming the rule, the action, its target and the outcome, delivered and retried as GA-NOTE-1's, at most once for that action per becoming true; `refused(leased)`, `skipped(occupied)` and `skipped(in_use)` raise none; a `failed(not_locked)` raises it only once the lock's `ack_within_s` from its dispatch and the late-ack slack pass with no `late_ack`, a `failed(no_graphical_session)` at once, and a `failed(no_ack)` only once the 60 s late-ack window after it and the late-ack slack pass with none, a held notice raised even if the conditions stop holding during the wait; `skipped(toggle_only)` raises none, the steward issuing one notice for a rule, or a schedule whose scenario (or one its `run` steps reach) acts on an action declared `toggles: true` on a `feedback: open` device, at its `define`, when such an action comes into its selector, and when a declaration change makes an action it names one |
+| GA-RULE-7 | MUST | Steward | wire | An action of a rule of conditions only, declared idempotent, that ends `skipped(dead)`, `unreachable` or `failed(no_ack)` while the conditions hold is fired again, no sooner than its `ack_within_s` after its last try and no later than 300 s after it, or, when its `ack_within_s` is longer than 300 s, its `ack_within_s` plus 60 s, until it ends in success or the conditions stop holding; one that ends `unanswered` on a `feedback: open` device is fired again once, at the same spacing, and then no more while the conditions hold; no other outcome, and no action that is not idempotent, is fired again |
+| GA-RULE-8 | MUST | Steward | wire | An action of a rule of conditions only that ends, while the conditions hold, in an outcome neither a success GA-RULE-7 names nor one it fires again for raises a notice naming the rule, the action, its target and the outcome, delivered and retried as GA-NOTE-1's, at most once for that action per becoming true; `refused(leased)`, `refused(safety)` after the steward ended a safety lease early, `skipped(occupied)` and `skipped(in_use)` raise none; a `failed(not_locked)` raises it only once the lock's `ack_within_s` from its dispatch and the late-ack slack pass with no `late_ack`, a `failed(no_graphical_session)` at once, and a `failed(no_ack)` only once the 60 s late-ack window after it and the late-ack slack pass with none, a held notice raised even if the conditions stop holding during the wait; `skipped(toggle_only)` raises none, the steward issuing one notice for a rule, or a schedule whose scenario (or one its `run` steps reach) acts on an action declared `toggles: true` on a `feedback: open` device, at its `define`, when such an action comes into its selector, and when a declaration change makes an action it names one; a steward MAY coalesce the `skipped(occupancy_unknown)` notice to one per rule and room (per rule and target for a target with no room) while that room's occupancy stays unknown, naming the action and target it was first raised for, the next one after it was known again raising it again |
 | GA-SCN-1 | MUST | Steward | wire | A run honours its scenario's mode; a start `single` ignores returns the running run with `ignored` |
 | GA-SCN-2 | MUST | Steward | wire | A running scenario leases its owned targets, groups expanded except `infrastructure` members, and releases only its own leases when it ends |
 | GA-SCN-3 | MUST | Steward | wire | A person-started run acts as that person: its `no_voice` steps through a brain are refused; a guest's steps above `reversible` are refused; unanswered asks are `skipped(not_confirmed)`; a yes stands for the whole run, except a yes to `ask(toggle_only)`, which stands for `ask_expiry_s` after it was given, a toggle step dispatched later asked again and `skipped(not_confirmed)` without a new `yes`; a run started at an endpoint names it in its cause |
@@ -1113,11 +1277,11 @@ carry `readOnlyHint: true`; `answer`,
 | GA-SCN-6 | MUST | Steward | wire | `scenario_plan` gives one step per action step in order; a repeated `scenario_run` key within 3600 s returns the first run and starts nothing |
 | GA-SCN-7 | MUST | Steward | wire | A run re-evaluates every step at its dispatch, the first included, occupancy too; an unanswered ask found then is `skipped(not_confirmed)`, an answered one stands |
 | GA-SCN-8 | MUST | Steward | wire | An `if` step evaluates its condition when reached and runs at most one branch, none on a target that is not live, or on an `assumed` value, without an `else`, the step then ending `skipped(dead)`, `skipped(stale)` or, on an `assumed` value, `skipped(assumed)`, in `failed_steps` |
-| GA-SCN-9 | MUST | Steward | wire | `scenario_stop` by a lower-precedence principal, or a lower role than the run's starter, is `not_permitted`; a stopped run ends `ended(stopped)` |
+| GA-SCN-9 | MUST | Steward | wire | `scenario_stop` by a role lower than that of the person who started the run is `not_permitted`, and so is a visitor's of a run no person started; a stopped run ends `ended(stopped)` |
 | GA-SCN-10 | MUST | Steward | wire | A timed-out `wait` ends the run with `stop` and continues with `continue`, recorded either way |
 | GA-SCN-11 | MUST | Steward | wire | `scenario_status` leaves `skipped(occupied)` and `skipped(in_use)` out of `failed_steps`, and lists `skipped(occupancy_unknown)`, `skipped(in_use_unknown)`, `skipped(not_confirmed)` and `skipped(toggle_only)` in it |
 | GA-SCHED-1 | MUST | Steward | wire | A schedule exception suppresses or moves exactly that date's run |
-| GA-SCHED-2 | MUST | Steward | wire | A run missed while the steward was down is not run late and is recorded as `schedule_missed` |
+| GA-SCHED-2 | MUST | Steward | wire | A run missed, however the time passed it (the steward down, or its clock stepped past it), is not run late and is recorded as `schedule_missed` |
 | GA-SCHED-3 | MUST | Steward | wire | A scheduled time in a daylight-saving gap runs at the first minute after; one that occurs twice runs once |
 | GA-DEF-1 | MUST | Steward | wire | `define` with `dry_run` changes nothing and returns a diff |
 | GA-DEF-2 | MUST | Steward | wire | `define` at a stale revision, or for a plan made at one, returns `stale_revision` and changes nothing |
@@ -1126,15 +1290,17 @@ carry `readOnlyHint: true`; `answer`,
 | GA-DEF-5 | MUST | Steward | wire | A `define` change set applies whole or not at all |
 | GA-DEF-6 | MUST | Steward | wire | `define` through a brain returns a plan with `ask(confirm_define)`; unanswered, it changes nothing |
 | GA-DEF-7 | MUST | Steward | wire | A `brain_authored` step whose effective tier at dispatch is above `reversible` is `refuse(tier)`, gets no authored token, and is sent with `brain: true`; a run that `brain_authored` work starts, or whose date a brain moved, is `brain_authored`, and so is an authored step reaching a device through a room or group the device joined through a brain |
-| GA-DEF-8 | MUST | Steward | wire | `define` refuses a voice endpoint, or any endpoint with a voice record, without `served_by`; an `app` endpoint without a `person`; a voice record whose `heard_by` names no front credential; voice records naming more than one front; a `skill_account` on an endpoint that is not `type: voice` or has a `person`; two endpoints with one `skill_account` and `skill_surface`; one account with both a surfaced endpoint and one without; an endpoint with a null `room` that is not an `app`; and `notice_channels` without a `notify` channel |
+| GA-DEF-8 | MUST | Steward | wire | `define` refuses a voice endpoint, or any endpoint with a voice record, without `served_by`; an `app` endpoint without a `person`; a voice record whose `heard_by` names no front credential; voice records naming more than one front; a `skill_account` on an endpoint that is not `type: voice` or has a `person`; two endpoints with one `skill_account` and `skill_surface`; one account with both a surfaced endpoint and one without; an endpoint with a null `room` that is not an `app`; `notice_channels`, once set, left empty; and a channel in it that is not adopted or offers neither `notify` nor `media.announce`; while `notice_channels` has never been set, a change set is not refused for its being empty |
 | GA-DEF-9 | MUST | Steward | wire | `define` refuses, with `invalid_request`, a change set naming a device the applier has not adopted |
 | GA-DEF-10 | MUST | Steward | wire | `define` refuses, with `invalid_request`, a change set putting an `internal` device in a room or a group, or naming one as a target of a scenario's or a rule's action |
 | GA-DEF-11 | MUST | Steward | wire | `define` sets a computer's `account_persons` as account token to person id, a field apart from the applier's `accounts`, which `describe` passes through unchanged beside it; it refuses, with `invalid_request`, `account_persons` on a target that is not a `computer` or naming a person not registered |
-| GA-DEF-12 | MUST | Steward | wire | `define` refuses, with `invalid_request` and changing nothing, a change set whose rules or scenarios that it adds or changes have a trigger or conditions, an `if` or a `wait` that reads a key its device does not declare (as *Rules* defines declaring, a trigger's extension `event` keys included) (for a selector, a key no matched device declares, `data` then naming no `device`, and `awaited` true where any matched device awaits the key), its `data` `{ key, device, awaited }`, `awaited` true where the device's `awaited_keys` lists the key |
+| GA-DEF-12 | MUST | Steward | wire | `define` refuses, with `invalid_request` and changing nothing, a change set whose rules or scenarios that it adds or changes have a trigger or conditions, an `if` or a `wait` that reads a key its device does not declare (as *Rules* defines declaring, a trigger's extension `event` keys included), the devices being those its triggers, conditions, `if` and `wait` steps name, its `data` `{ key, device, awaited }`, `awaited` true where the device's `awaited_keys` lists the key |
+| GA-DEF-13 | MUST | Steward | wire | `define` refuses, with `invalid_request` and changing nothing, a change set with a change that does not match *Change sets*: an unknown `op` or `kind`, a field its kind does not name, a value not of its kind's shape, a credential's `secret` under 16 characters, or more than 64 exceptions on a rule or a schedule |
+| GA-DEF-14 | MUST | Steward | wire | An upsert sets only the fields it names, a field left out keeping its value, a null one returning to its default and a named list replaced whole; an upsert that creates an item gives its kind's created-with fields, none null; a delete removes the item its key names, and a delete of one that does not exist is `invalid_request` |
 | GA-SEC-2 | MUST | Steward | wire | Every connection uses TLS, with the server's certificate validated, unless both ends are on one host's loopback |
 | GA-BIND-2 | MUST | Steward | wire | The steward serves MCP protocol revision `2026-07-28` to every caller, answering no revision but that one, `2025-06-18` and `2025-11-25`; it reaches its applier at `2026-07-28` where the applier serves it, and falls back, to one of those two only, for an applier that does not |
 | GA-HARN-2 | MUST | Steward | wire | Under the harness, the steward takes all time, elapsed time included, from the `time_source` set by `define`, and honours the harness stepping it; `time_source` is accepted only while its applier reports a `test_run_id` |
-| GA-PERSIST-2 | MUST | Steward | wire | The house model, leases, idempotency keys and the counters they are made from, open plans and answers, history, schedules' last runs and the notices GA-RULE-8 holds for a late ack survive a restart; an interrupted run ends `ended(interrupted)` |
+| GA-PERSIST-2 | MUST | Steward | wire | The house model, leases with the rules each refused, the applier cursor and the time of the last applier event, idempotency keys and the counters they are made from, open plans with an `ask` step and their answers, history, schedules' last runs, and every notice of the steward's own not yet delivered (those GA-RULE-8 holds for a late ack, and those held for want of a channel, included) survive a restart, a plan with no ask possibly lost, `apply` and `answer` of it then `unknown_plan`; an interrupted run ends `ended(interrupted)` |
 
 ## Conformance
 
@@ -1147,6 +1313,8 @@ takes all time from it, elapsed time included, and honours the harness stepping 
 does (GA-HARN-1); and the
 steward then reports the same `test_run_id`. The
 run-id guard, negative subjects and exit rules are the applier standard's (*Conformance*). The
+harness checks GA-NOTE-1's "never giving up" as a notice still retried after 7 days of stepped
+time. The
 harness reaches the steward at `2026-07-28` where it serves it, and otherwise at `2025-11-25` or
 `2025-06-18` if it answers one; the reference applier serves all three and records which the
 steward used.
@@ -1162,6 +1330,7 @@ steward used.
 | `takes-any-speaker` | GA-AUTH-2 | GA-TIER-3 | A named owner lifts a guest's role |
 | `app-without-person` | GA-DEF-8 | GA-AUTH-2 | The endpoint then has no role to derive |
 | `skips-the-ask-event` | GA-CONF-5 | — | |
+| `asks-without-the-steps` | GA-CONF-5 | — | The `ask` event for an IR TV's `onoff.turn_off` names it by `step_ids` only, with no `steps`, so the asked app cannot say what it confirms |
 | `serves-the-confirm-on` | GA-CONF-4 | GA-CONF-1 | A brain then answers the app's asks |
 | `answers-unasked-steps` | GA-CONF-2 | GA-CONF-3 | The extra yes earns a token |
 | `authors-a-moved-device` | GA-DEF-7 | GA-CONF-3, GA-SCN-4 | An owner's step reaches the moved device with an authored token |
@@ -1241,6 +1410,40 @@ steward used.
 | `forgets-a-held-notice` | GA-PERSIST-2 | GA-RULE-8 | The steward restarts inside a `failed(no_ack)`'s late-ack window, and no notice comes after it closes, which is also GA-RULE-8's notice missing |
 | `notices-a-late-launch` | GA-RULE-8 | — | A rule's `media.launch` that ends `failed(no_ack)` and has a `late_ack` 20 s later raises a notice that it failed |
 | `notices-every-lease` | GA-RULE-8 | — | A rule's action `refused(leased)` raises a notice, though the lease's end re-evaluates it |
+| `coalesces-a-failed-lock` | GA-RULE-8 | — | A lock that ends `failed(not_locked)` on a second night raises no notice, coalesced with the first night's as only `skipped(occupancy_unknown)`'s may be |
+| `replays-on-old-conditions` | GA-RULE-1 | — | After a `cursor_expired`, a motion edge from the gap fires the night light's rule, judged by the conditions at the edge, though its window has closed since |
+| `re-fires-at-every-lease-end` | GA-LEASE-4 | GA-RULE-1 | A level-triggered rule that fired, and whose condition still holds, fires again when a person's lease on its device ends, though the lease refused nothing of it |
+| `ends-a-safety-lease-early` | GA-LEASE-6 | — | A latchless safety rule's lease on a valve ends, by its `lease` event, before its actuation's `ack_within_s`, the late-ack window and the late-ack slack have passed |
+| `forgets-a-safety-refusal` | GA-LEASE-6 | — | After a latchless safety lease ended early, a level-triggered rule's action on the valve is `refuse(safety)`, and when the rule's `rule_fired` is relayed the rule is not re-evaluated, though its condition holds |
+| `forgets-a-replaced-lease` | GA-LEASE-4 | GA-RULE-1 | HS3: a hand on the switch leases the hall light and refuses the off rule, and a second touch replaces the lease; either the off rule is re-evaluated at the second touch (a `refused` event in `history`), or, when the second lease ends, it is not re-evaluated and the light stays on |
+| `replays-undeclared` | GA-RULE-1 | — | A steward whose `describe` has no `edge_replay_s` replays a motion edge from a `cursor_expired` gap |
+| `replays-a-time-trigger` | GA-RULE-1 | — | A rule triggered at 07:00 fires at 07:02, after a restart whose gap held 07:00 |
+| `broadcasts-the-steps` | GA-CONF-5 | — | A guest panel's `events` show the `steps`, with a `notify` text, of an ask put to a member's app |
+| `takes-a-short-secret` | GA-DEF-13 | — | `define` accepts a credential whose `secret` has 8 characters |
+| `keeps-a-dead-channel-quiet` | GA-NOTE-4 | — | With a phone and a second `notify` channel listed, the owner forgets the phone through the applier's `configure`, and no notice on the second channel says the phone's channel is gone |
+| `hides-the-held-notices` | GA-NOTE-1 | — | With only a speaker's `media.announce` as channel, `describe` shows no `held_notices` while a leak notice is held |
+| `forgets-an-unsent-notice` | GA-PERSIST-2 | GA-NOTE-1 | A notice held for want of a channel is gone after a restart, and is never delivered once the first `notify` channel is set |
+| `renames-away-the-room` | GA-DEF-14 | GA-OCC-3 | An upsert of a computer's `target` naming only `{ id, name }` clears its `room` and `account_persons` |
+| `drops-confirm-on` | GA-DEF-14 | GA-CONF-1 | An upsert renaming a satellite's `endpoint` resets its `confirm_on` to `same` |
+| `deletes-the-missing` | GA-DEF-14 | — | A delete of a room that does not exist is accepted |
+| `ends-a-safety-lease-undeclared` | GA-LEASE-6 | — | A steward whose `describe` has no `safety_lease_s` ends a latchless safety lease before the rule's `rule_fired` |
+| `hides-no-notify-channel` | GA-NOTE-1 | — | A `define` that sets `notice_channels` to a speaker's `media.announce` alone answers without `no_notify_channel: true` |
+| `lease-end-fires-in-an-exception` | GA-LEASE-4 | GA-RULE-6 | A lease that refused HS20's limit ends inside the granted half hour, and the lock is fired |
+| `replays-a-fired-edge` | GA-RULE-1 | — | A motion edge whose `rule_fired` is in `history` from before a crash is replayed after the restart, and the rule's `notify` is sent twice |
+| `runs-a-stepped-schedule` | GA-SCHED-2 | — | The harness steps the clock past 07:00, and the 07:00 schedule runs at 07:05 |
+| `forgets-a-restart-hand` | GA-LEASE-2 | — | An `external` change made while the steward was down takes no lease after the restart, and a rule turns the lamp back |
+| `sleeps-a-dead-pc` | GA-OCC-3 | — | A `dead` computer with a mapped account whose last key read `locked`, in a vacant room, has its `power.sleep` planned with no `ask(in_use_unknown)` |
+| `fires-before-the-duration` | GA-RULE-1 | — | After a restart, «no motion in the hall for 180 s → light off» fires at once, though the steward has read the hall's sensor for only 10 s since |
+| `broadcasts-the-diff` | GA-STW-7 | — | A guest panel's `events` show the diff of the owner's `define` made at her app |
+| `visitor-stops-a-schedule` | GA-SCN-9 | — | A `scenario_stop` from an endpoint whose `max_role` is `visitor` ends a scheduled run |
+| `refuses-the-first-define` | GA-DEF-8 | — | A fresh steward refuses a first change set that adds a room and names no notice channel |
+| `refuses-an-announcing-channel` | GA-DEF-8 | — | A first change set whose `notice_channels` names only a speaker with `media.announce` is refused |
+| `loses-an-early-notice` | GA-NOTE-1 | — | A notice raised before any channel is set is never delivered once the first `notify` channel is set |
+| `asks-with-personal-args` | GA-AUTH-7 | — | An ask put to the hall panel, whose derived role is `guest`, carries in its `steps` the value a step sets on a key the owner marked personal, which the panel's `state` withholds |
+| `replays-past-its-bound` | GA-RULE-1 | — | After a `cursor_expired`, an edge older than the `edge_replay_s` the steward's `describe` states fires its rule |
+| `never-notices-again` | GA-RULE-8 | — | A rule's `skipped(occupancy_unknown)` in a room that was known in between raises no notice, coalesced with the one before |
+| `takes-a-silent-channel` | GA-DEF-8 | GA-NOTE-1 | `define` accepts `notice_channels` naming a lamp, which offers neither `notify` nor `media.announce`, beside a `notify` channel |
+| `forgets-an-asked-plan` | GA-PERSIST-2 | — | A member answers `yes` to a plan's `ask(confirm_tier)`, the steward restarts, and the plan's `apply` is `unknown_plan` |
 
 ## What this standard does not define
 
@@ -1262,5 +1465,8 @@ steward used.
   it into a suggestion. Who may cancel is policy. **A known gap:** without `respect_occupancy` (a
   direct request) no session is consulted (GA-OCC-3), and `power.sleep` is `reversible`, so anyone
   who may do a `reversible` action may put to sleep a PC someone is using. Whether a direct request
-  should consult sessions too, or sleep be tiered higher, is policy.
+  should consult sessions too, or sleep be tiered higher, is policy. **A known gap:** a
+  person-precedence lease is taken again by every action, so a guest, a mistaken brain or another
+  admin acting again within `hold_time_s` can hold a device, and every rule and schedule acting on
+  it, for as long as they keep acting; a bound is left to a later revision, designed from real use.
 - The JSON Schemas; until they exist, the tables above are the shapes.

@@ -103,8 +103,8 @@ requirement("GA-EVT-8", {
 });
 
 requirement("GA-DESC-18", {
-  seam: "applier", fixture: { devices: ["lamp", "dimmer", "pusher"] }, timeoutMs: 90_000,
-  covers: "the pusher's mode turning its onoff into a press is a model change naming it, a plan made before is stale_revision; a step not yet dispatched when it changed is refused(declaration_changed), the pusher already on, while the dimmer's unchanged step goes; a dispatched turn_on, not idempotent then, is never reissued once it is again; a tier the owner lowered on its extension action falls back to the table when that action's declarations change, and stays so when they return, until the owner sets it again. The owner's idempotent: true is not offered by this build",
+  seam: "applier", fixture: { devices: ["lamp", "dimmer", "pusher", "presser"] }, timeoutMs: 120_000,
+  covers: "the pusher's mode turning its onoff into a press is a model change naming it, a plan made before is stale_revision; a second pusher whose click mode takes its onoff actions away and offers a press in their place, as the Zigbee bridge's does: a model event naming it, its turn_on gone from describe and the press there, a step for its turn_on not yet dispatched when it vanished refused(declaration_changed) or ended unsupported_action (the text names neither yet) and never sent, and switch mode bringing turn_on back and taking the press away; a step not yet dispatched when it changed is refused(declaration_changed), the pusher already on, while the dimmer's unchanged step goes; a dispatched turn_on, not idempotent then, is never reissued once it is again; a tier the owner lowered on its extension action falls back to the table when that action's declarations change, and stays so when they return, until the owner sets it again. The owner's idempotent: true is not offered by this build",
 }, async (ctx) => {
   const { mcp, owner, bridge, link } = { mcp: ctx.mcp!, owner: ctx.owner!, bridge: ctx.bridge!, link: ctx.link! };
 
@@ -177,4 +177,39 @@ requirement("GA-DESC-18", {
   mustEqual((await declared(ctx, PUSHER, `${PUSH}.set_mode`))?.tier, "confirm", "set_mode once its declaration returned to the one the owner lowered it on");
   await lower();
   mustEqual((await declared(ctx, PUSHER, `${PUSH}.set_mode`))?.tier, "reversible", "set_mode once the owner lowered it again");
+
+  // Actions that vanish and appear: the presser's click mode takes its onoff away and offers a press.
+  const PRESSER = "sim-bridge:presser";
+  const PR = "org.galatea.test.presser";
+  const press = async (to: "click" | "switch") => {
+    await bridge.control({ requestId: `press-${randomUUID()}`, op: "report", device: "presser", values: { [`${PR}.mode`]: to },
+      observedAt: wire(ctx.time.now()) });
+    await pollUntil(async () => ((await declared(ctx, PRESSER, to === "click" ? `${PR}.press` : "onoff.turn_on")) ? true : undefined),
+      oneSecond(ctx), `the presser's ${to === "click" ? "press" : "turn_on"} in describe in ${to} mode`);
+  };
+  const vanished = (await mcp.callOk("events")).cursor;
+  link.holdOutbound();
+  let held2: Promise<{ ok: boolean; body: any; error?: string }>;
+  try {
+    // The lamp, on since the steps above, turned off first: its dispatch, held at the link, keeps the presser's step undispatched.
+    held2 = mcp.call("apply", { idempotency_key: randomUUID(), request: { actions: [ask("sim-bridge:lamp", "onoff.turn_off"), ask(PRESSER)] } }) as never;
+    await sleep(300);
+    await press("click");
+  } finally {
+    link.restore();
+  }
+  const gone = await held2!;
+  must(gone.ok, `the apply returned ${gone.error}`, gone.body);
+  ctx.evidence(`a turn_on held while it vanished: ${JSON.stringify(gone.body.outcomes)}`);
+  // Until applier 0.16 says which, an action taken away may be a changed declaration or one no longer offered.
+  const said = (gone.body.outcomes as Outcome[]).map(short);
+  mustEqual(said[0], "dispatched", "the lamp's step");
+  must(["refused(declaration_changed)", "failed(unsupported_action)", "skipped(unsupported_action)"].includes(said[1] ?? ""),
+    `the presser's turn_on, gone before its dispatch, is ${said[1]}, not refused(declaration_changed) or unsupported_action`, said);
+  mustEqual(bridge.received.filter((x) => x.device === "presser" && x.action === "onoff.turn_on").length, 0,
+    "turn_ons the presser received after its turn_on was taken away");
+  must((await eventsOf(mcp, vanished, "model")).some((e) => e.device === PRESSER), "a model event names the presser");
+  mustEqual(await declared(ctx, PRESSER, "onoff.turn_on"), undefined, "the presser's turn_on in describe in click mode");
+  await press("switch");
+  mustEqual(await declared(ctx, PRESSER, `${PR}.press`), undefined, "the presser's press in describe in switch mode");
 });

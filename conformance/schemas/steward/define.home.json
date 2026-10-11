@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "steward/define.home.json",
-  "title": "A define change's value for kind home: the settings it sets, a null one back to its default (provisional until the standard names the shape)",
+  "title": "A define change's value for kind home: the settings it sets, a null one back to its default (steward, Change sets)",
   "type": "object",
   "additionalProperties": false,
   "minProperties": 1,

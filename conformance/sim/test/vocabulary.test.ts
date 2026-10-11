@@ -16,16 +16,16 @@ describe("vocabulary", () => {
   });
 
   it("puts a single argument on the wire bare, and takes it back", () => {
-    expect(toWire("onoff.turn_on", {})).toBeUndefined();
-    expect(toWire("level.set_level", { level: 40 })).toBe(40);
-    expect(fromWire("level.set_level", 40)).toEqual({ level: 40 });
-    expect(fromWire("onoff.turn_on", undefined)).toEqual({});
+    expect(toWire({ action: "onoff.turn_on" }, {})).toBeUndefined();
+    expect(toWire({ action: "level.set_level" }, { level: 40 })).toBe(40);
+    expect(fromWire({ action: "level.set_level" }, 40)).toEqual({ level: 40 });
+    expect(fromWire({ action: "onoff.turn_on" }, undefined)).toEqual({});
   });
 
   it("puts notify's arguments on the wire as one object, and knows it stateless and never idempotent", () => {
     expect(actionsOf(["notify"])).toEqual(["notify.notify"]);
-    expect(toWire("notify.notify", { text: "dinner", urgency: "info" })).toEqual({ text: "dinner", urgency: "info" });
-    expect(fromWire("notify.notify", { text: "dinner", urgency: "info" })).toEqual({ text: "dinner", urgency: "info" });
+    expect(toWire({ action: "notify.notify" }, { text: "dinner", urgency: "info" })).toEqual({ text: "dinner", urgency: "info" });
+    expect(fromWire({ action: "notify.notify" }, { text: "dinner", urgency: "info" })).toEqual({ text: "dinner", urgency: "info" });
     expect(actionSpec("notify.notify")).toMatchObject({ stateless: true, idempotent: false });
     expect(stateAfter("notify.notify", { text: "x" })).toBeUndefined();
   });
@@ -38,9 +38,24 @@ describe("extension actions (bridge 0.5)", () => {
     expect(setsOf({ ...set, confirmedBy: { key: "org.galatea.test.pusher.armed", value: true } })).toEqual({ "org.galatea.test.pusher.armed": true });
     expect(setsOf({ action: "onoff.turn_on" })).toEqual({ on: true });
   });
-  it("sends an extension action's arguments as one object, even one", () => {
-    expect(toWire(set.action, { mode: "click" })).toEqual({ mode: "click" });
-    expect(fromWire(set.action, { mode: "click" })).toEqual({ mode: "click" });
-    expect(toWire(set.action, {})).toBeUndefined();
+  it("sends an extension action's one argument bare, by its declaration's args (bridge, *Commands*)", () => {
+    const decl = { ...set, args: { mode: ["click", "switch"] } };
+    expect(toWire(decl, { mode: "click" })).toBe("click");
+    expect(fromWire(decl, "click")).toEqual({ mode: "click" });
+    expect(toWire(decl, {})).toBeUndefined();
+    const two = { action: "org.galatea.test.brew.make", args: { cups: { min: 1, max: 4 }, strength: ["mild", "strong"] } };
+    expect(toWire(two, { cups: 2, strength: "mild" })).toEqual({ cups: 2, strength: "mild" });
+    expect(fromWire(two, { cups: 2, strength: "mild" })).toEqual({ cups: 2, strength: "mild" });
+  });
+  it("refuses a value that does not fit, as a real bridge does: a one-argument value wrapped, a value for none, an unknown name", () => {
+    const decl = { ...set, args: { mode: ["click", "switch"] } };
+    expect(fromWire(decl, { mode: "click" })).toMatch(/goes bare/);
+    expect(fromWire({ action: "level.set_level" }, { level: 40 })).toMatch(/goes bare/);
+    expect(fromWire({ action: set.action }, "click")).toMatch(/takes no argument/);
+    expect(fromWire({ action: "onoff.turn_on" }, true)).toMatch(/takes no argument/);
+    expect(fromWire({ action: "org.galatea.test.brew.make", args: { cups: "any", strength: "any" } }, { cups: 1, size: 2 })).toMatch(/size/);
+    // A one-argument action whose argument is itself an object takes that object bare.
+    const search = { action: "org.galatea.test.tv.find", args: { search: { series: "any", season: { min: 1 } } } };
+    expect(fromWire(search, { series: "x" })).toEqual({ search: { series: "x" } });
   });
 });

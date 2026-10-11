@@ -2,14 +2,11 @@
 
 export interface StewardDefineEndpoint {
   id: string;
-  name: string;
-  type: "voice" | "panel" | "app";
-  room: string | null;
-  person: string | null;
-  max_role?: "owner" | "member" | "guest" | "visitor";
-  served_by: string | null;
-  /**
-   * same (the default, meaning none) or an endpoint id
-   */
-  confirm_on?: string;
+  name?: string;
+  type?: "voice" | "panel" | "app";
+  room?: string | null;
+  person?: string | null;
+  max_role?: ("owner" | "member" | "guest" | "visitor") | null;
+  served_by?: string | null;
+  confirm_on?: string | null;
 }

@@ -1,3 +1,4 @@
+import { TRANSPORT_KIND } from "@ludentes/galatea-life-sim";
 import { bridgeDoc, fixtureDevices } from "@ludentes/galatea-life-sim";
 import { must, mustEqual } from "../../assert.js";
 import type { TestContext } from "../../context.js";
@@ -126,7 +127,7 @@ requirement("GA-DISC-2", {
   // A second bridge, registered and never live: its retained status and devices only (dead, GA-BUS-8).
   await bridge.publishAs("sim-bridge-2", "status", { bridgeId: "sim-bridge-2", instanceId: "00000000-0000-4000-8000-0000000000d1", v: 1,
     state: "online", version: "0.0.0", levels: ["Serve", "Provision"], bridgeType: "esphome", faults: [], ungoverned: [], blocked: [],
-    transports: [{ id: "test", kind: "other", state: "up", since: wire(ctx.time.now()) }], devices: [], testRunId: ctx.runId,
+    transports: [{ id: "test", kind: TRANSPORT_KIND, state: "up", since: wire(ctx.time.now()) }], devices: [], testRunId: ctx.runId,
     publishedAt: wire(ctx.time.now()) }, true);
   await bridge.publishAs("sim-bridge-2", "devices", { publishedAt: wire(ctx.time.now()),
     devices: [bridgeDoc({ ...fixtureDevices(["lamp"])[0]!, id: "spare", connections: [DEAD_HELD] })] }, true);

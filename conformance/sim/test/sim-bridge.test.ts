@@ -480,7 +480,7 @@ describe("SimBridge: extensions (bridge 0.5)", () => {
     const mark = w.seen.length;
     await client.publishAsync(`${root}/bridges/sim-bridge/devices/pusher/command`, JSON.stringify({
       commandId: "0b5f2c3e-1d4a-4f6b-8c9d-0e1f2a3b4c5e", issuedAt: now(), resultWithinMs: 10_000,
-      value: { action: `${PUSH}.set_mode`, value: { mode: "click" } },
+      value: { action: `${PUSH}.set_mode`, value: "click" },
     }), { qos: 1 });
     const ack = await w.waitFor((s) => s.topic.endsWith("/devices/pusher/ack"), 2000, mark);
     expect(ack.payload.result).toBe("applied");
@@ -489,6 +489,102 @@ describe("SimBridge: extensions (bridge 0.5)", () => {
     expect(after[0]!.payload.devices[0].actions.find((a: any) => a.action === "onoff.turn_on").idempotent).toBe(false);
     expect(after[1]!.payload[`${PUSH}.mode`]).toBe("click");
     expect(b.received).toMatchObject([{ action: `${PUSH}.set_mode`, args: { mode: "click" } }]);
+  });
+
+  it("refuses a one-argument action's value wrapped in an object, failed(invalid_request) at once and nothing done, as a real bridge does (bridge, *Commands*)", async () => {
+    const { b, w, root } = await bridge({ devices: fixtureDevices(["pusher", "dimmer"]) });
+    const client = await connectAsync(broker.url, { protocolVersion: 5 });
+    cleanup.push(() => client.endAsync());
+    for (const [device, value, commandId] of [["pusher", { action: `${PUSH}.set_mode`, value: { mode: "click" } }, "1b5f2c3e-1d4a-4f6b-8c9d-0e1f2a3b4c5e"],
+      ["dimmer", { action: "level.set_level", value: { level: 40 } }, "2b5f2c3e-1d4a-4f6b-8c9d-0e1f2a3b4c5e"]] as const) {
+      const mark = w.seen.length;
+      await client.publishAsync(`${root}/bridges/sim-bridge/devices/${device}/command`, JSON.stringify({
+        commandId, issuedAt: now(), resultWithinMs: 10_000, value }), { qos: 1 });
+      const ack = await w.waitFor((s) => s.topic.endsWith(`/devices/${device}/ack`), 2000, mark);
+      expect(ack.payload).toMatchObject({ commandId, result: "failed", reason: "invalid_request" });
+    }
+    expect(b.received).toEqual([]);
+  });
+});
+
+describe("SimBridge: the real bridges' shapes", () => {
+  const PRESS = "org.galatea.test.presser";
+  const now = () => new Date(time.now()).toISOString();
+  const send = async (root: string, device: string, value: Record<string, unknown>, commandId = randomUUID()) => {
+    const client = await connectAsync(broker.url, { protocolVersion: 5 });
+    cleanup.push(() => client.endAsync());
+    await client.publishAsync(`${root}/bridges/sim-bridge/devices/${device}/command`, JSON.stringify({
+      commandId, issuedAt: now(), resultWithinMs: 10_000, value }), { qos: 1 });
+    return commandId;
+  };
+
+  it("names its transport's kind, as a real bridge does, not other", async () => {
+    const { w, root } = await bridge();
+    const s = await w.waitFor((m) => m.topic === `${root}/bridges/sim-bridge/status`, 2000);
+    expect(s.payload.transports[0]).toMatchObject({ id: "test", kind: "zigbee" });
+  });
+
+  it("transmits a command for a device not observable, and refuses one for a device available: false at once (GA-BRIDGE-6)", async () => {
+    const lamp = { ...fixtureDevices(["lamp"])[0]!, basisMaxAgeMs: null };
+    const { b, w, root } = await bridge({ devices: [lamp] });
+    const s = await w.waitFor((m) => m.topic === `${root}/bridges/sim-bridge/status`, 2000);
+    expect(s.payload.devices[0]).toMatchObject({ id: "lamp", observable: false });
+    let mark = w.seen.length;
+    const sent = await send(root, "lamp", { action: "onoff.turn_on" });
+    const ack = await w.waitFor((m) => m.topic.endsWith("/devices/lamp/ack") && m.payload.commandId === sent, 2000, mark);
+    expect(ack.payload.result).toBe("applied");
+    expect(b.received).toMatchObject([{ device: "lamp", action: "onoff.turn_on" }]);
+    await b.setAvailable("lamp", false);
+    mark = w.seen.length;
+    const refused = await send(root, "lamp", { action: "onoff.turn_off" });
+    const no = await w.waitFor((m) => m.topic.endsWith("/devices/lamp/ack") && m.payload.commandId === refused, 1000, mark);
+    expect(no.payload).toMatchObject({ result: "failed", reason: "unreachable" });
+    expect(b.received).toHaveLength(1);
+  });
+
+  it("offers a press in place of onoff in click mode, and onoff back in switch mode, describing only the extension actions it offers", async () => {
+    const { w, root } = await bridge({ devices: fixtureDevices(["presser"]) });
+    const first = await w.waitFor((s) => s.topic.endsWith("/sim-bridge/devices"), 2000);
+    const actions = (doc: any) => doc.devices[0].actions.map((a: { action: string }) => a.action);
+    const described = (doc: any) => doc.devices[0].extensions[0].actions.map((a: { action: string }) => a.action);
+    expect(actions(first.payload)).toEqual(["onoff.turn_on", "onoff.turn_off", `${PRESS}.set_mode`]);
+    expect(described(first.payload)).toEqual([`${PRESS}.set_mode`]);
+    for (const [mode, offered, ext] of [
+      ["click", [`${PRESS}.set_mode`, `${PRESS}.press`], [`${PRESS}.set_mode`, `${PRESS}.press`]],
+      ["switch", ["onoff.turn_on", "onoff.turn_off", `${PRESS}.set_mode`], [`${PRESS}.set_mode`]]] as const) {
+      const mark = w.seen.length;
+      await send(root, "presser", { action: `${PRESS}.set_mode`, value: mode });
+      const doc = await w.waitFor((s) => s.topic.endsWith("/sim-bridge/devices"), 2000, mark);
+      expect(validate("bridge/devices.json", doc.payload)).toEqual([]);
+      expect(actions(doc.payload)).toEqual(offered);
+      expect(described(doc.payload)).toEqual(ext);
+      expect(doc.payload.devices[0].capabilities).toEqual(["onoff"]);
+    }
+  });
+
+  it("presses in click mode, and answers an action no longer offered unsupported", async () => {
+    const { b, w, root } = await bridge({ devices: fixtureDevices(["presser"]) });
+    let mark = w.seen.length;
+    await send(root, "presser", { action: `${PRESS}.set_mode`, value: "click" });
+    await w.waitFor((s) => s.topic.endsWith("/devices/presser/ack"), 2000, mark);
+    mark = w.seen.length;
+    const pressed = await send(root, "presser", { action: `${PRESS}.press` });
+    expect((await w.waitFor((s) => s.topic.endsWith("/devices/presser/ack") && s.payload.commandId === pressed, 2000, mark)).payload.result)
+      .toBe("applied");
+    const gone = await send(root, "presser", { action: "onoff.turn_on" });
+    expect((await w.waitFor((s) => s.topic.endsWith("/devices/presser/ack") && s.payload.commandId === gone, 2000, mark)).payload.result)
+      .toBe("unsupported");
+    expect(b.received.map((r) => r.action)).toEqual([`${PRESS}.set_mode`, `${PRESS}.press`]);
+  });
+
+  it("publishes a status with no reading on a re-interview, never an empty one", async () => {
+    const { b, w, root } = await bridge();
+    const mark = w.seen.length;
+    await b.reinterview("lamp");
+    const s = await w.waitFor((m) => m.topic === `${root}/bridges/sim-bridge/devices/lamp/status`, 2000, mark);
+    expect(Object.keys(s.payload).sort()).toEqual(["available", "deviceId", "timestamp"]);
+    expect(s.payload).toMatchObject({ deviceId: "lamp", available: true });
+    expect(validate("bridge/device-status.json", s.payload)).toEqual([]);
   });
 });
 
@@ -614,6 +710,21 @@ describe("SimBridge: provisioning", () => {
     expect(f.payload).toMatchObject({ op: "remove", status: "failed", reason: "unknown_device" });
     expect(validate("bridge/reply.json", f.payload)).toEqual([]);
     expect(w.seen.slice(from).some((s) => s.topic.endsWith("/event") && s.payload.type === "left")).toBe(false);
+  });
+
+  it("answers a remove of a device id it never had failed(unknown_device), and one it removed before accepted, with left again (GA-BRIDGE-27)", async () => {
+    const { w, root } = await bridge({ levels: ["Serve", "Provision"] });
+    const never = await request(root, "remove", { device: "nothing", blockRejoin: false });
+    const f = await w.waitFor((s) => s.topic.endsWith("/reply") && s.payload.requestId === never, 2000);
+    expect(f.payload).toMatchObject({ op: "remove", status: "failed", reason: "unknown_device" });
+    for (const n of [1, 2]) {
+      const from = w.seen.length;
+      const id = await request(root, "remove", { device: "lamp", blockRejoin: false });
+      const r = await w.waitFor((s) => s.topic.endsWith("/reply") && s.payload.requestId === id, 2000, from);
+      expect(r.payload, `remove ${n}`).toMatchObject({ op: "remove", status: "accepted" });
+      const left = await w.waitFor((s) => s.topic.endsWith("/event") && s.payload.type === "left", 2000, from);
+      expect(left.payload.device).toBe("lamp");
+    }
   });
 
   it("shows a fixture device's connections in devices, and its transport's on status", async () => {

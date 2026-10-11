@@ -14,7 +14,7 @@ architecture, and how the parts fit, is in `docs/architecture.md`; the vocabular
 | [The Galatea applier standard](standard/applier.md) | 0.15 | draft |
 | [The Galatea brain standard](standard/brain.md) | 0.6 | draft |
 | [The Galatea bridge standard](standard/bridge.md) | 0.6 | draft |
-| [The Galatea steward standard](standard/steward.md) | 0.10 | draft |
+| [The Galatea steward standard](standard/steward.md) | 0.11 | draft |
 | [The Galatea voice standard](standard/voice.md) | 0.3 | draft |
 
 Each standard's *Requirement index* is its source of truth. Every requirement has an id

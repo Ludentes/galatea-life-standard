@@ -91,6 +91,7 @@ export type { StewardDescribeRequest } from "./steward/describe.request.js";
 export type { StewardDescribeResponse } from "./steward/describe.response.js";
 export type { StewardError } from "./steward/error.js";
 export type { StewardEvent } from "./steward/event.js";
+export type { StewardEventAsk } from "./steward/event.ask.js";
 export type { StewardEventsRequest } from "./steward/events.request.js";
 export type { StewardEventsResponse } from "./steward/events.response.js";
 export type { StewardFrontStatusRequest } from "./steward/front_status.request.js";

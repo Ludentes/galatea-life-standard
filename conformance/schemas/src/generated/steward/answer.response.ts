@@ -246,7 +246,7 @@ export interface StewardAnswerResponse {
         basis: "real" | "emulated";
         from_replaced?: true;
         /**
-         * A step of brain_authored work (GA-DEF-7): above reversible it is refuse(tier), and it is sent with brain: true (provisional: the standard names no field for it)
+         * A step of brain_authored work (GA-DEF-7): above reversible it is refuse(tier), and it is sent with brain: true (steward, Steps)
          */
         brain_authored?: true;
         /**

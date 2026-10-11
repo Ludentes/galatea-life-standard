@@ -27,6 +27,7 @@ import "./applier/state.js";
 import "./applier/plan.js";
 import "./applier/dispatch.js";
 import "./applier/extensions.js";
+import "./applier/descriptions.js";
 import "./applier/safety.js";
 import "./applier/restarts.js";
 import "./applier/provision.js";

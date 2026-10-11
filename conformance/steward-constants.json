@@ -99,9 +99,18 @@
     "where": "GA-RULE-8"
   },
   {
+    "key": "edge-replay-bound-at-most",
+    "name": "Edge replay bound, at most",
+    "value": "300 s",
+    "number": 300,
+    "unit": "s",
+    "guess": false,
+    "where": "GA-RULE-1"
+  },
+  {
     "key": "rule-retry-spacing",
     "name": "Rule retry spacing",
-    "value": "at least the action's ack_within_s; at most 300 s, or the ack_within_s when longer; ⚠️ a guess",
+    "value": "at least the action's ack_within_s; at most 300 s, or the ack_within_s plus 60 s when it is longer than 300 s; ⚠️ a guess",
     "number": 300,
     "unit": "s",
     "guess": true,
@@ -115,6 +124,15 @@
     "unit": "h",
     "guess": false,
     "where": "GA-LISTEN-1"
+  },
+  {
+    "key": "narrowing-notice-span",
+    "name": "Narrowing notice span",
+    "value": "24 h",
+    "number": 24,
+    "unit": "h",
+    "guess": false,
+    "where": "GA-LISTEN-2"
   },
   {
     "key": "source-delay",
@@ -132,7 +150,7 @@
     "number": 60,
     "unit": "s",
     "guess": false,
-    "where": "*Listening*"
+    "where": "GA-LISTEN-5"
   },
   {
     "key": "announce-hold",

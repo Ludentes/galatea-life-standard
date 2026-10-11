@@ -33,7 +33,7 @@
                 "stateless": { "type": "boolean" },
                 "toggles": { "type": "boolean" },
                 "wholeState": { "type": "boolean" },
-                "args": { "type": "object" },
+                "args": { "type": "object", "additionalProperties": { "$ref": "../common.json#/$defs/argConstraint" } },
                 "confirms": { "type": "boolean" },
                 "confirmedBy": { "type": "object" },
                 "requestedTier": { "type": "string" },

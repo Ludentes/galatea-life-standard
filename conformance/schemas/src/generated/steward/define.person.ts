@@ -2,6 +2,6 @@
 
 export interface StewardDefinePerson {
   id: string;
-  name: string;
-  role: "owner" | "member" | "guest";
+  name?: string;
+  role?: "owner" | "member" | "guest";
 }

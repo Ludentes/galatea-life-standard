@@ -73,20 +73,49 @@ export function setsOf(decl: { action: string; confirmedBy?: unknown }, args: Re
 }
 
 /**
- * A command's `value.value`: absent, the single argument bare, or the object of several; an action
- * the vocabulary does not know (an extension action) takes its arguments as one object.
+ * The names of an action's arguments, in the count a command carries them by (bridge, *Commands*): a
+ * standard action's, the vocabulary's; an extension action's, the names its declaration's `args` give.
  */
-export function toWire(action: string, args: Record<string, unknown> = {}): unknown {
-  if (!VOCABULARY[action]) return Object.keys(args).length ? args : undefined;
-  const params = VOCABULARY[action]!.params;
-  if (params.length === 0) return undefined;
-  if (params.length === 1) return args[params[0]!];
-  return args;
+function argNames(decl: { action: string; args?: Record<string, unknown> }): string[] {
+  const known = VOCABULARY[decl.action];
+  return known ? known.params : Object.keys(decl.args ?? {});
 }
 
-export function fromWire(action: string, value: unknown): Record<string, unknown> {
+const RANGE = new Set(["min", "max", "step", "optional"]);
+/** Whether an `args` constraint is an object argument's, an object of named fields (applier, *Arguments that are objects*). */
+function objectArg(c: unknown): boolean {
+  if (typeof c !== "object" || c === null || Array.isArray(c)) return false;
+  const keys = Object.keys(c);
+  return keys.length > 0 && !keys.every((k) => RANGE.has(k));
+}
+
+/**
+ * A command's `value.value` (bridge, *Commands*): absent for an action of no argument, the argument
+ * itself for one with one, and an object of them for one with several.
+ */
+export function toWire(decl: { action: string; args?: Record<string, unknown> }, args: Record<string, unknown> = {}): unknown {
+  const names = argNames(decl);
+  if (names.length === 0) return undefined;
+  if (names.length === 1) return args[names[0]!];
+  return Object.keys(args).length ? args : undefined;
+}
+
+/**
+ * A command's arguments by name, read from its `value.value` as a bridge reads it (bridge,
+ * *Commands*), or why it does not fit, for `failed(invalid_request)`: a value for an action of no
+ * argument; an object for one of one whose argument is not itself an object; anything but an object of its own names for one of
+ * several. Its arguments' values are the doer's; only the shape is checked.
+ */
+export function fromWire(decl: { action: string; args?: Record<string, unknown> }, value: unknown): Record<string, unknown> | string {
+  const names = argNames(decl);
+  if (names.length === 0) return value === undefined ? {} : `${decl.action} takes no argument`;
+  if (names.length === 1) {
+    if (value === undefined) return {};
+    const wrapped = typeof value === "object" && value !== null && !objectArg(decl.args?.[names[0]!]);
+    return wrapped ? `${decl.action}'s one argument ${names[0]} goes bare, not as an object` : { [names[0]!]: value };
+  }
   if (value === undefined) return {};
-  const params = VOCABULARY[action]?.params ?? [];
-  if (params.length === 1) return { [params[0]!]: value };
-  return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {};
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return `${decl.action} takes an object of ${names.join(", ")}`;
+  const unknown = Object.keys(value).filter((k) => !names.includes(k));
+  return unknown.length ? `${decl.action} takes no argument ${unknown.join(", ")}` : (value as Record<string, unknown>);
 }

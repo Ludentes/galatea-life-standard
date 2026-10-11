@@ -3,7 +3,7 @@
   "$id": "steward/describe.response.json",
   "type": "object",
   "required": ["steward_id", "standard_version", "revision", "home", "rooms", "targets", "groups", "endpoints",
-               "scenarios", "rules", "schedules", "modes", "applier"],
+               "persons", "scenarios", "rules", "schedules", "modes", "applier"],
   "properties": {
     "steward_id": { "type": "string" },
     "standard_version": { "type": "string", "pattern": "^\\d+\\.\\d+$" },
@@ -14,7 +14,7 @@
     "groups": { "type": "array" },
     "endpoints": { "type": "array" },
     "persons": {
-      "description": "Persons by id, name and role only (steward, Operations), and by id only to a front (GA-AUTH-8); not in the Operations table's list, see the reference steward's design, Standards problems found",
+      "description": "Persons by id, name and role only (steward, Operations), and by id only to a front (GA-AUTH-8)",
       "type": "array",
       "items": {
         "type": "object",
@@ -35,6 +35,9 @@
         "ungoverned": { "type": "array" }
       }
     },
+    "edge_replay_s": { "type": "number", "exclusiveMinimum": 0, "maximum": 300, "description": "The bound on replaying an edge from a gap, at most 300 s; absent when the steward replays none (GA-RULE-1)" },
+    "safety_lease_s": { "type": "number", "exclusiveMinimum": 0, "description": "The bound on a latchless safety lease; absent when the steward never ends one early (GA-LEASE-6)" },
+    "held_notices": { "type": "integer", "minimum": 0, "description": "The count of notices held, shown while no channel has notify (GA-NOTE-1)" },
     "test_run_id": { "type": "string" }
   }
 }

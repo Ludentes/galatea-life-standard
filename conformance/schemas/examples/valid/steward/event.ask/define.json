@@ -1,0 +1,3 @@
+{ "seq": 52, "time": "2026-10-07T21:10:00+03:00", "type": "ask", "plan_id": "p-21", "step_ids": ["s1"],
+  "steps": [{ "step_id": "s1", "reason": "confirm_define", "diff": "+ rule night-light" }],
+  "endpoint": "olga-app" }

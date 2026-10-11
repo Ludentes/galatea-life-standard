@@ -5,22 +5,17 @@ export interface StewardDefineScenario {
    * An id, as the applier standard's: 1 to 128 characters from [A-Za-z0-9._:/-], case-sensitive (steward, The house model)
    */
   id: string;
-  name: string;
+  name?: string;
   /**
    * Home Assistant's meaning; the steward lists the ones it runs in describe.modes, and define refuses another (GA-SCN-5)
    */
-  mode: "single" | "restart" | "queued" | "parallel";
-  /**
-   * Target ids the run leases until it ends (GA-SCN-2); a group's members, leaving out infrastructure ones
-   *
-   * Items: An id, as the applier standard's: 1 to 128 characters from [A-Za-z0-9._:/-], case-sensitive (steward, The house model)
-   */
-  owned?: string[];
-  respect_occupancy?: boolean;
+  mode?: "single" | "restart" | "queued" | "parallel";
+  owned?: string[] | null;
+  respect_occupancy?: boolean | null;
   /**
    * @minItems 1
    */
-  steps: [
+  steps?: [
     (
       | (((
           | {

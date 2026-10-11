@@ -14,5 +14,11 @@ export interface ApplierError {
     | "idempotency_conflict"
     | "cycle";
   message: string;
+  /**
+   * The structured details a requirement names, as GA-SAFE-14's { key, device, awaited } for a key a safety rule, latch or witness reads that its device does not declare
+   */
+  data?: {
+    [k: string]: unknown | undefined;
+  };
   [k: string]: unknown | undefined;
 }

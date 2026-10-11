@@ -165,6 +165,12 @@ already holds is removed first.
 | `GALATEA_APPLIER_CREDENTIAL` | The steward's credential at its applier, a bearer token | A steward |
 | `GALATEA_APPLIER_TOKEN_KEY` | The key the applier holds for the steward, which signs its confirmation tokens | A steward |
 
+The reference builds also take each secret above from a file named by its `_FILE` twin
+(`GALATEA_OWNER_CREDENTIAL_FILE`, `GALATEA_APPLIER_CREDENTIAL_FILE`, `GALATEA_APPLIER_TOKEN_KEY_FILE`),
+and a URL's password from `GALATEA_DATABASE_PASSWORD_FILE` or `GALATEA_BROKER_PASSWORD_FILE`, for an
+installation. The harness never sets them, so the values it passes work as before; a build given a
+value and its twin both refuses to start.
+
 A subject honours `GALATEA_MUTATION` only while `GALATEA_TEST_RUN_ID` is set, and never otherwise.
 
 ## Time
