@@ -1,6 +1,6 @@
 {
   "name": "@ludentes/galatea-life-schemas",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": false,
   "type": "module",
   "license": "Apache-2.0",
@@ -17,7 +17,8 @@
     "brain",
     "bridge",
     "harness",
-    "steward"
+    "steward",
+    "examples"
   ],
   "exports": {
     ".": {
