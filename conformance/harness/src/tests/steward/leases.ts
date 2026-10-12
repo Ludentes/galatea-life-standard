@@ -5,7 +5,7 @@ import { requirement } from "../../registry.js";
 import { CHANNEL, LAMP } from "../../steward-home.js";
 import { pollUntil } from "../../util.js";
 import { applyInline, mustAccept, outcomes, sentFrom } from "./answers.js";
-import { cursorNow, eventsAfter, firedOf, fires, laptop, limit, relayed, session, type Ev } from "./rules.js";
+import { cursorNow, eventsAfter, firedOf, fires, laptop, limit, relayed, restartSteward, session, type Ev } from "./rules.js";
 import { act, cursorExpiredGap, mustDefine, ownerOf, scripted, up } from "./util.js";
 
 type Lease = { holder: unknown; precedence: string; expires: string };
@@ -117,7 +117,7 @@ requirement("GA-LEASE-1", {
 
 requirement("GA-LEASE-2", {
   seam: "steward",
-  covers: "an external change on the lamp and a load_cap change on a dimmer each take a lease at person precedence held by that cause; a device change on another lamp takes none; an external change on that lamp inside a cursor_expired gap, the gap lasting 10 minutes, takes its lease once the steward reads the gap back, expiring the hold time after the change, not after the gap",
+  covers: "an external change on the lamp and a load_cap change on a dimmer each take a lease at person precedence held by that cause; a device change on another lamp takes none; an external change on that lamp inside a cursor_expired gap, the gap lasting 10 minutes, takes its lease once the steward reads the gap back, expiring the hold time after the change, not after the gap; an external change on that lamp while the steward is down takes its lease after the restart",
 }, async (ctx) => {
   const applier = ctx.standIn!.applier;
   const [dimmer, other] = await scripted(ctx, [{ fixture: "dimmer", adopt: "light" }, { fixture: "lamp", adopt: "light", bridge: "other-bridge" }]);
@@ -141,11 +141,16 @@ requirement("GA-LEASE-2", {
   const expires = Date.parse(gapLeases[other!]!.expires);
   ctx.evidence(`changed at ${new Date(at).toISOString()}, leased until ${new Date(expires).toISOString()}`);
   must(Math.abs(expires - (at + hold)) <= 2_000 + ctx.allowanceMs, `the missed change's lease expires at ${new Date(expires).toISOString()}, not the hold time after the change`);
+  // Missed while the steward was down: the restart's gap leases it as a cursor_expired gap's does.
+  await ctx.time.stepAndWait(hold + 10_000);
+  await leasesBecome(ctx, [], "after the hold time");
+  await restartSteward(ctx, () => applier.scriptValue(other!, "on", true));
+  await leasesBecome(ctx, [`${other} external person`], "after an outside change while the steward was down");
 });
 
 requirement("GA-LEASE-3", {
   seam: "steward",
-  covers: "equal precedence replaces: the member's lease on the lamp is replaced by an external change's, and that by the hall panel's apply, the panel's apply dispatched; each a replaced event; a lower precedence is refused: a rule's turn_off of the lamp is refused(leased), naming the panel; a rule's session.lock of a laptop an external change leased is dispatched, the lease standing as it was; a safety rule turning the lamp on replaces the panel's lease with its own, a replaced event, and the panel's apply then is refused(leased); a duck is slice 9's",
+  covers: "equal precedence replaces: the member's lease on the lamp is replaced by an external change's, and that by the hall panel's apply, the panel's apply dispatched; each a replaced event; a lower precedence is refused: a rule's turn_off of the lamp is refused(leased), naming the panel; a rule's session.lock of a laptop an external change leased is dispatched, the lease standing as it was; a safety rule turning the lamp on replaces the panel's lease with its own, a replaced event, and the panel's apply then is refused (the stand-in's refuse(safety) while the rule runs); a duck is slice 9's",
 }, async (ctx) => {
   const s = ctx.steward!;
   const applier = ctx.standIn!.applier;
@@ -188,12 +193,14 @@ requirement("GA-LEASE-3", {
   mustEqual(await leaseEvents(ctx, before), [`replaced ${LAMP} night`], "the lease events of the safety rule's actuation");
   const panelAgain = outcomes(await applyInline(s.panel, "hall-panel", [act(LAMP)]), "the panel's apply under the safety rule's lease");
   ctx.evidence(`the panel's apply under the safety rule's lease: ${panelAgain.join(", ")}`);
-  mustEqual(panelAgain, [`${LAMP} refused(leased)`], "the panel's apply under the safety rule's lease");
+  // The rule still running, the stand-in refuses the lamp `safety` (applier GA-SAFE-2), the applier's reason first in the
+  // steward's order; a person refused(leased) by a safety rule's lease is GA-LEASE-6's case.
+  mustEqual(panelAgain, [`${LAMP} refused(safety)`], "the panel's apply under the running safety rule");
 });
 
 requirement("GA-LEASE-4", {
   seam: "steward",
-  covers: "the member leases the lamp; motion makes a level rule and an edge rule turning it off each refused(leased); when the lease ends the level rule fires again and its turn_off reaches the stand-in, and the edge rule does not fire; the member's turn_off of the lamp, now off, ends skipped(already), and the level rule, still holding, does not fire again (no lease ended: a provisional one lifted is no lease's end)",
+  covers: "the member leases the lamp; motion makes a level rule and an edge rule turning it off each refused(leased); when the lease ends the level rule fires again and its turn_off reaches the stand-in, and the edge rule does not fire; the member's turn_off of the lamp, now off, ends skipped(already), and the level rule, still holding, does not fire again (no lease ended: a provisional one lifted is no lease's end); a lease of hers that refused nothing ends and the rule, fired and holding, does not fire; HS3: a hand on the switch (an external change) leases the lamp and a rule defined then is refused, a second touch a minute later replaces the lease with nothing re-evaluated, and the rule fires when the second lease ends; a lease that refused a further rule ends inside an exception granted after the refusal, and that rule does not fire",
 }, async (ctx) => {
   const s = ctx.steward!;
   const hold = constantMs("steward", "hold-time-default");
@@ -225,6 +232,58 @@ requirement("GA-LEASE-4", {
   const after = await eventsAfter(ctx, already);
   ctx.evidence(`after the member's skipped turn_off: ${after.map((e) => `${e.type}${e.rule ? ` ${e.rule}` : ""}`).join(", ")}`);
   mustEqual(firedOf(after, "off").length, 0, "the level rule's firings after a person's step ended skipped(already)");
+
+  // A lease that refused nothing ends with nothing re-evaluated: the level rule, fired and still holding, stays fired.
+  outcomes(await applyInline(s.olga, "olga-app", [act(LAMP)]), "the member's turn_on, which the rule does not meet");
+  await ctx.time.stepAndWait(hold - 5_000);
+  const quiet = await cursorNow(ctx);
+  await ctx.time.stepAndWait(15_000);
+  const quietAfter = await eventsAfter(ctx, quiet);
+  ctx.evidence(`after a lease that refused nothing ended: ${quietAfter.map((e) => `${e.type}${e.rule ? ` ${e.rule}` : ""}`).join(", ")}`);
+  mustEqual(firedOf(quietAfter, "off").length, 0, "the level rule's firings when a lease that refused nothing ended");
+
+  // HS3: a hand on the switch leases the lamp (`external`), and a rule defined then, motion holding, is
+  // refused; a second touch replaces the lease, which takes over the rule the first one refused, re-evaluated at its end.
+  const hand = (on: boolean) => ctx.standIn!.applier.scriptValue(LAMP, "on", on, { cause: "external" });
+  hand(false);
+  await ctx.time.stepAndWait(1_000);
+  hand(true);
+  await ctx.time.stepAndWait(1_000);
+  const touched = await cursorNow(ctx);
+  await mustDefine(ctx, [up("rule", offOn(motion!, "hs3"))], "a level rule turning the lamp off on motion, under the first touch's lease");
+  mustEqual(await refusals(ctx, touched, 1, "the rule under the first touch's lease"), [`hs3 ${LAMP} leased external`],
+    "the rule's refusal under the first touch's lease");
+  await ctx.time.stepAndWait(60_000);
+  const second = await cursorNow(ctx);
+  hand(false);
+  await ctx.time.stepAndWait(1_000);
+  hand(true);
+  await ctx.time.stepAndWait(5_000);
+  const atSecond = await eventsAfter(ctx, second);
+  ctx.evidence(`at the second touch: ${atSecond.map((e) => `${e.type}${e.rule ? ` ${e.rule}` : ""}`).join(", ")}`);
+  mustEqual(atSecond.filter((e) => e.type === "refused" || (e.type === "rule_fired" && e.rule === "hs3")).length, 0,
+    "the rule's re-evaluations at the second touch");
+  await ctx.time.stepAndWait(hold - 15_000);
+  const handed = await cursorNow(ctx);
+  await ctx.time.stepAndWait(20_000);
+  await fires(ctx, handed, "hs3", 1, "the second touch's lease ending");
+
+  // A re-evaluation fires a rule only outside its exceptions (GA-RULE-6).
+  await relayed(ctx, handed, LAMP, "on", false, "the lamp off by the rule");
+  hand(true);
+  await ctx.time.stepAndWait(1_000);
+  const third = await cursorNow(ctx);
+  await mustDefine(ctx, [up("rule", offOn(motion!, "late"))], "a second level rule, under the third touch's lease");
+  await refusals(ctx, third, 1, "the second rule under the third touch's lease");
+  const now = ctx.time.now();
+  await mustDefine(ctx, [up("rule_exception", { rule: "late", from: new Date(now).toISOString(), until: new Date(now + hold + 1_800_000).toISOString() })],
+    "an exception for the second rule past the lease's end");
+  await ctx.time.stepAndWait(hold - 15_000);
+  const excepted = await cursorNow(ctx);
+  await ctx.time.stepAndWait(25_000);
+  const inException = await eventsAfter(ctx, excepted);
+  ctx.evidence(`after a lease ended inside the second rule's exception: ${inException.map((e) => `${e.type}${e.rule ? ` ${e.rule}` : ""}`).join(", ")}`);
+  mustEqual(firedOf(inException, "late").length, 0, "the second rule's firings when the lease ended inside its exception");
 });
 
 requirement("GA-LEASE-5", {

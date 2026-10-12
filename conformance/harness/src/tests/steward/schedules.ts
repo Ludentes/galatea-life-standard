@@ -90,7 +90,7 @@ requirement("GA-SCHED-1", {
 
 requirement("GA-SCHED-2", {
   seam: "steward",
-  covers: "a schedule's time passing while the steward is down (the harness's restart): at its start the steward records schedule_missed for that date and time and starts no run, sending nothing",
+  covers: "a schedule's time passing while the steward is down (the harness's restart): at its start the steward records schedule_missed for that date and time and starts no run, sending nothing; a schedule's time the harness steps the clock five minutes past while the steward runs: schedule_missed, no run, nothing sent",
 }, async (ctx) => {
   await mustDefine(ctx, [lampScene("lamp")], "a scenario of the lamp");
   const at = minuteAfter(ctx, 2 * MINUTE);
@@ -105,6 +105,18 @@ requirement("GA-SCHED-2", {
   await ctx.time.stepAndWait(5_000);
   mustEqual((await startsOf(ctx, cursor, "dusk")).length, 0, "runs the schedule started late");
   mustEqual(sent().length, 0, "what the stand-in received");
+  // The clock stepped past a run while the steward runs: recorded missed, not run late.
+  const stepped = minuteAfter(ctx, 2 * MINUTE);
+  await mustDefine(ctx, [up("schedule", { id: "dawn", scenario: "lamp", time: wall(stepped).hhmm })], "a schedule two minutes on");
+  const before = await cursorNow(ctx);
+  const sentNow = sentFrom(ctx);
+  await ctx.time.stepAndWait(stepped + 5 * MINUTE - ctx.time.now());
+  const skipped = await pollUntil(async () => (await eventsAfter(ctx, before)).find((e) => e.type === "schedule_missed" && e.schedule === "dawn"), 15_000,
+    "the steward recorded no schedule_missed for a run its clock stepped past", 100);
+  ctx.evidence(`the clock stepped past: ${JSON.stringify(skipped)}`);
+  await ctx.time.stepAndWait(5_000);
+  mustEqual((await startsOf(ctx, before, "dawn")).length, 0, "runs of a schedule the clock stepped past");
+  mustEqual(sentNow().length, 0, "what the stand-in received after the clock stepped past a run");
 });
 
 requirement("GA-SCHED-3", {

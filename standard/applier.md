@@ -5,7 +5,7 @@ last_verified:
 area: architecture
 audience: dev
 author: Galatea maintainers
-version: 0.15
+version: 0.16
 related:
   - standard/steward.md
   - standard/bridge.md
@@ -15,6 +15,7 @@ related:
   - docs/reviews/2026-10-01-bridge-0.5-applier-0.14.md
   - CONTEXT.md
   - docs/reviews/2026-10-06-bridge-0.6-applier-0.15.md
+  - docs/reviews/2026-10-11-applier-0.16.md
 ---
 
 # The Galatea applier standard
@@ -23,6 +24,7 @@ related:
 
 | Date | Version | Change |
 |---|---|---|
+| 2026-10-11 | 0.16 | From the first light on the bench and the plug rehearsal, by the maintainer's rulings of 2026-10-11. HS35 (scenarios 16): the owner may lower a tier they raised. Each action has a floor, the *Default tiers* table with its classes, flags, loads, hosts and `requested_tier`, which stays the safety floor, and a default, the floor or, for an extension action, the higher of `confirm` and its floor; its tier is the higher of the floor and the owner's value where set, and the default otherwise; `configure` sets any tier at or above the floor and deletes the owner's value, and refuses one below it with `invalid_request`, never clamping, for a standard action as for an extension one (GA-DESC-3, GA-DESC-14 amended; GA-DESC-11's delete no longer the one lowering); a change of `load` or `infrastructure` re-derives the tier from the new floor and never rewrites the owner's value, so a socket turned from `heating` to `lighting` drops to its new default (GA-DESC-13 amended); a later lowering raises no `other_admin` notice (GA-ADOPT-3's text). From the review: every tier check in a change set is judged against the floor the whole change set leaves, except GA-ADOPT-3's `other_admin` judgement, which takes the higher of each action's tier before and after the change set (GA-DESC-14, GA-ADOPT-3 amended); an extension action's floor is the extension tier's floor on any device, and the table's column reads as the floor (GA-DESC-3); a replacement's kept tier is stored as the owner's value (GA-DESC-11 amended). The plug rehearsal (F3), and the maintainer's ruling of 2026-10-11 on the review: a key's first value, the applier holding none before, is told by what the applier observes, not by the retain flag, and is reported with cause `device`, not `external`, and so takes no lease, when it arrives while the applier loads statuses after it connects or restarts, in a bridge's answer to `snapshot` or among a new instance's first statuses before it, over a new route after a route moves, or on a device not adopted; an adapter treats its engine's return as a snapshot; a live report from a running bridge instance on an adopted device stays `external`; a plugin server's first values after adoption a known gap; ⚠️ to be checked on a real installation (GA-EVT-1 amended). New negative subjects `keeps-an-owner-raise`, `keeps-an-owner-raise-on-a-set`, `keeps-a-manifest-kept-tier`, `lowers-a-heater-below-the-table`, `keeps-a-table-tier-over-a-new-load`, `externalises-a-first-value`, `externalises-a-snapshot-value`, `externalises-a-rerouted-value` and `devices-a-live-press`. Change record `docs/reviews/2026-10-11-applier-0.16.md`. Reviewed in `docs/reviews/2026-10-11-applier-0.16.md`, lighter by the maintainer's ruling (one reader, Kimi `k3`, and a scenario walk; a recorded exception to FR-REV-01's two readers): 18 finding rows, 13 fixed, 5 deferred (steward 0.12, applier 0.17, the backlog), none rejected; no blocker; round 1's fixes not re-read by a further round (the stopping rule); **PASS** 2026-10-11 (the maintainer, after walking the deferred items) |
 | 2026-10-06 | — | Editorial: private references removed for publication; no requirement changed. Decisions once credited to another system now state what was decided and why; links to documents that are not public are reworded |
 | 2026-10-06 | 0.15 | Joint revision with bridge 0.6 and steward 0.10. From the Zigbee bridge's live bench run and the maintainer's rulings of 2026-10-06: the sensor keys' names and units follow Home Assistant 2026.9.4 (released 2026-09-27), with Galatea's own meanings (*Sensor keys*); `contact` renamed `opening`, `true` meaning open, since its polarity was never defined; new sensor keys `illuminance` (lux) and `battery_low` (⚠️ tentative); `occupancy` and `motion` defined; a device's `awaited_keys`, `undescribed` and `settings` from its bridge, and the bridge's `undescribed` event relayed (GA-DESC-19); `configure` refuses a safety rule, latch or witness on an undeclared key, and a declaration change that leaves one on such a key disables it (GA-SAFE-14); an adapter maps an engine's sensors by meaning, an engine's `occupancy` as `motion` unless it sees stillness (GA-STATE-5); an error body may carry `data`; a device's settings changed through `provision`'s `configure_device` (*Settings*, ⚠️ tentative, outside the requirement index). The applier's own queued items are applier 0.16. Reviewed with the `standard-review` procedure in five rounds (change record `docs/reviews/2026-10-06-bridge-0.6-applier-0.15.md`): Kimi (k3) and a no-context Claude reader, and a scenario walk each round; 183 findings: 151 fixed (round 5's highs not re-read, by the stopping rule), 24 deferred to the backlog, 6 no change, 2 rejected; the maintainer's rulings of 2026-10-06 on held-back keys (numeric only), kept settings (A), GA-OCC-1 (a motion sensor reading motion now) and cross-topic order (applier 0.16). **PASS** 2026-10-06 |
 | 2026-10-01 | 0.14 | Device extensions on any bridge, for bridge 0.5, by the maintainer's rulings of 2026-10-01 (change record `docs/reviews/2026-10-01-bridge-0.5-applier-0.14.md`): `extensions` on any device, each key a `state` or an `event` (`kind`); `confirmed_by` on any stateful extension action; the extension tier row and the not-idempotent default for any extension action, not only a plugin's; the `occurrence` event, never state, kept in `history` unless its key is personal, relayed by a meta-applier (GA-EVT-8 new); a bridge's changed declarations a model change: an undispatched step whose declarations changed `refused(declaration_changed)`, a dispatched action re-sent only where old and new both say idempotent, the owner's lowered tier and `idempotent: true` falling back (GA-DESC-18 new); a held latch refuses every extension action on a device its rule actuated. GA-DESC-3, GA-DESC-4, GA-DESC-14, GA-EVT-3, GA-EVT-5, GA-APPLY-9, GA-SAFE-7 and GA-META-8 amended. Reviewed in `docs/reviews/2026-10-01-bridge-0.5-applier-0.14.md`: one round of two readers (Kimi `k3`; Claude, no context) and a scenario walk (no grade changed); 30 finding rows, 26 fixed (one in part), 3 deferred, 1 rejected; no blocker; round 1's fixes not re-read by a further round (the stopping rule); **PASS** 2026-10-01 (the maintainer, after walking the deferred items) |
@@ -103,7 +105,8 @@ again when the engine answers. A device the engine has not yet loaded after its 
 
 `standard_version` is `major.minor`. A minor version only adds: fields, enum values, operations,
 requirements, except where its changelog row says it renames or removes one (0.15 renames the
-sensor key `contact` to `opening`): only the current version exists, and a client of an earlier one
+sensor key `contact` to `opening`; 0.16 reports a key's first value from a retained status or on a
+device not adopted with cause `device`, where it was `external`): only the current version exists, and a client of an earlier one
 is not supported (the maintainer's ruling: no backward compatibility). Nothing on the wire refuses
 one, so a home moves its components to a revision together, and an owner redefines a rule stored on
 a renamed key. A client MUST ignore a field it does not know, and MUST treat an enum value it does not
@@ -334,7 +337,7 @@ Every action a device offers is declared on the device:
 | Field | Type | Notes |
 |---|---|---|
 | `action` | `capability.action` | |
-| `tier` | `reversible` · `confirm` · `no_voice` | Not lower than *Default tiers* gives (GA-DESC-3) |
+| `tier` | `reversible` · `confirm` · `no_voice` | The higher of the action's floor and the owner's value where the owner set one, otherwise its default; never lower than its floor (*Default tiers*, GA-DESC-3) |
 | `idempotent` | bool | Defaults to the capability's column; MAY be `false` where the device implements the action as a toggle or pulse. `notify`, `media.announce`, `power.shutdown` and `media.launch` MUST be `false`, and so MUST an extension action unless the owner declares it `true` at adoption: its bridge's or manifest's value is a proposal the owner's app shows then (GA-DESC-4) |
 | `stateless` | bool | The capability's column; `true` for an action with no state key to confirm it |
 | `toggles` | bool, default `false` | From its bridge's `toggles`: `true` where the device carries the action out by a code that reaches a state only from a known one, one that flips it (an IR power code), cycles it (a mode button) or steps it (vol+) rather than sets it (`standard/bridge.md`, GA-BRIDGE-71). Such an action is declared `idempotent: false` (GA-PLAN-8) |
@@ -345,13 +348,13 @@ Every action a device offers is declared on the device:
 | `confirms` | bool | For a device behind a bridge, the bridge's word: whether the protocol path confirms a command. Absent otherwise |
 | `confirmed_by` | `{ key, value }` or absent | Only on a stateful extension action: the state key and value that confirm it, from its bridge's `confirmedBy`; `value` may be `{ arg: <name> }`, the value of that argument of the step. It is what the action sets, for GA-EVT-1 and GA-EVT-3 |
 | `tool_hash` | string or absent | Only on a plugin device's action: the SHA-256 of the MCP tool that implements it, from its bridge's `toolHash`, kept so that a later version's changed tool can be told (GA-DESC-11) |
-| `requested_tier` | tier or absent | Only on a plugin device's action: the tier its manifest requests, from its bridge's `requestedTier`. It enters one of two formulas, *Default tiers*' **extension tier** for an extension action and **plugin standard tier** for a standard one; only the first may be lowered |
+| `requested_tier` | tier or absent | Only on a plugin device's action: the tier its manifest requests, from its bridge's `requestedTier`. It enters one of two formulas, *Default tiers*' **extension tier** for an extension action and **plugin standard tier** for a standard one; either may be lowered to its floor, as any action's (GA-DESC-14) |
 | `witness` | Witness or absent | Safe level only |
 
 ### Default tiers
 
-A device's tiers MUST NOT be lower than this table gives, and `configure` may only raise them,
-except an extension action's, as below (GA-DESC-3). The first row that matches wins. A computer's
+This table gives each action its **floor**, and a device's tiers MUST NOT be lower than it
+(GA-DESC-3). The first row that matches wins. A computer's
 `infrastructure` has three states, and every rule below that reads it reads them so: the owner set
 it `true`, and it is `true`; the owner set it `false`, and it is `false`, whatever its bridge
 proposes; or the owner has not set it, and then its bridge's `proposed_infrastructure` decides, a
@@ -362,7 +365,7 @@ device and the first `infrastructure: true` or `computer` row that matches its h
 so that a plugin's `power.sleep`, `power.shutdown` or `onoff.turn_off` on a device an
 `infrastructure` computer hosts is `no_voice`, as the computer's own are.
 
-| Class, flag or load | Action | Default tier |
+| Class, flag or load | Action | Floor |
 |---|---|---|
 | any | `lock.unlock` | `no_voice` |
 | `water_valve`, `gas_valve` | `valve.open` | `no_voice` |
@@ -374,7 +377,7 @@ so that a plugin's `power.sleep`, `power.shutdown` or `onoff.turn_off` on a devi
 | `infrastructure: true` | `onoff.turn_off` | `no_voice` |
 | `infrastructure: true` | `power.sleep`, `power.shutdown` | `no_voice` |
 | `computer` | `power.shutdown` | `confirm` |
-| any | an extension action (*Extensions*), a plugin's or a bridge's own | `confirm` (ruling 5), or its floor where that is higher: the higher of its `requested_tier` and the highest tier its device's class, flag or load rows give any action, and `no_voice` on a device an `infrastructure` computer hosts (*Plugins' actions*) |
+| any | an extension action (*Extensions*), a plugin's or a bridge's own | its floor (*Plugins' actions*): the higher of its `requested_tier` and the highest tier its device's class, flag or load rows give any action, and `no_voice` on a device an `infrastructure` computer hosts; its default, not its floor, is the higher of `confirm` and that floor (ruling 5) |
 | any other | any other | `reversible` |
 
 A gate or garage door on a momentary relay is an `onoff` device of class `gate`, so its pulse is
@@ -386,6 +389,27 @@ take down the applier, and with it every safety rule and load cap; putting it to
 it down is `no_voice` for the same reason, so the `infrastructure` rows come before the `computer`
 row they must win over. A shutdown loses unsaved work, which nothing undoes, so it is `confirm`;
 `power.wake`, `power.sleep`, `power.cancel` and `session.lock` stay `reversible`.
+
+**The floor and the owner's value.** An action's floor is the tier this table gives it, its host's
+rows included; for an extension action, on any device, the extension tier's floor below; and for a
+standard action on a plugin device, the plugin standard tier below. Its **default**
+is its floor, except an extension action's, which is the higher of `confirm` and its floor (ruling
+5). The owner MAY set a tier for any action through `configure`, at or above its floor, and MAY
+delete that value; the action's tier is then the higher of its floor and the owner's value where
+one is set, and its default where none is (GA-DESC-3). `configure` MUST refuse a tier below the
+action's floor, with `invalid_request` and nothing changed, never clamping it to the floor
+(GA-DESC-14). Every tier check in a change set is judged against the state the whole change set
+leaves: the floor after its own `load`, `infrastructure`, adoption and replacement changes, so a
+change set that sets a socket's `load` to `lighting` and its `onoff.turn_on` to `reversible` is
+accepted whichever order it lists them in, and one that sets `heating` with `reversible` is refused
+(GA-DESC-14). The one exception is GA-ADOPT-3's `other_admin` judgement (*Adoption*). So the owner can raise any action's tier and bring it back down, a stricter choice of
+their own as much as an extension action's `confirm`, and never below the table, which is the
+safety floor; anything above it is the owner's to choose. A change that moves an action's floor (a
+load, `infrastructure`, a replacement's `requested_tier`) moves its tier with it and never rewrites
+the owner's value (GA-DESC-13), except as GA-DESC-11 says for a replacement. A tier change is a model
+change (GA-DESC-2), so a plan made at the old tier is `stale_revision` at apply (GA-APPLY-2) and
+nothing is dispatched under a tier that no longer holds; the effective tier a latched undo is raised
+to (*Steps*) and the applier's own actuations, which no tier gates, are untouched by it.
 
 **Plugins' actions.** A plugin device's actions take one of two formulas, never both:
 - The **extension tier**, for an extension action, a plugin's or, on any device, a bridge's own.
@@ -403,28 +427,31 @@ row they must win over. A shutdown loses unsaved work, which nothing undoes, so 
   `infrastructure: true`, or proposed so and not yet set by the owner, the floor is `no_voice`, so that a plugin's own `…system.shutdown` on
   the box's player is never easier to reach than the box's own `power.shutdown`; a `configure`
   change of a computer's `infrastructure` re-applies this to the devices it hosts, in the same
-  change set (GA-DESC-13). Its tier is the owner's `configure` value if one is set, otherwise the
-  higher of `confirm` and the floor. `configure` MUST refuse, with `invalid_request` and nothing
-  changed, a tier below the floor, never clamping it: so it may lower an extension action, down to
-  its floor and no lower, and may lower no other action, except by deleting a tier a replacement kept (GA-DESC-11) (GA-DESC-14).
+  change set (GA-DESC-13). Its default is the higher of `confirm` and the floor; the owner may
+  lower it to its floor and no lower, as any action (GA-DESC-14).
 - The **plugin standard tier**, for a standard action (`media.pause`, `power.sleep`) on a plugin
-  device: the higher of this table's tier, its host's rows included, and its `requested_tier`,
-  raised by `configure` and never lowered, as for any device.
+  device: its floor, and its default, is the higher of this table's tier, its host's rows
+  included, and its `requested_tier`; the owner may raise it, and lower it again to that floor and
+  no lower, as for any device.
 
 When a replacement (*Adoption*) changes an action's tool hash, its argument schema or its
 `requested_tier`, a tier the owner set for it below what its formula gives without the owner's
 value is not carried over: it falls back to the formula until the owner sets it again. A tier the
 owner raised is kept, since a publisher's edit must not undo a stricter choice. A replacement whose
 manifest lowers an action's `requested_tier` does not lower the action's tier by itself: the tier
-the action had is kept, as a tier the owner set, until the owner accepts the lower one by deleting
-that value through `configure`, the one lowering of a standard action `configure` makes (GA-DESC-11). An
+the action had is kept, stored as the owner's value, until the owner accepts the lower one by
+deleting that value through `configure`, as the owner may delete any value they set: like any
+owner's value it is deletable, and a later move of the floor (GA-DESC-13) never rewrites it
+(GA-DESC-11). An
 action's tool hash is its declaration's `tool_hash`, which the applier keeps across its restarts
 (GA-PERSIST-1), so a version that arrives months later is compared with the one it replaces. The
 hash detects a changed declaration, not changed behaviour: a server that keeps its tools' names,
 descriptions and schemas may still change what they do, which no hash sees (`standard/bridge.md`,
 *Hosting*: pinning is not a sandbox).
 The extension row, and lowering an extension action to its floor, are ruling 5 of
-`docs/specs/2026-09-25-pc-design.md`, confirmed on 2026-09-25.
+`docs/specs/2026-09-25-pc-design.md`, confirmed on 2026-09-25. Lowering any action to its floor
+follows the first light on the bench, 2026-10-11 (HS35, the maintainer's ruling): an owner who
+raised a tier could not take it back.
 
 ### Loads
 
@@ -434,9 +461,11 @@ MUST declare a `load` on every `socket`, and treats a socket whose load was neve
 `infrastructure` flag, changes what the device is, and its default tier follows; `configure` records
 it like any other change. A `configure` change of `load` or `infrastructure` MUST re-apply *Default
 tiers* to the device's actions, and a computer's `infrastructure` to the actions of the devices it
-hosts, extension and standard (*Default tiers*), in the same change set, raising every tier now below its new
-floor to that floor, as GA-DESC-11 re-derives a plugin action's tier; a tier at or above it is kept
-(GA-DESC-13). A socket turned from `lighting` to `heating` does not keep a `reversible`
+hosts, extension and standard (*Default tiers*), in the same change set: each action's tier is
+the higher of its new floor and the owner's value where one is set, and its new default where none
+is, the owner's value kept as the owner set it and never rewritten (GA-DESC-13). So a tier now below
+its new floor rises to it, and a socket turned from `heating` to `lighting` drops back to its new
+default unless the owner set a tier for it. A socket turned from `lighting` to `heating` does not keep a `reversible`
 `onoff.turn_on`. A `heating` load carries `max_on_s` (default 14400). A socket whose
 `onoff.turn_off` is declared `toggles: true` cannot carry one, since its cap would have to press a
 toggle (GA-SAFE-13); a `feedback: open` socket whose `onoff.turn_off` is discrete can.
@@ -558,11 +587,43 @@ Every state change the applier reports carries a `cause`, one of:
   load cap keeps that cause. With two applies on one target, the later one's;
 - `{ safety_rule: rule id }`;
 - `load_cap`;
-- `device`: a change of a key the device declares `self_changing`;
+- `device`: a change of a key the device declares `self_changing`, or a key's first value where no
+  hand can be told, as below: the device's own word, never a person's;
 - `external`: any other change the applier did not make.
 
-Every state change the applier did not make, other than a `self_changing` key, MUST be reported with
-cause `external` (GA-EVT-1); a change of a `self_changing` key MUST be reported with cause `device`,
+Every state change the applier did not make, other than a `self_changing` key and a first value
+below, MUST be reported with cause `external` (GA-EVT-1). A key's **first value**, the applier
+holding no value for it before, changes nothing the applier knew. The applier tells it by what it
+observes, never by a message's retain flag. A first value MUST be reported with cause `device`,
+unless the first item above gives it to an apply, and so takes no lease (the steward's GA-LEASE-2),
+when it arrives:
+- while the applier loads statuses after it connects or restarts: the deliveries on subscribing.
+  Reported values are not kept across a restart (GA-PERSIST-1 keeps assumed states, not reported
+  ones), so after one every key's value comes in again;
+- in a bridge's answer to the applier's `snapshot` (GA-BUS-6), or among a bridge's first statuses of
+  a new instance, an `instanceId` the applier has not seen, before that snapshot's answer: a bridge
+  that starts after the applier, after a power cut, is this case;
+- over a new route, after a `configure` route moves a device to another bridge or child (*configure*,
+  GA-META-1);
+- on a device not adopted: its interview's reads, values that came before its description.
+
+In each, no hand can be told from the value: pairing a device, restarting the applier or a bridge, or
+moving a route leases nothing to a person. An adapter takes the values it reads from its engine when
+it connects to it again, after the engine was unreachable or restarted, as the second case's, a
+snapshot of the engine; where it cannot tell the engine restarted while it stayed connected, it has no
+such moment, and those values are `external`. A report arriving live from a bridge instance already
+running, on an adopted device, is a change like any other, `external`, a person's real first press
+included, so it keeps its lease (GA-EVT-1). A known gap: a plugin's server starts only when its
+device is adopted (GA-ADOPT-4), under its bridge's running instance, so its device's first values
+arrive live on an adopted device and are `external`, and lease it, as the rule stands. ⚠️ To be
+checked on a real installation: the rule rests on the order in which values arrive, which only a
+house shows; the checks are a power cut with the bridge starting after the applier, a bridge's
+restart, an adapter's engine restarting, and a route move, each leasing nothing (the workshop's backlog,
+*From the applier 0.16 review*). `device` thus carries two
+meanings, a `self_changing` key's change and such a first value, which nothing on the wire tells
+apart; both mean that no person is taken to have acted.
+
+A change of a `self_changing` key MUST be reported with cause `device`,
 except a report that the first item above gives to a dispatched action on a key that action sets,
 which keeps that apply's cause: an apply's correlation wins over `device` for the key its own
 action sets, so a `session.lock` or a `media.launch` is still the apply's (GA-EVT-6). A person
@@ -1085,9 +1146,14 @@ taken for a dry one. The owner may still `clear_latch`.
 **Other admins.** A device with an action whose effective tier is above `reversible`, and with
 another admin or with `other_admins: unknown`, MUST be a notice with cause `other_admin` when it is
 adopted, whenever an admin is added to it, and once, for each such device already adopted, when the
-applier starts supporting adoption (GA-ADOPT-3): that is where a second door opens. At adoption the
-tier is judged before any change in the same change set lowers it, so that adopting a plugin device
-and lowering its extension action at once still says who else can reach it (GA-ADOPT-3). When a device's
+applier starts supporting adoption (GA-ADOPT-3): that is where a second door opens. Unlike every
+other tier check in a change set (*Default tiers*), this one takes, for each action, the higher of
+its tier before the change set and its tier after it, so that adopting a device and lowering one of
+its actions at once (a plugin's extension action, or a tier a replacement carried over), or adopting
+it and raising one of its actions above `reversible` at once, still says who else can reach it
+(GA-ADOPT-3). A later `configure` that lowers an adopted
+device's tier raises no such notice: it takes away a guard the other admin could pass anyway, and
+opens no door. When a device's
 `other_admins` later becomes `[]`, a notice with cause `other_admin` says so, and replaces an untaken
 earlier one for that device. A `[]` that lapses to `unknown` only because a table is unread or old
 (`standard/bridge.md`, GA-BRIDGE-14) is an `other_admins` event, not a notice, and if a later read
@@ -1547,8 +1613,8 @@ only under the conformance harness (see *Conformance*).
 ### configure
 
 - `changes` is a list of upserts and deletes of: clients (stewards and parents, with their
-  credentials, and whether each is a `steward` or a `parent`); tiers (raise only, except an
-  extension action, down to its floor, and deleting a tier a replacement kept, *Default tiers*); loads and
+  credentials, and whether each is a `steward` or a `parent`); tiers (any tier at or above the
+  action's floor, or a delete, which returns the action to its default, *Default tiers*); loads and
   `max_on_s`; `infrastructure`; `applier_host` on a computer (*Safety rules*); `self_changing` and `personal` keys, and `internal` (never removing
   a declaration the standard or a bridge makes, except a plugin manifest's `self_changing` key,
   GA-DESC-9); `wake_via` (*Waking*); `tolerance`;
@@ -1841,7 +1907,7 @@ checks it: `wire` against a running applier, `static` against its `describe` out
 |---|---|---|---|---|
 | GA-DESC-1 | MUST | Act | wire | `describe` returns the device model valid against its schema, with `standard_version`, `levels` and `revision` |
 | GA-DESC-2 | MUST | Act | wire | `revision` changes on every model change and never on a state change |
-| GA-DESC-3 | MUST | Act | static | Every action on every device declares a tier no lower than the default table gives, loads, gate classes, `infrastructure` power, a computer's shutdown and extension actions included; `configure` only raises it, except an extension action, which it may lower to its floor, the higher of its `requested_tier` (where it has one) and the highest tier any row naming the device's class, a flag or its load gives any action (`reversible` where none names it), `no_voice` on a `door_lock`, `water_valve`, `gas_valve`, `gate` or `garage_door` and on a device whose `host` is a computer with `infrastructure: true`, and no lower (ruling 5); a computer with `proposed_infrastructure` takes the `infrastructure: true` rows until the owner sets the flag either way; a standard action on a hosted device takes the higher of its own row and its host's `infrastructure: true` or `computer` row for that action |
+| GA-DESC-3 | MUST | Act | static | Every action on every device declares a tier no lower than its floor, the tier the *Default tiers* table gives, loads, gate classes, `infrastructure` power, a computer's shutdown and extension actions included; the action's tier is the higher of that floor and the owner's `configure` value where one is set, and its default where none is: the floor, or for an extension action the higher of `confirm` and its floor; the owner may set any tier at or above the floor and may delete their value; an extension action's floor is the higher of its `requested_tier` (where it has one) and the highest tier any row naming the device's class, a flag or its load gives any action (`reversible` where none names it), `no_voice` on a `door_lock`, `water_valve`, `gas_valve`, `gate` or `garage_door` and on a device whose `host` is a computer with `infrastructure: true`, and no lower (ruling 5); a computer with `proposed_infrastructure` takes the `infrastructure: true` rows until the owner sets the flag either way; a standard action on a hosted device takes the higher of its own row and its host's `infrastructure: true` or `computer` row for that action |
 | GA-DESC-4 | MUST | Act | static | Every action on every device declares idempotency; `notify`, `media.announce`, `power.shutdown` and `media.launch` are never idempotent, and an extension action is not idempotent unless the owner declared it so at adoption, whatever its bridge or manifest says |
 | GA-DESC-5 | MUST | Act | static | Every `matter`, `zigbee` or `zwave` device declares `stable_identifier` |
 | GA-DESC-6 | MUST | Safe | static | An adapter lists in `ungoverned` every way its engine changes a device unseen (not checked by the harness); an applier claiming Safe has an empty `ungoverned` of its own, and a path a bridge declares counts as its own; a child's is listed under that child; over bridges, it claims Safe only with `describe.box` true, which it refuses while its own broker connection is plain TCP off loopback |
@@ -1849,14 +1915,14 @@ checks it: `wire` against a running applier, `static` against its `describe` out
 | GA-DESC-8 | MUST | Safe | static | An applier claiming Safe declares a `load` on every `socket`, and treats one never configured as `heating` |
 | GA-DESC-9 | MUST | Act | static | A device's `self_changing` and `personal` hold every key this standard declares so (every computer key `self_changing`; `app`, `camera_in_use`, `microphone_in_use` and `speech` `personal` on every device that reports them, and a computer's session keys; a player's `playing`, `title` and `started_at`, and `speech` on every device that reports it, `self_changing`) and every key its bridge declares so, and `internal` every device its bridge declares so; `configure` adds to them and never removes one of these, except a key a plugin's manifest declares `self_changing` |
 | GA-DESC-10 | MUST | Act | wire | `configure` refuses a `wake_via` naming a device that is not adopted, does not offer `power.wake`, or belongs to another applier than the computer, and a `forget` of a device a `wake_via` names; a computer declares `power.wake` exactly while it has a `wake_via`, the applier adding it with its default tier and `ack_within_s` and removing it |
-| GA-DESC-11 | MUST | Act | wire | When a replacement changes an action's tool hash, argument schema or `requested_tier`, a tier the owner set for it below what its formula gives without the owner's value is dropped, and the action falls back to the formula until the owner sets it again; a tier the owner raised is kept; a replacement that lowers an action's `requested_tier` keeps the tier it had, as the owner's, until the owner deletes that value; the tool hash compared is the action's `tool_hash`, kept across restarts |
+| GA-DESC-11 | MUST | Act | wire | When a replacement changes an action's tool hash, argument schema or `requested_tier`, a tier the owner set for it below what its formula gives without the owner's value is dropped, and the action falls back to the formula until the owner sets it again; a tier the owner raised is kept; a replacement that lowers an action's `requested_tier` keeps the tier it had, stored as the owner's value, deletable through `configure` and never rewritten by a later move of the floor (GA-DESC-13), until the owner deletes it, as any value the owner set may be deleted; the tool hash compared is the action's `tool_hash`, kept across restarts |
 | GA-DESC-12 | MUST | Act | static | An adapter maps an engine's entity to `power` or `session` only through its allowlist by the agent's model and `unique_id` pattern, lists the rest of what the engine can do to a computer in `ungoverned`, and maps no entity that runs arbitrary commands to any capability; whether the allowlist holds is not checked by the harness |
-| GA-DESC-13 | MUST | Act | wire | A `configure` change of a device's `load` or `infrastructure` re-applies *Default tiers* to its actions, and a computer's `infrastructure` to the actions of the devices it hosts, extension and standard, in the same change set, raising every tier now below its new floor to that floor; a tier at or above it is kept |
-| GA-DESC-14 | MUST | Act | wire | `configure` refuses an extension action's tier below its floor (*Default tiers*) with `invalid_request`, nothing changed, never clamping it to the floor |
+| GA-DESC-13 | MUST | Act | wire | A `configure` change of a device's `load` or `infrastructure` re-applies *Default tiers* to its actions, and a computer's `infrastructure` to the actions of the devices it hosts, extension and standard, in the same change set: each action's tier becomes the higher of its new floor and the owner's value where one is set, and its new default where none is, the owner's value never rewritten, a replacement's kept tier excepted (GA-DESC-11) |
+| GA-DESC-14 | MUST | Act | wire | `configure` refuses any action's tier below its floor (*Default tiers*) with `invalid_request`, nothing changed, never clamping it to the floor, and accepts any tier at or above it, and the delete of a tier the owner set, for a standard action as for an extension one; every tier check in a change set is judged against the floor the whole change set leaves, GA-ADOPT-3's excepted |
 | GA-DESC-15 | MUST | Act | wire | An owner's `idempotent: true` on a plugin's extension action falls back to `false` when a replacement changes the action's tool hash |
 | GA-DESC-16 | MUST | Act | wire | A plugin device's replacement keeps in `personal` every key an earlier version's manifest declared so, and in `self_changing` every such key the owner has not removed, a removal standing across replacements until the owner adds the key again |
 | GA-DESC-17 | MUST | Act | wire | A computer's `session.lock` declares `account`'s `args` as the tokens its `accounts` lists, so a step naming any other token, a retired one included, is `refuse(invalid_args)` in a plan and never dispatched |
-| GA-DESC-18 | MUST | Act | wire | A bridge's `devices` that changes a known device's declarations (`standard/bridge.md`, *Declarations and settings*) is a model change with a `model` event naming the device; an undispatched step whose action's declarations changed is `refused(declaration_changed)`; a dispatched action keeps its dispatch-time outcome rules and is re-sent only where old and new both say idempotent; an owner's `idempotent: true` and a tier the owner lowered on a changed action fall back |
+| GA-DESC-18 | MUST | Act | wire | A bridge's `devices` that changes a known device's declarations (`standard/bridge.md`, *Declarations and settings*) is a model change with a `model` event naming the device; an undispatched step whose action's declarations changed is `refused(declaration_changed)`; a dispatched action keeps its dispatch-time outcome rules and is re-sent only where old and new both say idempotent; an owner's `idempotent: true` and a tier the owner set below the action's default on a changed action fall back |
 | GA-DESC-19 | MUST | Act | wire | A bridge's device carries its bridge's `awaitedKeys`, `undescribed` and `settings` in `describe` as `awaited_keys`, `undescribed` and `settings`, a meta-applier's too, and relays the bridge's `undescribed` event as its own, once per name, a name it first meets in a `devices` it receives (live, or the retained one at connect) announced too, and which names it has announced kept across restarts; a change to `awaited_keys` or `settings` is a model change, as one of `sensor_keys` is, and a change to `undescribed` alone moves no revision |
 | GA-STATE-1 | MUST | Act | wire | Every state value carries the basis time of its observation, never the time of the response |
 | GA-STATE-2 | MUST | Act | wire | A bridged device reads `dead` within 1 s of its bridge going 30 s without a `status`, its will on `lwt`, or a graceful `offline`, its transport going `down`, the applier losing the broker, the bridge reporting it `available: false`, or its leaving `devices` or the roster or its retained status being cleared |
@@ -1890,7 +1956,7 @@ checks it: `wire` against a running applier, `static` against its `describe` out
 | GA-APPLY-14 | MUST | Act | wire | A `notify` without `from` is accepted; `from` is sent in the command's value only when the request carries it and only to a device whose `notify` declaration lists `from` among its `args`, and left out for any other; a meta-applier passes it to a child only when the child's `standard_version` is 0.10 or later and the child's device lists it, and leaves it out otherwise |
 | GA-APPLY-15 | MUST | Act | wire | The `detail` of the terminal ack taken for a step is carried in that step's final outcome and its `outcome` event, whatever the outcome, which it never changes |
 | GA-APPLY-16 | MUST | Act | wire | A command for an action declared `whole_state: true` carries in `state` the device's assumed value of every key the applier holds one for, across a restart too, each key's value being the one the latest earlier action on the device sets, from any apply, once dispatched and unless it ended `failed` or `unreachable`, otherwise the assumed value, the action's own key carrying the value it asks for; no step waits for another to build it; when such a command ends `sent` or `unanswered`, every key it carried becomes assumed |
-| GA-EVT-1 | MUST | Act | wire | Every state change the applier did not make, other than a `self_changing` key, appears with cause `external`; a report moving towards a dispatched action's value, until it matches or `ack_within_s` passes, is that apply's, after a `failed(no_confirmation)` or `failed(not_locked)` ack too; the key `session.lock` sets is its argument's `session.<account>` |
+| GA-EVT-1 | MUST | Act | wire | Every state change the applier did not make, other than a `self_changing` key, appears with cause `external`, except a key's first value, the applier holding none before, told by what the applier observes and not by the retain flag, which appears with cause `device` unless an apply's correlation gives it that apply's, when it arrives while the applier loads statuses after it connects or restarts, in a bridge's answer to `snapshot` or among a new instance's first statuses before that answer, over a new route after a route moves, or on a device not adopted (⚠️ to be checked on a real installation); a report arriving live from a running bridge instance on an adopted device is `external`, a first press included; a report moving towards a dispatched action's value, until it matches or `ack_within_s` passes, is that apply's, after a `failed(no_confirmation)` or `failed(not_locked)` ack too; the key `session.lock` sets is its argument's `session.<account>` |
 | GA-EVT-2 | MUST | Act | wire | Every change event carries a cause; `history` returns the same causes in order |
 | GA-EVT-3 | MUST | Act | wire | `acked` arrives only after the device's reported state matches within its tolerance, on the key the action sets (for `session.lock`, its argument's, matched by `locked`, `disconnected` or `none`; for an extension action, its `confirmed_by`); `media.launch` and `power.wake` are acked only as GA-EVT-7 and GA-APPLY-13 say |
 | GA-EVT-4 | MUST | Act | wire | Events are kept at least 3600 s; an older cursor is `cursor_expired` |
@@ -1935,7 +2001,7 @@ checks it: `wire` against a running applier, `static` against its `describe` out
 | GA-BIND-3 | MUST | Meta | wire | A meta-applier reaches each child at MCP protocol revision `2026-07-28` where the child serves it, and falls back, to `2025-06-18` or `2025-11-25` only, for a child that does not |
 | GA-ADOPT-1 | MUST | Act | wire | A device new to the applier is `adopted: false` until the owner adopts it; every action on it is `refuse(not_adopted)` in a plan and `refused(not_adopted)` at apply; `configure` refuses a safety rule that reads or actuates it, and a `forget` of a device still in its bridge's `devices` or named by a safety rule |
 | GA-ADOPT-2 | MUST | Act | wire | `adopt` with `replaces` keeps the replaced device's `id`, declarations and safety rules, for a plugin device only the declarations the owner set, its manifest's being the new version's; the old identifier goes to `previous_identifiers` and never takes the id back; a new device lacking an action or key they use, or under another child, is refused, except that a plugin device's replacement may lack an action no safety rule uses |
-| GA-ADOPT-3 | MUST | Act | wire | A device with an action above `reversible` and another admin, or `other_admins: unknown`, is a notice with cause `other_admin` at adoption, the tier judged before the same change set lowers it, whenever an admin is added, and once for each such adopted device when the applier starts supporting adoption; its becoming `[]` is a notice that replaces an untaken earlier one |
+| GA-ADOPT-3 | MUST | Act | wire | A device with an action above `reversible` and another admin, or `other_admins: unknown`, is a notice with cause `other_admin` at adoption, each action's tier judged as the higher of its tier before and after the change set, so that a raise or a lowering in the same change set never hides it, whenever an admin is added, and once for each such adopted device when the applier starts supporting adoption; its becoming `[]` is a notice that replaces an untaken earlier one |
 | GA-ADOPT-4 | MUST | Act | wire | The applier sends a plugin's bridge `activate { plugin, version }` when the owner adopts the first device of that version, for a version with staged devices only on an adoption with `replaces`, never for a version with no adopted device, and again each time the bridge is found live and at least every 60 s while it stays live, until an `ok`; a `failed(unknown_plugin)` is a notice with cause `bridge_fault` naming the version's adopted devices, once until an `ok`; any `activate` that will remove an adopted device of another version of the plugin on that host, not replaced in the same change set, staged version or not, is preceded by a notice with cause `plugin_update` naming each such device; an adoption whose `activate` would remove a device a safety rule names, not replaced in the same change set, is refused with `invalid_request`, nothing changed |
 | GA-ADOPT-5 | MUST | Act | wire | An adoption of a staged plugin device with `replaces` is pending until the swap (the old version's devices leave the bridge's `devices`): until then the old device keeps the `id`, its declarations and its rules, and the new device stays unadopted; if before the swap the bridge reports the new device `available: false` after publishing it `available: true` following its `ok` to the `activate`, or names it in a `faults` entry of code `pin_mismatch`, `crash_loop` or `account_deleted`, never on a status from before the `ok`, the pending adoption is dropped, a notice with cause `plugin_update` names both devices, the old device stays as it was, and an `activate` naming the old device's version, which cancels the new version's, is sent and re-sent as GA-ADOPT-4's until an `ok`, with no further `activate` of the new version; if the old devices leave before that `ok`, the adoption takes effect as at any swap, with a `plugin_update` notice, and the cancel's `failed(unknown_plugin)` is no `bridge_fault` |
 | GA-ADOPT-6 | MUST | Act | wire | Adopting a device on an `unknown` transport, an adopted device's transport first reading `unknown`, and `configure` of a safety rule actuating a device on one are each a notice with cause `open_loop` naming it, saying that nothing will show if it stops working |
@@ -2020,6 +2086,10 @@ is `pass`. A SHOULD is reported, never failed.
 | `never-fails-a-silent-ack` | GA-APPLY-8 | GA-APPLY-11, GA-SAFE-2, GA-SAFE-3, GA-SAFE-8, GA-SAFE-12 | A `late_ack` needs the `failed(no_ack)` first; a safety rule waits on the same outcome, and its `refuse(safety)` window with it |
 | `no-late-ack-for-a-slow-lock` | GA-APPLY-11 | — | A simulated computer acks a `session.lock` `failed(not_locked)`, then reports the key `locked` within its `ack_within_s`, and no `late_ack` event comes |
 | `acks-without-state` | GA-EVT-3 | — | |
+| `externalises-a-first-value` | GA-EVT-1 | — | A simulated bridge's device, not adopted, first reports `on`, or after the subject's restart a status delivered on subscribing brings a value back, and the subject reports it with cause `external`; a key first reported live on an adopted device is `external` in the subject as in the text |
+| `externalises-a-snapshot-value` | GA-EVT-1 | GA-BUS-6 | The subject restarts with the simulated bridge stopped; the bridge then starts with a new `instanceId` and publishes an adopted device's status, live, before and in answer to the subject's `snapshot`, and the subject reports the value with cause `external` |
+| `externalises-a-rerouted-value` | GA-EVT-1 | — | The owner's `configure` moves an adopted device's route to a second simulated bridge, which reports a key the first bridge never reported, and the subject reports it with cause `external` |
+| `devices-a-live-press` | GA-EVT-1 | — | With the simulated bridge's instance running and the subject holding the adopted device's other keys, the bridge first reports a key live, and the subject reports it with cause `device` |
 | `lock-fails-on-logout` | GA-EVT-3 | — | The simulated computer answers a `session.lock` by reporting the account's key `none`, a logout, and the step ends `failed(no_ack)` |
 | `externalises-a-late-lock` | GA-EVT-1 | — | The simulated computer acks a `session.lock` `failed(not_locked)` and reports the account's key `locked` 3 s later, inside the step's `ack_within_s`, and the subject reports it with cause `external` |
 | `applies-without-token` | GA-TOKEN-1 | GA-TOKEN-2, GA-APPLY-9, GA-META-10, GA-SAFE-7 | Every token check is the same check |
@@ -2078,9 +2148,14 @@ is `pass`. A SHOULD is reported, never failed.
 | `wakes-across-appliers` | GA-DESC-10 | — | A meta-applier's `configure` takes a `wake_via` for its own computer naming a child's relay entry |
 | `lowers-by-a-new-manifest` | GA-DESC-11 | — | A replacement's manifest requests `confirm` for an action the old one requested at `no_voice`, the owner set nothing, and the subject declares it `confirm` |
 | `keeps-a-lowered-tier` | GA-DESC-11 | — | A replacement whose tool hash changed keeps the owner's lowered tier |
+| `keeps-a-manifest-kept-tier` | GA-DESC-11 | GA-DESC-14 | A replacement's manifest requests `confirm` for an action the old one requested at `no_voice`, the owner set nothing, the action keeps `no_voice` as the owner's value, and the owner's `configure` deleting that value is refused or leaves the action at `no_voice` |
 | `forgets-a-tool-hash` | GA-DESC-11 | GA-PERSIST-1 | The harness restarts the subject between a plugin version's adoption and its replacement by a version whose tool changed, and the owner's lowered tier is kept |
 | `maps-a-shell` | GA-DESC-12 | — | The simulated engine offers an agent's command entity, and the subject maps it |
 | `extension-under-the-box` | GA-DESC-3 | GA-DESC-13 | The owner sets `infrastructure` on a computer hosting a test plugin's device whose extension action requests `reversible`, and the action's tier stays below `no_voice`; not re-deriving it in the change set is GA-DESC-13's failure too |
+| `keeps-an-owner-raise` | GA-DESC-14 | GA-DESC-3 | The owner raises a `lighting` socket's `onoff.turn_on` to `confirm`, then deletes that value, and the subject refuses the delete or keeps the action at `confirm` |
+| `keeps-an-owner-raise-on-a-set` | GA-DESC-14 | GA-DESC-3 | The owner raises a `lighting` socket's `onoff.turn_on` to `confirm`, then sets it to `reversible`, and the subject refuses the change or keeps the action at `confirm` |
+| `lowers-a-heater-below-the-table` | GA-DESC-14 | GA-DESC-3 | `configure` sets a `heating` socket's `onoff.turn_on` to `reversible`, and the subject accepts it, or clamps it to `confirm`, instead of refusing it `invalid_request` |
+| `keeps-a-table-tier-over-a-new-load` | GA-DESC-13 | — | The owner, having set no tier, changes a socket's `load` from `heating` to `lighting`, and its `onoff.turn_on` stays `confirm` |
 | `lowers-a-lock-extension` | GA-DESC-14 | — | `configure` sets a `door_lock` plugin device's extension action to `confirm`, and the subject accepts it, or clamps it to `no_voice`, instead of refusing it `invalid_request` |
 | `sleeps-the-box-through-its-player` | GA-DESC-3 | — | A test plugin's device hosted by an `infrastructure` computer offers `power.shutdown` requesting `reversible`, and the subject declares it below `no_voice` |
 | `sleeps-the-proposed-broker-host` | GA-DESC-3 | — | A simulated PC bridge's computer carries `proposedInfrastructure`, the owner has not set `infrastructure`, and the subject declares its `power.sleep` below `no_voice` |

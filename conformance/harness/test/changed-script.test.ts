@@ -294,7 +294,7 @@ describe.skipIf(!workshop)("the preflight's probes, on this repository", () => {
   const scoped = async (edits: Edit[]) => (await scopeOfChange({ buildDir: join(top, "reference/applier"), base: "HEAD", head: probe(edits) })).scope;
 
   it("A: a site removed from one of a mutation's two files puts it in scope", async () => {
-    const s = await scoped([{ file: "reference/applier/src/gate/plan.ts", edit: (t) => t.replace(/"toggles-to-reach-a-state"/, '"zz-probe"') }]);
+    const s = await scoped([{ file: "reference/applier/src/gate/plan.ts", edit: (t) => t.replace(/(?:[\w$]+\??\.)*mutant\.togglesToReachAState\b/, "false") }]);
     expect(s.mutations).toContainEqual({ mutation: "toggles-to-reach-a-state", reasons: ["a site in reference/applier/src/gate/plan.ts"] });
   });
 

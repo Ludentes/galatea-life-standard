@@ -6,7 +6,7 @@
 // a local alias of it. A build reads its mutation only through such comparisons (the lint), so a
 // check whose clean run evaluated none of a mutation's sites runs the same code under it, timing apart.
 
-/** A mutation site in a built file: the offset of its string literal, which V8's ranges are in. */
+/** A mutation site in a built file: the offset of its string literal or its flag, which V8's ranges are in. */
 export interface Site {
   mutation: string;
   file: string;
@@ -88,9 +88,18 @@ export function aliases(text: string): string[] {
   return [...text.matchAll(/\b(?:const|let)\s+([\w$]+)\s*=\s*(?:[\w$]+\??\.)*mutation\s*;/g)].map((m) => m[1]!);
 }
 
+/** A mutation's flag in a mutant record: its name in camel case (`trusts-any-token` is `trustsAnyToken`). */
+export function flagOf(name: string): string {
+  return name.replace(/-([a-z0-9])/g, (_, c: string) => c.toUpperCase());
+}
+
+/** A read of a mutation's flag, `<x>.mutant.<flag>` or `mutant?.<flag>`, in code: the flag is group 1. */
+const MUTANT_READ = /(?<![\w$])mutant\s*\??\.\s*([\w$]+)/g;
+
 /**
  * The sites of a built (or source) file: every literal naming a mutation that is a direct comparison
- * of the mutation. Any other literal naming one is a problem.
+ * of the mutation, and every read of a mutation's flag in a mutant record (outside comments and
+ * strings). Any other literal naming one is a problem, as is a read of a flag no mutation has.
  */
 export function findSites(file: string, text: string, names: ReadonlySet<string>): { sites: Site[]; problems: string[] } {
   const readers = new Set(["mutation", ...aliases(text)]);
@@ -101,6 +110,17 @@ export function findSites(file: string, text: string, names: ReadonlySet<string>
     const at = lineColumn(text, l.offset);
     if (m && readers.has(m[2]!)) sites.push({ mutation: l.name, file, offset: l.offset, ...at });
     else problems.push(`${file}:${at.line}: "${l.name}" is not a direct comparison of the mutation`);
+  }
+  if (/\bmutant\b/.test(text)) {
+    const flags = new Map([...names].map((n) => [flagOf(n), n]));
+    for (const m of codeOf(text).matchAll(MUTANT_READ)) {
+      const offset = m.index! + m[0].length - m[1]!.length;
+      const at = lineColumn(text, offset);
+      const name = flags.get(m[1]!);
+      if (name) sites.push({ mutation: name, file, offset, ...at });
+      else problems.push(`${file}:${at.line}: mutant.${m[1]} is the flag of no mutation`);
+    }
+    sites.sort((a, b) => a.offset - b.offset);
   }
   return { sites, problems };
 }
@@ -157,15 +177,16 @@ function closing(code: string, open: number): number {
 }
 
 /**
- * A declaration file (`mutations.ts`) with its `MUTATIONS` list and its `mutationFromEnv` blanked:
- * the only places a build may name every mutation, or read `GALATEA_MUTATION`. The rest of it is
- * linted as any file.
+ * A declaration file (`mutations.ts`) with its `MUTATIONS` list, its `mutationFromEnv` and its
+ * `mutantOf` blanked: the only places a build may name every mutation, read `GALATEA_MUTATION`, or
+ * compare the mutation with every name (to build its mutant record). The rest of it is linted as
+ * any file.
  */
 export function withoutDeclarations(text: string): string {
   const code = codeOf(text);
   let out = text;
   const blankSpan = (from: number, to: number) => { out = out.slice(0, from) + out.slice(from, to).replace(/[^\n]/g, " ") + out.slice(to); };
-  for (const re of [/\bexport\s+const\s+MUTATIONS\s*=\s*\[/, /\bexport\s+function\s+mutationFromEnv\s*\(/]) {
+  for (const re of [/\bexport\s+const\s+MUTATIONS\s*=\s*\[/, /\bexport\s+function\s+mutationFromEnv\s*\(/, /\bexport\s+function\s+mutantOf\s*\(/]) {
     const m = re.exec(code);
     if (!m) continue;
     const open = re.source.endsWith("\\[") ? m.index + m[0].length - 1 : code.indexOf("{", closing(code, m.index + m[0].length - 1));
@@ -198,8 +219,16 @@ const PATH = String.raw`(?:[\w$]+\??\.)*`;
  * and never stringified. `GALATEA_MUTATION` is read nowhere but `mutationFromEnv`. Destructuring,
  * indexing, `in`, a method or property of it, a truth test, a loose or reversed comparison: each is a
  * problem.
+ *
+ * A mutant record (`mutant`, any member path ending in it) is held to the same allowlist: it is
+ * read only by a flag (`x.mutant.<flag>`, a site), in a type (`mutant: Mutant`) or as a key, copied
+ * whole into a field or an alias named `mutant` (with `?? Mutant.none` at most), built by a call to
+ * this build's code (`const mutant = mutantOf(mutation);`), narrowed by a site (`const mutant =
+ * x.mutant.<flag> ? Mutant.none : x.mutant;`), or passed on whole as the mutation may be.
+ * A mutation's flag (of `names`) is read nowhere but after `mutant.`; its holder never indexed,
+ * destructured, tested or handed to other code.
  */
-export function mutationReads(file: string, text: string, callees: ReadonlySet<string>): string[] {
+export function mutationReads(file: string, text: string, callees: ReadonlySet<string>, names: ReadonlySet<string> = new Set()): string[] {
   const code = codeOf(text);
   const problems: string[] = [];
   const at = (offset: number) => lineColumn(text, offset).line;
@@ -237,16 +266,16 @@ export function mutationReads(file: string, text: string, callees: ReadonlySet<s
    * True when the expression from `from` to `to` is a whole argument of a declared call, or the whole
    * value of a `mutation` key (or a shorthand) in an object literal that no undeclared call is given.
    */
-  const passedOn = (from: number, to: number): boolean => {
+  const passedOn = (from: number, to: number, key = "mutation"): boolean => {
     const o = opener(from);
     if (o < 0) return false;
     const before = prevChar(from);
     const after = nextChar(to);
     if (code[o] === "(") return (before === "(" || before === ",") && (after === ")" || after === ",") && declaredCall(o);
     if (code[o] !== "{") return false;
-    const keyed = /\bmutation\s*:\s*$/.test(code.slice(0, from));
+    const keyed = new RegExp(String.raw`\b${key}\s*:\s*$`).test(code.slice(0, from));
     if (code[o - 1] === "$") return false;
-    const shorthand = code.slice(from, to) === "mutation" && (before === "{" || before === ",") && (after === "}" || after === ",");
+    const shorthand = code.slice(from, to) === key && (before === "{" || before === ",") && (after === "}" || after === ",");
     if (!(keyed || shorthand) || !(after === "}" || after === ",")) return false;
     // A destructuring pattern reads the mutation out: not a literal.
     return !destructuring(o) && literalKept(o);
@@ -291,8 +320,46 @@ export function mutationReads(file: string, text: string, callees: ReadonlySet<s
   };
   check("mutation", false);
   for (const a of aliasNames) check(a, true);
+  // The mutant record.
+  for (const m of code.matchAll(readers("mutant"))) {
+    const start = m.index!;
+    const end = start + m[0].length;
+    const tail = code.slice(end);
+    const head = code.slice(0, start);
+    const lineHead = head.slice(head.lastIndexOf("\n") + 1);
+    // A flag read: a site, which findSites judges.
+    if (/^\s*\??\.\s*[\w$]/.test(tail)) continue;
+    // A type, or a key: a name, not a read.
+    if (m[1] === "" && /^\s*\??:\s*Mutant\b/.test(tail)) continue;
+    if (m[1] === "" && /^\s*\??:/.test(tail) && (["{", ",", "(", ";"].includes(prevChar(start)) || /^\s*(?:readonly\s+)?$/.test(lineHead))) {
+      const o = opener(start);
+      if (!(o >= 0 && code[o] === "{" && destructuring(o))) continue;
+    }
+    // Copied whole into a field or an alias named mutant, or built by this build's own call; and what is copied.
+    const into = /^this\.$/.test(m[1]!) || (m[1] === "" && /\b(?:const|let)\s+$/.test(lineHead));
+    if (into && new RegExp(String.raw`^\s*=\s*${PATH}mutant(?:\s*\?\?\s*Mutant\.none)?\s*;`).test(tail)) continue;
+    const built = tail.match(/^\s*=\s*(?:new\s+)?([\w$]+)\s*\(/);
+    if (into && built && callees.has(built[1]!)) continue;
+    if (/(?:\bthis\.mutant|\b(?:const|let)\s+mutant)\s*=\s*$/.test(lineHead) && /^\s*(?:\?\?\s*Mutant\.none\s*)?;/.test(tail)) continue;
+    // Narrowed by a site: `const mutant = x.mutant.<flag> ? Mutant.none : x.mutant;`, every read of it.
+    const lineEnd = code.indexOf("\n", start);
+    const line = code.slice(head.lastIndexOf("\n") + 1, lineEnd < 0 ? undefined : lineEnd);
+    if (new RegExp(String.raw`^\s*(?:const|let)\s+mutant\s*=\s*${PATH}mutant\s*\??\.\s*[\w$]+\s*\?\s*Mutant\.none\s*:\s*${PATH}mutant\s*;\s*$`).test(line)) continue;
+    if (passedOn(start, end, "mutant")) continue;
+    fail(start, "the mutant record is read other than by a flag, copied whole, or passed on whole to this build's code");
+  }
+  // A mutation's flag is read only after `mutant.`.
+  for (const name of names) {
+    const flag = flagOf(name);
+    if (flag === name) continue;
+    for (const m of code.matchAll(new RegExp(String.raw`(?<![\w$])${flag.replace(/\$/g, "\\$")}(?![\w$])`, "g"))) {
+      if (!/(?<![\w$])mutant\s*\??\.\s*$/.test(code.slice(Math.max(0, m.index! - 40), m.index!))) {
+        fail(m.index!, `the flag ${flag} is read other than as mutant.${flag}`);
+      }
+    }
+  }
   // Holders: spread only into an object literal that no undeclared call is given; never stringified.
-  const holders = new Set([...code.matchAll(new RegExp(String.raw`(?<![\w$.])(${PATH}[\w$]+)\??\.mutation\b`, "g"))].map((m) => m[1]!));
+  const holders = new Set([...code.matchAll(new RegExp(String.raw`(?<![\w$.])(${PATH}[\w$]+)\??\.(?:mutation|mutant)\b`, "g"))].map((m) => m[1]!));
   for (const h of holders) {
     const x = h.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     for (const m of code.matchAll(new RegExp(String.raw`JSON\.stringify\(\s*${x}(?![\w$.])`, "g"))) fail(m.index!, `${h}, which holds the mutation, is stringified`);
@@ -322,7 +389,7 @@ export function lint(o: { mutations: string[]; sources: { file: string; text: st
     for (const f of files) {
       const text = own(f);
       const { sites, problems: p } = findSites(f.file, text, names);
-      if (into) into.push(...p, ...mutationReads(f.file, text, callees));
+      if (into) into.push(...p, ...mutationReads(f.file, text, callees, names));
       for (const s of sites) n.set(s.mutation, (n.get(s.mutation) ?? 0) + 1);
     }
     return n;

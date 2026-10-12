@@ -6,7 +6,7 @@ import { requirement } from "../../registry.js";
 import { CHANNEL, LAMP } from "../../steward-home.js";
 import { pollUntil } from "../../util.js";
 import { applyInline, mustAccept, planned, sentFrom } from "./answers.js";
-import { act, mustDefine, revisionOf, scripted, up } from "./util.js";
+import { act, announcer, mustDefine, ownerDefine, ownerOf, revisionOf, scripted, up } from "./util.js";
 import { runReads, runSent, startRun } from "./scenarios.js";
 import { cursorNow, eventsAfter } from "./rules.js";
 import { scheduleSoon } from "./schedules.js";
@@ -45,11 +45,33 @@ async function version(ctx: TestContext, v: string): Promise<void> {
 
 requirement("GA-NOTE-1", {
   seam: "steward",
-  covers: "a notice the stand-in raises is delivered by a notify on the home's channel, sent via rule for the notice, and only then taken; with the channel dead its notify is tried again within each 60 s, three times, the notice not taken; once the channel lives again the next try delivers it and it is taken; announcing channels are slice 9's",
+  standIn: { bare: true },
+  covers: "on a fresh steward, a notice the stand-in raises before any define is held: describe shows it in held_notices; a define setting notice_channels to an announcing speaker alone answers no_notify_channel: true, the notice still held; once the baseline sets the notify channel, the held notice is delivered by a notify on it and taken, and describe shows no held_notices; then a notice the stand-in raises is delivered by a notify on the home's channel, sent via rule for the notice, and only then taken; with the channel dead its notify is tried again within each 60 s, three times, the notice not taken; once the channel lives again the next try delivers it and it is taken; with the home's channel unadopted through the applier, a define answers no_notify_channel: true; speaking through an announcing channel is slice 9's",
 }, async (ctx) => {
   const applier = ctx.standIn!.applier;
   const retry = constantMs("steward", "notice-retry-interval");
   const sent = sentFrom(ctx);
+  const speaker = await announcer(ctx);
+  const early = raise(ctx, "Раннее уведомление");
+  const held = async (what: string) => pollUntil(async () => {
+    const n = (await ownerOf(ctx).callOk("describe")).held_notices;
+    return typeof n === "number" && n >= 1 ? n : undefined;
+  }, 10_000, `describe showed no held_notices ${what}`, 100);
+  // Held before any define, so no first change set's check (GA-DEF-8) leans on this case.
+  ctx.evidence(`held_notices before any define: ${await held("before any define")}`);
+  const spoken = await ownerDefine(ctx, [up("home", { notice_channels: [speaker] })]);
+  must(spoken.ok, `notice_channels naming an announcing speaker alone was refused: ${spoken.ok ? "" : spoken.error}`, spoken.body);
+  ctx.evidence(`a define setting an announcing speaker alone answered ${JSON.stringify(spoken.body)}`);
+  mustEqual(spoken.body.no_notify_channel, true, "no_notify_channel in a define's answer setting an announcing speaker alone");
+  ctx.evidence(`held_notices with an announcing speaker alone: ${await held("with an announcing speaker alone")}`);
+  must(!applier.taken.includes(early), "the steward took a notice no notify channel delivered");
+  await ctx.defineBaseline!();
+  await taken(ctx, early);
+  const delivered0 = notifiesOf(sent, early);
+  ctx.evidence(`the early notice's notifies once the channel was set: ${JSON.stringify(delivered0.map((x) => x.target))}`);
+  must(delivered0.some((x) => x.target === CHANNEL), "the notice held before the channel was set was never delivered on it", delivered0);
+  const after = await ownerOf(ctx).callOk("describe");
+  must(after.held_notices === undefined, "describe shows held_notices with a notify channel set", after.held_notices);
   const first = raise(ctx);
   await taken(ctx, first);
   const delivered = notifiesOf(sent, first);
@@ -70,6 +92,14 @@ requirement("GA-NOTE-1", {
   await ctx.time.stepAndWait(retry);
   await taken(ctx, second);
   ctx.evidence(`taken once the channel lived again, after ${notifiesOf(sent, second).length} tries`);
+  // No notify channel left by the applier's side: a define's answer says so.
+  applier.scriptAdopted(CHANNEL, false);
+  const unadopted = await pollUntil(async () => {
+    const r = await ownerDefine(ctx, [up("room", { id: "attic", name: "Чердак" })]);
+    return r.ok && r.body.no_notify_channel === true ? r.body : undefined;
+  }, 10_000, "no define answered no_notify_channel: true with the home's channel unadopted", 100);
+  ctx.evidence(`a define with the home's channel unadopted answered ${JSON.stringify(unadopted)}`);
+  applier.scriptAdopted(CHANNEL, true);
 });
 
 requirement("GA-NOTE-2", {
@@ -125,4 +155,41 @@ requirement("GA-NOTE-2", {
   const marked = await brainRuleNotify(ctx, motion!);
   ctx.evidence(`the brain's rule's notify from: ${JSON.stringify(marked)}`);
   mustEqual(marked, { rule: "told", brain_authored: true }, "the brain's rule's notify's from");
+});
+
+requirement("GA-NOTE-4", {
+  seam: "steward",
+  covers: "with the home's channel and a pager listed, the owner unadopts the pager through the applier's configure, and a notice naming it is delivered on the home's channel, once; the home's channel unadopted too, the list has no notify channel left: notices of the channel's loss and the list's are raised and held, none delivered, and both are delivered once the channel is adopted again",
+}, async (ctx) => {
+  const applier = ctx.standIn!.applier;
+  const [pager] = await scripted(ctx, [{ fixture: "pager", adopt: "channel" }]) as [string];
+  await mustDefine(ctx, [up("home", { notice_channels: [CHANNEL, pager] })], "the home's channel and a pager as notice channels");
+  const sent = sentFrom(ctx);
+  const naming = (id: string) => sent().filter((x) => x.action === NOTIFY && String(x.args?.text ?? "").includes(id));
+  applier.scriptAdopted(pager, false);
+  const told = await pollUntil(async () => naming(pager)[0], 10_000, `no notice naming the pager ${pager} once it left adoption`, 100);
+  ctx.evidence(`once the pager left adoption: a notify on ${told.target}: ${told.args.text}`);
+  mustEqual(told.target, CHANNEL, "the channel the pager's loss was told on");
+  const gone = await cursorNow(ctx);
+  applier.scriptAdopted(CHANNEL, false);
+  // Held: raised (the steward's notice events), one naming the home's channel and one naming no device (the list's
+  // loss of its last notify channel), and not delivered while no notify channel is left.
+  const raisedAs = async () => {
+    const n = (await eventsAfter(ctx, gone)).filter((e) => e.type === "notice" && e.change === "raised");
+    const channel = n.find((e) => e.target === CHANNEL);
+    const list = n.find((e) => e.target === undefined && e.devices === undefined);
+    return channel && list ? { channel, list } : undefined;
+  };
+  const raised = await pollUntil(raisedAs, 10_000,
+    "the steward did not raise a notice naming the home's channel and one for the list's last notify channel once the channel left adoption", 100);
+  ctx.evidence(`no notify channel left: ${raised.channel.text} | ${raised.list.text}`);
+  await ctx.time.stepAndWait(5_000);
+  mustEqual(naming(CHANNEL).length, 0, "notices naming the home's channel delivered while no notify channel was left");
+  applier.scriptAdopted(CHANNEL, true);
+  const lost = await pollUntil(async () => naming(CHANNEL)[0], 10_000, `no notice naming the home's channel ${CHANNEL} once it was adopted again`, 100);
+  ctx.evidence(`once the home's channel was adopted again: ${lost.args.text}`);
+  const delivered = (id: unknown) => sent().some((x) => x.action === NOTIFY && x.target === CHANNEL && x.for?.notice === id);
+  await pollUntil(async () => (delivered(raised.channel.notice_id) && delivered(raised.list.notice_id)) || undefined, 10_000,
+    "the channel's loss and the list's were not both delivered once the channel returned", 100);
+  mustEqual([...new Set(naming(pager).map((x) => JSON.stringify(x.for)))].length, 1, "notices naming the pager");
 });

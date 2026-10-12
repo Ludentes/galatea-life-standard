@@ -297,7 +297,7 @@ requirement("GA-SCN-8", {
 
 requirement("GA-SCN-9", {
   seam: "steward",
-  covers: "the owner's run: the member's scenario_stop, a lower role, is not_permitted; an unknown run_id is unknown_run; the owner's stop ends it ended(stopped), its later step never sent",
+  covers: "the owner's run: the member's scenario_stop, a lower role, is not_permitted; an unknown run_id is unknown_run; the owner's stop ends it ended(stopped), its later step never sent; a scheduled run of it: a stop from a kiosk capped at visitor is not_permitted",
 }, async (ctx) => {
   const s = ctx.steward!;
   await mustDefine(ctx, [scene("long", [act(LAMP), { delay: 60 }, act(LAMP, OFF)])], "a scenario with a delay");
@@ -312,6 +312,12 @@ requirement("GA-SCN-9", {
   await ctx.time.stepAndWait(61_000);
   await runReads(ctx, run_id, "ended(stopped)", "the stopped run");
   mustEqual(runSent(sent, run_id).map((x) => x.action), [ON], "what the stopped run sent");
+  // A run no person started, a schedule's: a visitor's stop is not_permitted, the owner's ends it.
+  const secret = await kiosk(ctx);
+  const scheduled = await scheduleSoon(ctx, "evening", "long");
+  mustBe(ctx, await asCredential(ctx, secret, (k) => k.call("scenario_stop", { run_id: scheduled.run_id, endpoint: "hall-kiosk" })), "not_permitted",
+    "the visitor's kiosk stopping a scheduled run");
+  mustAccept(ctx, await ownerOf(ctx).call("scenario_stop", { run_id: scheduled.run_id, endpoint: "owner-app" }), "the owner's stop of the scheduled run");
 });
 
 requirement("GA-SCN-10", {

@@ -500,13 +500,19 @@ Promise<{ ctx: Pick<TestContext, "subject" | "owner" | "mcpUrl" | "standIn" | "s
   if (standIn.url.startsWith("https:")) return { ctx, more: { credentials } };
   await pollUntil(async () => ((await owner.callOk("describe")).targets as { id: string }[]).some((t) => t.id === CHANNEL),
     10_000, `the steward's describe did not show the stand-in's ${CHANNEL}`, 100);
-  await defineBaseline(owner, credentials, home.time.source);
   const seams: Record<string, McpSeam> = { owner };
-  for (const who of ["olga", "panel", "brain", "front"] as const) {
-    seams[who] = await McpSeam.connect(url, credentials[who]);
-    cleanup.push(() => seams[who]!.close());
-  }
-  return { ctx, more: { credentials, steward: seams as NonNullable<TestContext["steward"]> } };
+  const baseline = async () => {
+    await defineBaseline(owner, credentials, home.time.source);
+    for (const who of ["olga", "panel", "brain", "front"] as const) {
+      seams[who] = await McpSeam.connect(url, credentials[who]);
+      cleanup.push(() => seams[who]!.close());
+    }
+  };
+  const steward = seams as NonNullable<TestContext["steward"]>;
+  // A bare steward: the test sees it fresh, and defines the baseline when it is done with that.
+  if (test.opts.standIn?.bare) return { ctx, more: { credentials, steward, defineBaseline: baseline } };
+  await baseline();
+  return { ctx, more: { credentials, steward } };
 }
 
 /**

@@ -20,7 +20,7 @@
     "level": "MUST",
     "conformance": "Act",
     "verify": "static",
-    "text": "Every action on every device declares a tier no lower than the default table gives, loads, gate classes, infrastructure power, a computer's shutdown and extension actions included; configure only raises it, except an extension action, which it may lower to its floor, the higher of its requested_tier (where it has one) and the highest tier any row naming the device's class, a flag or its load gives any action (reversible where none names it), no_voice on a door_lock, water_valve, gas_valve, gate or garage_door and on a device whose host is a computer with infrastructure: true, and no lower (ruling 5); a computer with proposed_infrastructure takes the infrastructure: true rows until the owner sets the flag either way; a standard action on a hosted device takes the higher of its own row and its host's infrastructure: true or computer row for that action",
+    "text": "Every action on every device declares a tier no lower than its floor, the tier the *Default tiers* table gives, loads, gate classes, infrastructure power, a computer's shutdown and extension actions included; the action's tier is the higher of that floor and the owner's configure value where one is set, and its default where none is: the floor, or for an extension action the higher of confirm and its floor; the owner may set any tier at or above the floor and may delete their value; an extension action's floor is the higher of its requested_tier (where it has one) and the highest tier any row naming the device's class, a flag or its load gives any action (reversible where none names it), no_voice on a door_lock, water_valve, gas_valve, gate or garage_door and on a device whose host is a computer with infrastructure: true, and no lower (ruling 5); a computer with proposed_infrastructure takes the infrastructure: true rows until the owner sets the flag either way; a standard action on a hosted device takes the higher of its own row and its host's infrastructure: true or computer row for that action",
     "negative_subjects": [
       {
         "subject": "extension-under-the-box",
@@ -138,7 +138,7 @@
     "level": "MUST",
     "conformance": "Act",
     "verify": "wire",
-    "text": "When a replacement changes an action's tool hash, argument schema or requested_tier, a tier the owner set for it below what its formula gives without the owner's value is dropped, and the action falls back to the formula until the owner sets it again; a tier the owner raised is kept; a replacement that lowers an action's requested_tier keeps the tier it had, as the owner's, until the owner deletes that value; the tool hash compared is the action's tool_hash, kept across restarts",
+    "text": "When a replacement changes an action's tool hash, argument schema or requested_tier, a tier the owner set for it below what its formula gives without the owner's value is dropped, and the action falls back to the formula until the owner sets it again; a tier the owner raised is kept; a replacement that lowers an action's requested_tier keeps the tier it had, stored as the owner's value, deletable through configure and never rewritten by a later move of the floor (GA-DESC-13), until the owner deletes it, as any value the owner set may be deleted; the tool hash compared is the action's tool_hash, kept across restarts",
     "negative_subjects": [
       {
         "subject": "lowers-by-a-new-manifest",
@@ -147,6 +147,12 @@
       {
         "subject": "keeps-a-lowered-tier",
         "coupled": []
+      },
+      {
+        "subject": "keeps-a-manifest-kept-tier",
+        "coupled": [
+          "GA-DESC-14"
+        ]
       },
       {
         "subject": "forgets-a-tool-hash",
@@ -174,8 +180,12 @@
     "level": "MUST",
     "conformance": "Act",
     "verify": "wire",
-    "text": "A configure change of a device's load or infrastructure re-applies *Default tiers* to its actions, and a computer's infrastructure to the actions of the devices it hosts, extension and standard, in the same change set, raising every tier now below its new floor to that floor; a tier at or above it is kept",
+    "text": "A configure change of a device's load or infrastructure re-applies *Default tiers* to its actions, and a computer's infrastructure to the actions of the devices it hosts, extension and standard, in the same change set: each action's tier becomes the higher of its new floor and the owner's value where one is set, and its new default where none is, the owner's value never rewritten, a replacement's kept tier excepted (GA-DESC-11)",
     "negative_subjects": [
+      {
+        "subject": "keeps-a-table-tier-over-a-new-load",
+        "coupled": []
+      },
       {
         "subject": "keeps-a-tier-below-a-new-load",
         "coupled": [
@@ -189,8 +199,26 @@
     "level": "MUST",
     "conformance": "Act",
     "verify": "wire",
-    "text": "configure refuses an extension action's tier below its floor (*Default tiers*) with invalid_request, nothing changed, never clamping it to the floor",
+    "text": "configure refuses any action's tier below its floor (*Default tiers*) with invalid_request, nothing changed, never clamping it to the floor, and accepts any tier at or above it, and the delete of a tier the owner set, for a standard action as for an extension one; every tier check in a change set is judged against the floor the whole change set leaves, GA-ADOPT-3's excepted",
     "negative_subjects": [
+      {
+        "subject": "keeps-an-owner-raise",
+        "coupled": [
+          "GA-DESC-3"
+        ]
+      },
+      {
+        "subject": "keeps-an-owner-raise-on-a-set",
+        "coupled": [
+          "GA-DESC-3"
+        ]
+      },
+      {
+        "subject": "lowers-a-heater-below-the-table",
+        "coupled": [
+          "GA-DESC-3"
+        ]
+      },
       {
         "subject": "lowers-a-lock-extension",
         "coupled": []
@@ -247,7 +275,7 @@
     "level": "MUST",
     "conformance": "Act",
     "verify": "wire",
-    "text": "A bridge's devices that changes a known device's declarations (standard/bridge.md, *Declarations and settings*) is a model change with a model event naming the device; an undispatched step whose action's declarations changed is refused(declaration_changed); a dispatched action keeps its dispatch-time outcome rules and is re-sent only where old and new both say idempotent; an owner's idempotent: true and a tier the owner lowered on a changed action fall back",
+    "text": "A bridge's devices that changes a known device's declarations (standard/bridge.md, *Declarations and settings*) is a model change with a model event naming the device; an undispatched step whose action's declarations changed is refused(declaration_changed); a dispatched action keeps its dispatch-time outcome rules and is re-sent only where old and new both say idempotent; an owner's idempotent: true and a tier the owner set below the action's default on a changed action fall back",
     "negative_subjects": [
       {
         "subject": "plans-on-a-stale-declaration",
@@ -724,8 +752,26 @@
     "level": "MUST",
     "conformance": "Act",
     "verify": "wire",
-    "text": "Every state change the applier did not make, other than a self_changing key, appears with cause external; a report moving towards a dispatched action's value, until it matches or ack_within_s passes, is that apply's, after a failed(no_confirmation) or failed(not_locked) ack too; the key session.lock sets is its argument's session.<account>",
+    "text": "Every state change the applier did not make, other than a self_changing key, appears with cause external, except a key's first value, the applier holding none before, told by what the applier observes and not by the retain flag, which appears with cause device unless an apply's correlation gives it that apply's, when it arrives while the applier loads statuses after it connects or restarts, in a bridge's answer to snapshot or among a new instance's first statuses before that answer, over a new route after a route moves, or on a device not adopted (⚠️ to be checked on a real installation); a report arriving live from a running bridge instance on an adopted device is external, a first press included; a report moving towards a dispatched action's value, until it matches or ack_within_s passes, is that apply's, after a failed(no_confirmation) or failed(not_locked) ack too; the key session.lock sets is its argument's session.<account>",
     "negative_subjects": [
+      {
+        "subject": "externalises-a-first-value",
+        "coupled": []
+      },
+      {
+        "subject": "externalises-a-snapshot-value",
+        "coupled": [
+          "GA-BUS-6"
+        ]
+      },
+      {
+        "subject": "externalises-a-rerouted-value",
+        "coupled": []
+      },
+      {
+        "subject": "devices-a-live-press",
+        "coupled": []
+      },
       {
         "subject": "externalises-a-late-lock",
         "coupled": []
@@ -1253,7 +1299,7 @@
     "level": "MUST",
     "conformance": "Act",
     "verify": "wire",
-    "text": "A device with an action above reversible and another admin, or other_admins: unknown, is a notice with cause other_admin at adoption, the tier judged before the same change set lowers it, whenever an admin is added, and once for each such adopted device when the applier starts supporting adoption; its becoming [] is a notice that replaces an untaken earlier one",
+    "text": "A device with an action above reversible and another admin, or other_admins: unknown, is a notice with cause other_admin at adoption, each action's tier judged as the higher of its tier before and after the change set, so that a raise or a lowering in the same change set never hides it, whenever an admin is added, and once for each such adopted device when the applier starts supporting adoption; its becoming [] is a notice that replaces an untaken earlier one",
     "negative_subjects": [
       {
         "subject": "hides-a-second-door",

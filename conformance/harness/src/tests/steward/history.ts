@@ -4,8 +4,9 @@ import { constantMs } from "../../manifest.js";
 import { requirement } from "../../registry.js";
 import { LAMP } from "../../steward-home.js";
 import { pollUntil } from "../../util.js";
-import { applyInline, outcomes } from "./answers.js";
-import { cursorNow, eventsAfter, type Ev } from "./rules.js";
+import { applyInline, outcomes, sentFrom } from "./answers.js";
+import { cursorNow, eventsAfter, fires, type Ev } from "./rules.js";
+import { ackWithinMs } from "./outcomes.js";
 import { act, cursorExpiredGap, mustDefine, ownerOf, scripted, up } from "./util.js";
 
 const MINUTE = 60_000;
@@ -40,9 +41,19 @@ async function leasesBecome(ctx: TestContext, want: string[], what: string): Pro
 
 requirement("GA-STW-7", {
   seam: "steward",
-  covers: "history returns, oldest first and with their causes, the steward's define, lease, refused and rule_fired events (an outside change leasing the lamp, a rule's turn_off on it refused) and the applier's state, outcome, latch and rule_fired (a safety rule closing the valve, its state change caused by it), liveness, model, late_ack, route_conflict, provision, freshness, transport, other_admins, bridge_fault, occurrence and undescribed events (undescribed as received live); a speaker's speech and the vibration sensor's personal presence occurrence are served by events and absent from history; events still serve them from the cursor 3590 s on, and history still returns every one a minute short of 7 days on; answer in history is graded under GA-CONF-2; ask, scenario, schedule_missed, schedule_skipped and notice pass the same filter and are not graded here; narrowed is slice 9's (narrow is not built)",
+  covers: "the owner's define event, read at her app, carries its diff, and the guest panel's events give it without the diff; history returns, oldest first and with their causes, the steward's define, lease, refused and rule_fired events (an outside change leasing the lamp, a rule's turn_off on it refused) and the applier's state, outcome, latch and rule_fired (a safety rule closing the valve, its state change caused by it), liveness, model, late_ack, route_conflict, provision, freshness, transport, other_admins, bridge_fault, occurrence and undescribed events (undescribed as received live); a speaker's speech and the vibration sensor's personal presence occurrence are served by events and absent from history; events still serve them from the cursor 3590 s on, and history still returns every one a minute short of 7 days on; answer in history is graded under GA-CONF-2; ask, scenario, schedule_missed, schedule_skipped and notice pass the same filter and are not graded here; narrowed is slice 9's (narrow is not built)",
 }, async (ctx) => {
   const applier = ctx.standIn!.applier;
+  // The define event's diff, to its endpoint (the owner's app) and not to the guest panel.
+  {
+    const c = await cursorNow(ctx);
+    await mustDefine(ctx, [up("room", { id: "attic", name: "Чердак" })], "a room");
+    const own = ((await ownerOf(ctx).callOk("events", { cursor: c })).events as Ev[]).find((e) => e.type === "define");
+    const panel = ((await ctx.steward!.panel.callOk("events", { cursor: c })).events as Ev[]).find((e) => e.type === "define");
+    ctx.evidence(`the owner's define event at her app: ${JSON.stringify(own)}; at the guest panel: ${JSON.stringify(panel)}`);
+    must(own !== undefined && own.diff !== undefined, "the define event read at the define's endpoint carries no diff", own);
+    must(panel !== undefined && panel.diff === undefined, "the guest panel's events gave the diff of the owner's define", panel);
+  }
   const [shaker, speaker, valve] = await scripted(ctx, [{ fixture: "shaker", adopt: "sensor" }, { fixture: "speaker", adopt: "speaker" },
     { fixture: "valve", adopt: "water_valve" }]);
   await mustDefine(ctx, [up("rule", { id: "off", name: "Гасить", conditions: [{ target: LAMP, key: "on", op: "eq", value: true }],
@@ -109,7 +120,7 @@ requirement("GA-STW-7", {
 
 requirement("GA-LEASE-6", {
   seam: "steward",
-  covers: "a latching safety rule closing the valve leases it to the rule at safety_rule precedence, the member's open of it refused(leased), and keeps it when the rule completes; its latch cleared by the owner ends it; a latchless rule turning the lamp on leases it until its rule_fired; across a cursor_expired gap: a latch set inside it leases the valve after (read from state's latches), one set before and cleared inside ends; a latchless rule fired and completed inside it holds no lease after, and one fired before and completed inside ends (its rule_fired read from history)",
+  covers: "a latching safety rule closing the valve leases it to the rule at safety_rule precedence, the member's open of it refused(leased), and keeps it when the rule completes; its latch cleared by the owner ends it; a latchless rule turning the lamp on leases it until its rule_fired; across a cursor_expired gap: a latch set inside it leases the valve after (read from state's latches), one set before and cleared inside ends; a latchless rule fired and completed inside it holds no lease after, and one fired before and completed inside ends (its rule_fired read from history); a latchless rule on the valve that does not complete keeps its lease past the valve's ack_within_s, the late-ack window and slack, and, when describe states safety_lease_s, ends it only past that, a rule opening the valve then refused(safety) firing again when the safety rule completes; with no safety_lease_s stated, the lease stands 20 minutes on, until the rule completes",
 }, async (ctx) => {
   const s = ctx.steward!;
   const applier = ctx.standIn!.applier;
@@ -146,4 +157,44 @@ requirement("GA-LEASE-6", {
   await ctx.time.stepAndWait(1_000);
   await cursorExpiredGap(ctx, () => { applier.scriptSafetyComplete("night"); });
   await leasesBecome(ctx, [], "the latchless rule completing inside a gap");
+
+  // A latchless rule whose completion does not come: its lease stands past the valve's ack bound and the
+  // 60 s late-ack window (the row's floor, no slack added), and past safety_lease_s when describe states
+  // one, else until it completes. The check stands 5 s before the floor.
+  const bound = (await ownerOf(ctx).callOk("describe")).safety_lease_s as number | undefined;
+  ctx.evidence(`safety_lease_s: ${bound ?? "not stated"}`);
+  const ack = Math.max(...await Promise.all(["valve.open", "valve.close"].map((a) => ackWithinMs(ctx, valve!, a))));
+  const floor = ack + 60_000;
+  applier.scriptSafetyRule({ id: "shut", actuates: [{ target: valve!, key: "open", value: false }] });
+  await ctx.time.stepAndWait(1_000);
+  const granted = ctx.time.now();
+  applier.scriptSafetyFire("shut", { complete: false });
+  await leasesBecome(ctx, [`${valve} shut safety_rule`], "the latchless rule on the valve running");
+  await ctx.time.stepAndWait(floor - 5_000);
+  mustEqual(await leases(ctx), [`${valve} shut safety_rule`], "the leases before the valve's ack bound and the late-ack window passed");
+  if (bound === undefined) {
+    await ctx.time.stepAndWait(20 * 60_000);
+    mustEqual(await leases(ctx), [`${valve} shut safety_rule`], "the leases 20 minutes on, the rule not complete and no safety_lease_s stated");
+    applier.scriptSafetyComplete("shut");
+    await leasesBecome(ctx, [], "the latchless rule on the valve complete");
+    return;
+  }
+  const ends = granted + Math.max(bound * 1000, floor);
+  if (ends - 5_000 > ctx.time.now()) await ctx.time.stepAndWait(ends - 5_000 - ctx.time.now());
+  mustEqual(await leases(ctx), [`${valve} shut safety_rule`], "the leases before safety_lease_s passed");
+  await ctx.time.stepAndWait(10_000 + ctx.allowanceMs);
+  await leasesBecome(ctx, [], "the latchless lease past safety_lease_s");
+  // Ended early, the rule still running: a rule opening the valve is refused safety, and fires again once the rule completes.
+  const c = await cursorNow(ctx);
+  const sent = sentFrom(ctx);
+  await mustDefine(ctx, [up("rule", { id: "reopen", name: "Открыть", conditions: [{ target: LAMP, key: "on", op: "eq", value: true }],
+    actions: [act(valve!, "valve.open")] })], "a rule opening the valve while the lamp is on");
+  const refused = await pollUntil(async () => (await eventsAfter(ctx, c)).find((e) => e.type === "outcome" && (e.cause as { rule?: string })?.rule === "reopen"),
+    10_000, "the rule opening the valve had no outcome", 100);
+  ctx.evidence(`the rule opening the valve: ${refused.outcome}(${refused.reason})`);
+  mustEqual(`${refused.outcome}(${refused.reason})`, "refused(safety)", "the rule's outcome while the safety rule runs");
+  applier.scriptSafetyComplete("shut");
+  await fires(ctx, c, "reopen", 2, "the safety rule's completion");
+  await pollUntil(async () => sent().some((x) => x.target === valve && x.action === "valve.open") || undefined, 10_000,
+    "the rule's valve.open did not reach the stand-in after the safety rule completed", 100);
 });

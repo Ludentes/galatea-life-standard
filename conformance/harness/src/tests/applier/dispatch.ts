@@ -6,7 +6,7 @@ import { requirement } from "../../registry.js";
 import { BridgeWatcher } from "../../seams/bridge-watcher.js";
 import { pollUntil, sleep } from "../../util.js";
 import { sign, type Asked } from "../token.js";
-import { DIMMER, eventsOf, LAMP, lastDevices, livenessWithin, oneSecond, ownerConfigure, reviveWithin, TV, wire } from "../util.js";
+import { DIMMER, eventsOf, LAMP, lastDevices, lastStatus, livenessWithin, oneSecond, ownerConfigure, reviveWithin, TV, wire } from "../util.js";
 
 const CHANNEL = "sim-bridge:channel";
 const PAGER = "sim-bridge:pager";
@@ -256,6 +256,9 @@ requirement("GA-APPLY-11", {
   must(history[0].cause?.apply === r.apply_id, "history's late_ack carries the apply as its cause", history[0]);
 
   await report(false);
+  // The applier reads the lamp off before the next apply: otherwise its step may be judged on the
+  // earlier on, end skipped(already) and never be sent.
+  await pollUntil(async () => (await mcp.callOk("plan", { actions: [ask(LAMP)] })).steps[0]?.verdict === "op", oneSecond(ctx), "the lamp read off");
   await bridge.control({ requestId: "apply-11-rejected", op: "commandResult", device: "lamp", result: "rejected", afterMs: 0 });
   const { cursor: c2 } = await mcp.callOk("events");
   const f = await apply(ctx, [ask(LAMP)]);
@@ -271,6 +274,9 @@ requirement("GA-APPLY-11", {
   // 61 s after a failed(no_ack), a match is no late_ack: the lamp is held silent meanwhile, so neither
   // the command nor any reissue of it acts.
   await report(false);
+  // The applier reads the lamp off before the next apply: otherwise its step may be judged on the
+  // earlier on, end skipped(already) and never be sent.
+  await pollUntil(async () => (await mcp.callOk("plan", { actions: [ask(LAMP)] })).steps[0]?.verdict === "op", oneSecond(ctx), "the lamp read off");
   await bridge.control({ requestId: "apply-11-silent", op: "silence", device: "lamp", silent: true });
   const g = await apply(ctx, [ask(LAMP)]);
   await ctx.time.advance(bound * 1000, { chunkMs: 5000 });
@@ -594,8 +600,8 @@ requirement("GA-TOKEN-4", {
 });
 
 requirement("GA-EVT-1", {
-  seam: "applier", fixture: { devices: ["dimmer"] },
-  covers: "while a set_level of 80 waits, the dimmer's report of level 40 and on: true (its side effect) carry the apply's cause, one of 20 (moving away) is external, the matching 80 the apply's; a later 50, after the match, is external. session.lock is the PC build's",
+  seam: "applier", fixture: { devices: ["dimmer", "lamp"] }, timeoutMs: 180_000,
+  covers: "while a set_level of 80 waits, the dimmer's report of level 40 and on: true (its side effect) carry the apply's cause, one of 20 (moving away) is external, the matching 80 the apply's; a later 50, after the match, is external. A key's first value, told by what the applier observes: an unadopted device's first on is device; on an adopted device with its bridge's instance running, a first press, and a key first reported while its other keys are held, are external; after the applier's restart, the statuses delivered on subscribing are device, none external; with the applier restarted while the bridge is stopped, a new instance's first status before its snapshot's answer is device; the phases over, a key first reported live on an adopted device is external again; the bridge restarted under the running subject, a key first reported before its snapshot's answer is device; a key first reported over a new route, the route set and the device adopted in one change set, is device, and so is a key the new bridge first reports in the snapshot the move asks of it. An adapter's engine returning, and a plugin's first values, are not this build's; session.lock is the PC build's",
 }, async (ctx) => {
   const { mcp, bridge } = { mcp: ctx.mcp!, bridge: ctx.bridge! };
   const report = (values: Record<string, unknown>) =>
@@ -612,7 +618,171 @@ requirement("GA-EVT-1", {
   ctx.evidence(`causes: ${JSON.stringify(causes)}`);
   mustEqual(causes, [["on", true, "apply"], ["level", 40, "apply"], ["level", 20, "external"], ["level", 80, "apply"], ["level", 50, "external"]],
     "each state event's cause");
+  await firstValues(ctx);
 });
+
+/**
+ * A key's first value, the applier holding none for it before (applier, *Causes*): told by what the
+ * applier observes, never by the retain flag, it is the device's word, cause `device`, where no hand can
+ * be told (a device not adopted; the load after a restart; a new instance's first statuses before its
+ * snapshot's answer; a new route), so it takes no lease; a key first reported live by a running
+ * bridge instance on an adopted device is a change like any other, `external`.
+ */
+async function firstValues(ctx: TestContext): Promise<void> {
+  const bridge = ctx.bridge!;
+  const report = (device: string, values: Record<string, unknown>) =>
+    bridge.control({ requestId: `evt-1-${randomUUID()}`, op: "report", device, values, observedAt: wire(ctx.time.now()) });
+  const cursorNow = async () => (await ctx.mcp!.callOk("events")).cursor as string;
+  /** The first state event of `target`'s `key` after `cursor`, read through the client seam as it is now. */
+  const stateOf = async (cursor: string, target: string, key: string, what: string) => (await pollUntil(async () => {
+    const s = (await eventsOf(ctx.mcp!, cursor, "state")).filter((e) => e.target === target && e.key === key);
+    return s.length ? s : undefined;
+  }, oneSecond(ctx), what))[0]!;
+  const join = async (device: string, capabilities: string[]) => {
+    await bridge.control({ requestId: `evt-1-join-${device}`, op: "join", device, capabilities, feedback: "closed" });
+    // The owner's seam as it is now: a restart opens another.
+    await pollUntil(async () => ((await ctx.owner!.callOk("describe")).devices as { id: string }[]).some((d) => d.id === `sim-bridge:${device}`),
+      oneSecond(ctx), `sim-bridge:${device} in describe`);
+  };
+  const adopt = async (device: string) => {
+    const adopted = await ownerConfigure(ctx.owner!, [{ op: "upsert", kind: "adopt", value: { device, class: "light" } }]);
+    must(adopted.ok, `adopting ${device} returned ${adopted.ok ? "" : adopted.error}`, adopted.body);
+  };
+
+  // An unadopted device's first value: its join's interview read.
+  const KETTLE = "sim-bridge:kettle";
+  let cursor = await cursorNow();
+  await join("kettle", ["onoff"]);
+  await report("kettle", { on: true });
+  const kettle = await stateOf(cursor, KETTLE, "on", "a state event of the unadopted kettle's first on");
+  ctx.evidence(`the unadopted kettle's first on: ${JSON.stringify(kettle.cause)}`);
+  must(kettle.cause === "device", "an unadopted device's first value has cause device", kettle);
+
+  // Live from the bridge's running instance on an adopted device: a person's first press, and a key first
+  // reported while the device's other keys are held, are external.
+  const PLUG = "sim-bridge:plug";
+  await join("plug", ["onoff", "level"]);
+  await adopt(PLUG);
+  cursor = await cursorNow();
+  await report("plug", { on: true });
+  const press = await stateOf(cursor, PLUG, "on", "a state event of the adopted plug's first on");
+  await report("plug", { level: 30 });
+  const level = await stateOf(cursor, PLUG, "level", "a state event of the adopted plug's first level");
+  ctx.evidence(`the adopted plug's first live on: ${JSON.stringify(press.cause)}; its first level, its on held: ${JSON.stringify(level.cause)}`);
+  must(press.cause === "external", "a key first reported live on an adopted device has cause external", press);
+  must(level.cause === "external", "a key first reported live on an adopted device whose other keys are held has cause external", level);
+
+  // The load after the applier's restart: the lamp's on, changed before it, comes back delivered on subscribing.
+  cursor = await cursorNow();
+  await report("lamp", { on: true });
+  const moved = await stateOf(cursor, LAMP, "on", "a state event of the lamp's on before the restart");
+  must(moved.cause === "external", "the adopted lamp's live change has cause external", moved);
+  const from = wire(ctx.time.now() - 1000);
+  cursor = await cursorNow();
+  if (!ctx.restartApplier) throw new Error("the subject cannot restart the applier");
+  await ctx.restartApplier();
+  await sleep(oneSecond(ctx));
+  // The restart reconnects the client: its seam is read again.
+  const again = await ctx.mcp!.call("events", { cursor });
+  const after = again.ok ? (again.body.events as Record<string, any>[])
+    : ((await ctx.mcp!.callOk("history", { from, to: wire(ctx.time.now() + 1000) })).events as Record<string, any>[]).filter((e) => e.seq > moved.seq);
+  const restated = after.filter((e) => e.type === "state");
+  ctx.evidence(`state events after the restart (${again.ok ? "events" : `history, the cursor ${again.error}`}): `
+    + JSON.stringify(restated.map((e) => [e.target, e.key, e.value, e.cause])));
+  const lampOn = restated.find((e) => e.target === LAMP && e.key === "on");
+  must(lampOn !== undefined, `after the restart, no state event restated the lamp's on (${restated.length} state events)`, restated);
+  must(lampOn!.cause === "device", "the lamp's on restated after the applier's restart has cause device", lampOn);
+  const outside = restated.filter((e) => e.cause === "external");
+  must(!outside.length, `after the restart, external: ${JSON.stringify(outside.map((e) => [e.target, e.key]))}`, outside);
+
+  // A new instance's first status before its snapshot's answer: the applier restarts with the bridge stopped, the
+  // bridge then starts anew, and a fan that never reported reports on before the bridge answers the snapshot.
+  const FAN = "sim-bridge:fan";
+  await join("fan", ["onoff"]);
+  await adopt(FAN);
+  await ctx.restartApplier({ between: () => bridge.stop(), dead: ["dimmer", "lamp"] });
+  const asked = bridge.requests.length;
+  bridge.holdRequests(true);
+  try {
+    cursor = await cursorNow();
+    await bridge.restart();
+    const snapshot = await pollUntil(async () => bridge.requests.slice(asked).find((q) => q.op === "snapshot"), 10_000,
+      "the applier's snapshot of the bridge's new instance");
+    await report("fan", { on: true });
+    const fan = await stateOf(cursor, FAN, "on", "a state event of the fan's first on, in the new instance's first statuses");
+    ctx.evidence(`the fan's first on, before the new instance's snapshot answered: ${JSON.stringify(fan.cause)}`);
+    must(fan.cause === "device", "a first value among a new instance's first statuses, before its snapshot's answer, has cause device", fan);
+    const requestId = (snapshot.body as { requestId?: string }).requestId;
+    await bridge.publishRaw("reply", { requestId, op: "snapshot", status: "ok", data: {} }, false);
+  } finally {
+    bridge.holdRequests(false);
+  }
+
+  // The phases over, the snapshot answered: a key first reported live on an adopted device is external again.
+  const VANE = "sim-bridge:vane";
+  await join("vane", ["onoff", "level"]);
+  await adopt(VANE);
+  cursor = await cursorNow();
+  await report("vane", { level: 30 });
+  const vane = await stateOf(cursor, VANE, "level", "a state event of the vane's first level, the phases over");
+  ctx.evidence(`the vane's first level, live after the phases ended: ${JSON.stringify(vane.cause)}`);
+  must(vane.cause === "external", "a key first reported live after the restart's phases ended has cause external", vane);
+
+  // The bridge restarts under the running subject: a key first reported before its snapshot's answer is device.
+  const GUST = "sim-bridge:gust";
+  await join("gust", ["onoff"]);
+  await adopt(GUST);
+  const before = bridge.requests.length;
+  bridge.holdRequests(true);
+  try {
+    cursor = await cursorNow();
+    await bridge.restart();
+    const snapshot = await pollUntil(async () => bridge.requests.slice(before).find((q) => q.op === "snapshot"), 10_000,
+      "the applier's snapshot of the bridge restarted under it");
+    await report("gust", { on: true });
+    const gust = await stateOf(cursor, GUST, "on", "a state event of the gust's first on, before the restarted bridge's snapshot answered");
+    ctx.evidence(`the gust's first on, the bridge restarted under the running subject, before its snapshot answered: ${JSON.stringify(gust.cause)}`);
+    must(gust.cause === "device", "a first value of a bridge restarted under a running subject, before its snapshot's answer, has cause device", gust);
+    const requestId = (snapshot.body as { requestId?: string }).requestId;
+    await bridge.publishRaw("reply", { requestId, op: "snapshot", status: "ok", data: {} }, false);
+  } finally {
+    bridge.holdRequests(false);
+  }
+
+  // Over a new route: a second bridge's copy of an unadopted heron reports a level the first bridge never
+  // reported, and one change set routes the heron to that bridge and adopts it.
+  const HERON = "sim-bridge:heron";
+  await join("heron", ["onoff", "level"]);
+  const heron = lastDevices(bridge).devices.find((d) => d.id === "heron")!;
+  cursor = await cursorNow();
+  await bridge.publishAs("sim-bridge-2", "devices", { publishedAt: wire(ctx.time.now()), devices: [{ ...heron, id: "0x07" }] }, true);
+  const registered = await ownerConfigure(ctx.owner!, [{ op: "upsert", kind: "bridge", value: { id: "sim-bridge-2", identity: "sim-bridge-2" } }]);
+  must(registered.ok, `registering a second bridge returned ${registered.ok ? "" : registered.error}`, registered.body);
+  await pollUntil(async () => (await eventsOf(ctx.mcp!, cursor, "route_conflict")).find((e) => e.stable_identifier === heron.stableIdentifier
+    && e.bridges?.includes("sim-bridge-2")), 10_000, "the heron's identifier under the second bridge");
+  // The second bridge is heard live, its snapshot answered: what it reports next is live.
+  const roster = lastStatus(bridge);
+  const entry = roster.devices.find((x: { id: string }) => x.id === "heron");
+  await bridge.publishAs("sim-bridge-2", "status", { ...roster, bridgeId: "sim-bridge-2", instanceId: randomUUID(), testRunId: ctx.runId,
+    devices: [{ ...entry, id: "0x07" }], publishedAt: wire(ctx.time.now()) }, false);
+  await bridge.publishAs("sim-bridge-2", "reply", { requestId: randomUUID(), op: "snapshot", status: "ok", data: {} }, false);
+  await bridge.publishAs("sim-bridge-2", "devices/0x07/status", { deviceId: "0x07", level: 40, timestamp: wire(ctx.time.now()), available: true }, false);
+  await sleep(500);
+  cursor = await cursorNow();
+  const route = await ownerConfigure(ctx.owner!, [{ op: "upsert", kind: "route", value: { stable_identifier: heron.stableIdentifier, bridge: "sim-bridge-2" } },
+    { op: "upsert", kind: "adopt", value: { device: HERON, class: "light" } }]);
+  must(route.ok, `routing the heron to the second bridge and adopting it returned ${route.ok ? "" : route.error}`, route.body);
+  const rerouted = await stateOf(cursor, HERON, "level", "a state event of the heron's level over its new route");
+  ctx.evidence(`the heron's level, first reported over its new route: ${JSON.stringify(rerouted.cause)}`);
+  must(rerouted.cause === "device", "a key first reported over a new route has cause device", rerouted);
+  // The move asks the new bridge for a snapshot: a key it first reports in that answer is over the new route too.
+  cursor = await cursorNow();
+  await bridge.publishAs("sim-bridge-2", "devices/0x07/status", { deviceId: "0x07", on: true, timestamp: wire(ctx.time.now()), available: true }, false);
+  const answered = await stateOf(cursor, HERON, "on", "a state event of the heron's on, first reported in the new bridge's snapshot answer");
+  ctx.evidence(`the heron's on, first reported by the new bridge in the snapshot the move asked: ${JSON.stringify(answered.cause)}`);
+  must(answered.cause === "device", "a key the new bridge first reports in the snapshot a route move asked has cause device", answered);
+  await bridge.publishAs("sim-bridge-2", "reply", { requestId: randomUUID(), op: "snapshot", status: "ok", data: {} }, false);
+}
 
 requirement("GA-EVT-6", {
   seam: "applier", fixture: { devices: ["dimmer"] },

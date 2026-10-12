@@ -360,6 +360,11 @@ export class SimApplier {
     if (o.complete !== false) this.scriptSafetyComplete(id);
   }
 
+  /** Whether a safety rule fired and not complete actuates `target` (GA-SAFE-2). */
+  private actuatedByRunning(target: string): boolean {
+    return [...this.running.keys()].some((id) => this.safetyRules.get(id)?.actuates.some((a) => a.target === target));
+  }
+
   /** The scripted stand-in: a fired safety rule completes (GA-SAFE-3): its `rule_fired` event, issued at completion. */
   scriptSafetyComplete(id: string): void {
     const outcomes = this.running.get(id);
@@ -528,6 +533,10 @@ export class SimApplier {
         // An applier before 0.10 knows no `from`, and refuses the argument it does not know (steward GA-NOTE-2).
         if (step.verdict === "op" && x.action === "notify.notify" && x.args?.from !== undefined && older(this.standardVersion, "0.10")) {
           return { ...step, verdict: "refuse", reason: "invalid_args" } as Step;
+        }
+        // From firing until complete, a request for a device a safety rule actuates is refused (GA-SAFE-2).
+        if (step.verdict !== "refuse" && this.actuatedByRunning(x.target as string)) {
+          return { ...step, verdict: "refuse", reason: "safety" } as Step;
         }
         return step;
       }),

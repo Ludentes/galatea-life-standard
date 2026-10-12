@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import formatsModule from "ajv-formats";
+import { requestOperations as operationsIn, requestSchemaOf, type ToolInputSchema, type ToolSide } from "./request-schema.js";
 
 /** conformance/schemas/, from src/ under vitest and from dist/ when built. */
 export const schemaRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -75,4 +76,27 @@ export function assertValid(id: string, value: unknown): void {
   if (errors.length) throw new Error(`${id}: ${errors.join("; ")}`);
 }
 
+const bundled = new Map<string, ToolInputSchema>();
+
+/** `side`'s operations that have a request schema (`<side>/<op>.request.json`), sorted. */
+export function requestOperations(side: ToolSide): string[] {
+  return operationsIn(side, schemaRoot);
+}
+
+/**
+ * The request schema of `side`'s operation `op`, every `$ref` inlined: one self-contained JSON
+ * Schema 2020-12 document whose top level is `type: "object"`, ready to be an MCP tool's
+ * `inputSchema`. Throws when `op` has no request schema. Each call hands out a fresh copy.
+ */
+export function requestSchemaFor(side: ToolSide, op: string): ToolInputSchema {
+  const key = `${side}/${op}`;
+  let schema = bundled.get(key);
+  if (!schema) {
+    schema = requestSchemaOf(side, op, schemaRoot);
+    bundled.set(key, schema);
+  }
+  return structuredClone(schema);
+}
+
+export type { ToolInputSchema, ToolSide };
 export type * from "./generated/index.js";

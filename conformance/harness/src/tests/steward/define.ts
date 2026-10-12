@@ -1,9 +1,9 @@
-import { must } from "../../assert.js";
+import { must, mustEqual } from "../../assert.js";
 import { requirement } from "../../registry.js";
-import { LAMP } from "../../steward-home.js";
+import { CHANNEL, LAMP } from "../../steward-home.js";
 import { mustAccept, mustBe } from "./answers.js";
 import { brainAsks, brainDefine, defineByPlan, ownerChat, ownerSaysYes } from "./brain.js";
-import { freshSecret, mustDefine, mustRefuse, ownerDefine, ownerOf, revisionOf, up, voice } from "./util.js";
+import { announcer, freshSecret, mustDefine, mustRefuse, ownerDefine, ownerOf, revisionOf, scripted, up, voice } from "./util.js";
 
 const attic = up("room", { id: "attic", name: "Чердак" });
 
@@ -74,8 +74,19 @@ requirement("GA-DEF-5", {
 
 requirement("GA-DEF-8", {
   seam: "steward",
-  covers: "each clause, one change set apiece, against the baseline: a voice endpoint without served_by; a panel with a voice record without served_by; an app without a person; heard_by naming no front; a second front; a skill_account on a panel, and on a voice endpoint with a person; two endpoints with one skill_account and skill_surface; an account surfaced on one endpoint and not on another; a panel with a null room; notice_channels naming only a lamp",
+  standIn: { bare: true },
+  covers: "on a fresh steward, notice_channels never set: a first change set adding a room and naming no channel is taken, then notice_channels naming only a speaker with media.announce, and once so set, a change set leaving it empty is refused; then each clause, one change set apiece, against the baseline: a voice endpoint without served_by; a panel with a voice record without served_by; an app without a person; heard_by naming no front; a second front; a skill_account on a panel, and on a voice endpoint with a person; two endpoints with one skill_account and skill_surface; an account surfaced on one endpoint and not on another; a panel with a null room; notice_channels naming only a lamp, a lamp beside the notify channel, and a pager the applier describes but has not adopted beside the notify channel",
 }, async (ctx) => {
+  const speaker = await announcer(ctx);
+  const first = await ownerDefine(ctx, [up("room", { id: "attic", name: "Чердак" })]);
+  ctx.evidence(`a first change set naming no channel: ${first.ok ? `taken, ${JSON.stringify(first.body)}` : `${first.error}: ${first.message}`}`);
+  must(first.ok, `a fresh steward refused a first change set naming no notice channel: ${first.ok ? "" : first.error}`, first.body);
+  const spoken = await ownerDefine(ctx, [up("home", { notice_channels: [speaker] })]);
+  ctx.evidence(`notice_channels naming only an announcing speaker: ${spoken.ok ? "taken" : `${spoken.error}: ${spoken.message}`}`);
+  must(spoken.ok, `notice_channels naming only a speaker with media.announce was refused: ${spoken.ok ? "" : spoken.error}`, spoken.body);
+  await mustRefuse(ctx, [up("home", { notice_channels: [] })], "notice_channels left empty once set");
+  await ctx.defineBaseline!();
+  const [pager] = await scripted(ctx, [{ fixture: "pager", adopt: null }]) as [string];
   const ep = (id: string, extra: Record<string, unknown>) =>
     up("endpoint", { id, name: id, type: "voice", room: "kitchen", person: null, served_by: "brain", ...extra });
   const cases: [string, unknown[]][] = [
@@ -91,7 +102,9 @@ requirement("GA-DEF-8", {
     ["one account surfaced on one endpoint and not on another", [ep("v7", {}), voice("v7", { skill_account: "acc", skill_surface: "s" }),
       ep("v8", {}), voice("v8", { skill_account: "acc" })]],
     ["a panel with a null room", [ep("p3", { type: "panel", room: null, served_by: null })]],
-    ["notice_channels naming no notify channel", [up("home", { notice_channels: [LAMP] })]],
+    ["notice_channels naming only a lamp", [up("home", { notice_channels: [LAMP] })]],
+    ["notice_channels naming a lamp beside the notify channel", [up("home", { notice_channels: [LAMP, CHANNEL] })]],
+    ["notice_channels naming a pager not adopted beside the notify channel", [up("home", { notice_channels: [pager, CHANNEL] })]],
   ];
   for (const [what, changes] of cases) await mustRefuse(ctx, changes, what);
   // The accepted counterparts: the clauses refuse what they name, not voice endpoints at large.
@@ -110,4 +123,39 @@ requirement("GA-CONF-4", {
   const r = await ownerDefine(ctx, [up("endpoint", { id: "hall-panel", name: "Панель в холле", type: "panel", room: "hall", person: null,
     served_by: null, confirm_on: "olga-app" })]);
   must(r.ok, `confirm_on naming an app was refused: ${r.ok ? "" : r.error}`, r.body);
+});
+
+requirement("GA-DEF-13", {
+  seam: "steward",
+  covers: "define refuses, changing nothing: a credential whose secret has 8 characters, a room with a field its kind does not name, an unknown op, and a rule with 65 exceptions",
+}, async (ctx) => {
+  await mustRefuse(ctx, [up("credential", { id: "b2", kind: "brain", secret: "short-12" })], "a credential whose secret has 8 characters");
+  await mustRefuse(ctx, [up("room", { id: "attic", name: "Чердак", colour: "blue" })], "a room with a field its kind does not name");
+  await mustRefuse(ctx, [{ op: "replace", kind: "room", value: { id: "attic", name: "Чердак" } }], "an unknown op");
+  const exceptions = Array.from({ length: 65 }, (_, i) => ({ from: new Date(Date.UTC(2030, 0, 1 + i, 21)).toISOString(),
+    until: new Date(Date.UTC(2030, 0, 1 + i, 22)).toISOString() }));
+  await mustRefuse(ctx, [up("rule", { id: "many", name: "Много", conditions: [{ target: LAMP, key: "on", op: "eq", value: true }],
+    actions: [{ target: LAMP, action: "onoff.turn_off", args: {} }], exceptions })], "a rule with 65 exceptions");
+});
+
+requirement("GA-DEF-14", {
+  seam: "steward",
+  covers: "an upsert of the lamp's target naming only { id, name } keeps its room and aliases; renaming the kitchen satellite keeps its confirm_on; a field given as null returns to its default (the target's aliases); an upsert creating a room without its name is refused; a delete of a room that does not exist is refused, invalid_request",
+}, async (ctx) => {
+  await mustDefine(ctx, [up("target", { id: LAMP, name: "Лампа", aliases: ["свет"], room: "hall" }),
+    up("endpoint", { id: "kitchen-voice", name: "Кухня", type: "voice", room: "kitchen", person: null, served_by: "brain", confirm_on: "olga-app" })],
+  "the lamp in the hall, and the satellite's confirm_on");
+  await mustDefine(ctx, [up("target", { id: LAMP, name: "Торшер" }), up("endpoint", { id: "kitchen-voice", name: "Кухня у окна" })], "two renames");
+  const d = await ownerOf(ctx).callOk("describe");
+  const lamp = (d.targets as any[]).find((t) => t.id === LAMP);
+  const satellite = (d.endpoints as any[]).find((e) => e.id === "kitchen-voice");
+  ctx.evidence(`after the renames: the lamp ${JSON.stringify([lamp?.name, lamp?.room, lamp?.aliases])}; the satellite ${JSON.stringify([satellite?.name, satellite?.confirm_on])}`);
+  mustEqual([lamp?.name, lamp?.room, lamp?.aliases], ["Торшер", "hall", ["свет"]], "the lamp's name, room and aliases after a rename");
+  mustEqual([satellite?.name, satellite?.confirm_on], ["Кухня у окна", "olga-app"], "the satellite's name and confirm_on after a rename");
+  await mustDefine(ctx, [up("target", { id: LAMP, aliases: null })], "the lamp's aliases given as null");
+  const cleared = ((await ownerOf(ctx).callOk("describe")).targets as any[]).find((t) => t.id === LAMP);
+  mustEqual([cleared?.room, cleared?.aliases], ["hall", []], "the lamp's room and aliases after its aliases were given as null");
+  await mustRefuse(ctx, [up("room", { id: "attic" })], "a room created without its name");
+  const code = await mustRefuse(ctx, [{ op: "delete", kind: "room", value: { id: "nowhere" } }], "a delete of a room that does not exist");
+  mustEqual(code, "invalid_request", "the refusal of a delete of nothing");
 });

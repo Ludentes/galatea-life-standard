@@ -331,10 +331,24 @@ requirement("GA-STW-4", {
 
 requirement("GA-CONF-5", {
   seam: "steward",
-  covers: "a plan with an ask emits one ask event { plan_id, step_ids, endpoint, time }, naming only the asked steps, its endpoint the plan's (the member's app; the brain's voice endpoint), the brain credential's confirm_on once it names one, and the endpoint's own over the credential's; a brain's define plan, asked confirm_define, emits one too; a plan with no ask emits none",
+  covers: "a plan with an ask emits one ask event { plan_id, step_ids, steps, endpoint, time }, naming only the asked steps, its steps the asked steps as the plan gives them, its endpoint the plan's (the member's app; the brain's voice endpoint), the brain credential's confirm_on once it names one, and the endpoint's own over the credential's; the guest panel's events give the member's ask without steps; a brain's define plan, asked confirm_define, emits one too, its step { step_id, reason: confirm_define, diff } as the owner reads it; a plan with no ask emits none",
 }, async (ctx) => {
   const s = ctx.steward!;
   await raiseTier(ctx, LAMP, ON, "confirm");
+  // The member's ask, as she reads it at her app and as the guest panel reads it.
+  {
+    const { cursor } = await s.olga.callOk("events");
+    const r = await planAt(s.olga, "olga-app", [act(LAMP, ON), act(LAMP, OFF)]);
+    must(r.ok, `the member's plan returned ${r.ok ? "" : r.error}`, r.body);
+    const step = (r.body.steps as any[]).find((x) => x.step_id === "s1");
+    const mine = ((await s.olga.callOk("events", { cursor })).events as any[]).find((e) => e.type === "ask" && e.plan_id === r.body.plan_id);
+    ctx.evidence(`the member's ask at her app: ${JSON.stringify(mine)}`);
+    mustEqual(mine?.steps, [{ step_id: "s1", target: step.target, action: step.action, args: step.args, tier: step.tier, reason: step.reason }],
+      "the ask event's steps, read at its endpoint");
+    const panel = ((await s.panel.callOk("events", { cursor })).events as any[]).find((e) => e.type === "ask" && e.plan_id === r.body.plan_id);
+    ctx.evidence(`the member's ask at the guest panel: ${JSON.stringify(panel)}`);
+    must(panel !== undefined && panel.steps === undefined, "the guest panel's events gave the steps of an ask put to the member's app", panel);
+  }
   const asked = async (seam: typeof s.olga, endpoint: string, speaker?: string) => {
     const { cursor } = await s.olga.callOk("events");
     const r = await planAt(seam, endpoint, [act(LAMP, ON), act(LAMP, OFF)], { speaker });
@@ -358,6 +372,8 @@ requirement("GA-CONF-5", {
   const defineAsks = ((await s.olga.callOk("events", { cursor: before.cursor })).events as any[]).filter((e) => e.type === "ask" && e.plan_id === defined.body.plan_id);
   ctx.evidence(`the brain's define plan's ask events: ${JSON.stringify(defineAsks)}`);
   mustEqual(defineAsks.map((e) => e.step_ids), [["s1"]], "the ask events of the brain's define plan");
+  const ownerRead = ((await ownerOf(ctx).callOk("events", { cursor: before.cursor })).events as any[]).find((e) => e.type === "ask" && e.plan_id === defined.body.plan_id);
+  mustEqual(ownerRead?.steps, [{ step_id: "s1", reason: "confirm_define", diff: defined.body.steps[0].diff }], "the define plan's ask steps, as the owner reads them");
   mustEqual(await asked(s.brain, "kitchen-voice", "olga"), "kitchen-voice", "where the brain's plan is asked, with no confirm_on");
   await mustDefine(ctx, [up("credential", { id: "brain", kind: "brain", secret: ctx.credentials!.brain, confirm_on: "olga-app" })], "the brain's confirm_on");
   mustEqual(await asked(s.brain, "kitchen-voice", "olga"), "olga-app", "where the brain's plan is asked, its credential naming olga-app");

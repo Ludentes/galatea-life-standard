@@ -25,9 +25,10 @@ export interface TestOptions {
   /**
    * Steward seam: the stand-in served with `tls` on the host's other address, with a certificate the
    * steward is not told to trust (GA-SEC-2); the baseline house is then not defined, since the
-   * steward never reaches it.
+   * steward never reaches it. With `bare`, the steward is left as it starts, its store fresh: only the
+   * owner's seam is connected, and the test defines the baseline with `defineBaseline` when it is ready.
    */
-  standIn?: { tls?: boolean };
+  standIn?: { tls?: boolean; bare?: boolean };
   timeoutMs?: number;
 }
 

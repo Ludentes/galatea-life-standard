@@ -18,10 +18,10 @@ beforeAll(async () => { broker = await startBroker(); time = await TimeServer.st
 afterAll(async () => { await time.close(); await broker.stop(); });
 afterEach(async () => { while (cleanup.length) await cleanup.pop()!(); });
 
-async function bridge(extra: Partial<ConstructorParameters<typeof SimBridge>[0]> = {}) {
+async function bridge({ watchUrl, ...extra }: Partial<ConstructorParameters<typeof SimBridge>[0]> & { watchUrl?: string } = {}) {
   const root = `demo/b${++n}`;
   const clock = await TestClock.connect(time.source);
-  const w = await watch(broker.url, `${root}/#`);
+  const w = await watch(watchUrl ?? broker.url, `${root}/#`);
   const b = new SimBridge({ brokerUrl: broker.url, root, bridgeId: "sim-bridge", clock, runId: "run-1",
     devices: fixtureDevices(["lamp", "tv"]), ...extra });
   await b.start();
@@ -165,6 +165,25 @@ describe("SimBridge", () => {
       expect(validate("bridge/status.json", s.payload)).toEqual([]);
       expect(s.payload.transports.map((t: { id: string }) => t.id)).toEqual(["test", "radio"]);
     }
+  });
+
+  it("acks a command though the broker refuses its control echo, as an installation's rules do", async () => {
+    // The installation's rules for a bridge (reference/install's broker-init.sh): its own tree, not the
+    // harness's control topic. The echo's publish is refused; the command must still be acked.
+    // Anonymous clients (this test's and its watcher) may do anything; the bridge's own identity gets its
+    // tree and may only read the test topics.
+    const ruled = await startBroker({ acl: "topic readwrite demo/#\n\nuser sim-bridge\ntopic readwrite demo/+/bridges/#\ntopic read demo/+/test/#\n" });
+    cleanup.push(() => ruled.stop());
+    const { w, root } = await bridge({ brokerUrl: ruled.url, watchUrl: ruled.url });
+    const client = await connectAsync(ruled.url, { protocolVersion: 5 });
+    cleanup.push(() => client.endAsync());
+    const mark = w.seen.length;
+    const commandId = "6c1e9a7b-2d3f-4a5b-9c8d-7e6f5a4b3c2d";
+    await client.publishAsync(`${root}/bridges/sim-bridge/devices/lamp/command`, JSON.stringify({
+      commandId, issuedAt: new Date(time.now()).toISOString(), resultWithinMs: 10_000, value: { action: "onoff.turn_on" },
+    }), { qos: 1 });
+    const ack = await w.waitFor((s) => s.topic.endsWith("/devices/lamp/ack"), 3000, mark);
+    expect(ack.payload).toMatchObject({ commandId, result: "applied" });
   });
 
   it("answers the control protocol over MQTT", async () => {

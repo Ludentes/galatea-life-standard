@@ -68,15 +68,22 @@ export async function stopBrokers(): Promise<void> {
  */
 const NODELAY = "set_tcp_nodelay true\n";
 
-/** Mosquitto 2 for one run, on a free loopback port: the binary on PATH, or else Docker. */
-export async function startBroker(): Promise<Broker> {
+/**
+ * Mosquitto 2 for one run, on a free loopback port: the binary on PATH, or else Docker. With `acl`, the
+ * broker enforces that ACL file's text (lines before any `user` for anonymous clients, a `user` block for
+ * a client of that username), as an installation's broker enforces its rules: a publish it refuses is
+ * answered "not authorized".
+ */
+export async function startBroker({ acl }: { acl?: string } = {}): Promise<Broker> {
   const port = await freePort();
   const dir = mkdtempSync(join(tmpdir(), "galatea-mqtt-"));
   const conf = join(dir, "mosquitto.conf");
+  const aclFile = join(dir, "acl");
+  if (acl !== undefined) writeFileSync(aclFile, acl, { mode: 0o644 });
   const url = `mqtt://127.0.0.1:${port}`;
   let kill: () => Promise<void>;
   if (hasBinary()) {
-    writeFileSync(conf, `listener ${port} 127.0.0.1\nallow_anonymous true\npersistence false\n${NODELAY}`);
+    writeFileSync(conf, `listener ${port} 127.0.0.1\nallow_anonymous true\npersistence false\n${NODELAY}${acl !== undefined ? `acl_file ${aclFile}\n` : ""}`);
     const child: ChildProcess = spawn("mosquitto", ["-c", conf], { stdio: "ignore" });
     kill = async () => {
       if (child.exitCode === null) {
@@ -86,12 +93,13 @@ export async function startBroker(): Promise<Broker> {
       }
     };
   } else {
-    writeFileSync(conf, `listener 1883\nallow_anonymous true\npersistence false\n${NODELAY}`);
+    writeFileSync(conf, `listener 1883\nallow_anonymous true\npersistence false\n${NODELAY}${acl !== undefined ? "acl_file /mosquitto/config/acl\n" : ""}`);
     const name = `galatea-mqtt-${randomUUID().slice(0, 8)}`;
     // Labelled, so a container a killed harness left can be found: docker ps --filter label=org.galatea.harness
     const run = spawnSync("docker", ["run", "--rm", "-d", "--name", name, "-p", `127.0.0.1:${port}:1883`,
       "--label", "org.galatea.harness=broker", "--label", `org.galatea.harness.pid=${process.pid}`,
-      "-v", `${conf}:/mosquitto/config/mosquitto.conf:ro`, IMAGE], { encoding: "utf8" });
+      "-v", `${conf}:/mosquitto/config/mosquitto.conf:ro`,
+      ...(acl !== undefined ? ["-v", `${aclFile}:/mosquitto/config/acl:ro`] : []), IMAGE], { encoding: "utf8" });
     if (run.status !== 0) throw new Error(`docker could not start ${IMAGE}: ${run.stderr}`);
     kill = async () => { spawnSync("docker", ["rm", "-f", name]); };
   }

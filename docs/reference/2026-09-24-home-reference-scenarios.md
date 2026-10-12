@@ -5,7 +5,7 @@ last_verified:
 area: architecture
 audience: dev, pm
 author: Galatea maintainers
-version: 15
+version: 16
 related:
   - docs/architecture.md
   - docs/reference/2026-09-25-voice-reference-scenarios.md
@@ -22,6 +22,7 @@ related:
 
 | Date | Version | Change |
 |---|---|---|
+| 2026-10-11 | 16 | HS35 from the first light on the bench: a wall scene switch's presses drive a rule for a lamp whose `turn_on` the owner once raised, and the owner lowers it back to the table's tier. Graded ❌ against applier 0.15 (GA-DESC-3: `configure` only raises a tier); walked against the draft of applier 0.16, steward 0.11 and bridge 0.6 in its review (HS1–HS35; only HS35 moved): ⚠️ partly, the tier part works, and a person's lease on the lamp refuses the button's rule for `hold_time_s`, a steward gap tracked for steward 0.12; **PASS** with applier 0.16, 2026-10-11 |
 | 2026-10-06 | — | Editorial: private references removed for publication; no scenario or grade changed. Links to documents that are not public are reworded; the goals are cited from the architecture overview |
 | 2026-10-06 | 15 | HS28–HS34 from the Zigbee bridge's live bench run: a sleeping sensor's setting (HS28), a radar deciding a room is empty (HS29), a PIR and a radar in one room (HS30), dusk by `illuminance` (HS31), a reading promised and never sent (HS32), a device's unknown data (HS33), a button pusher's mode by voice, and a power cut (HS34); HS17 gains a `battery_low` warning and where a Tuya sensor's bound comes from. Graded against the drafts of bridge 0.6, applier 0.15 and steward 0.10, before their review. Walked against bridge 0.6, applier 0.15 and steward 0.10 in each round of their review; **PASS** 2026-10-06 |
 | 2026-09-28 | 14 | HS1–HS27 regraded against applier 0.13, steward 0.8, brain 0.6 and voice 0.2, the MCP revision pin (`docs/reviews/2026-09-28-mcp-revision-pin.md`). No grade moves: no scenario uses what revision `2026-07-28` removed. |
@@ -1500,6 +1501,52 @@ bridge did not offer on/off until the mode was seen again, though bridge 0.5 alr
 across restarts (a gap in the build, not the standard); the Fingerbot
 cannot be commanded until its mode is seen. **Against the draft of bridge 0.6, applier 0.15 and steward 0.10:** ✅ as designed, given the tentative *Settings*; until it is adopted, ⚠️: the mode is an extension action within a brain's reach. The kept mode across a power cut drives today (GA-BRIDGE-79).
 
+## HS35 · Sunday — a wall button for the lamp the owner once guarded
+
+**The home.** The flat. A floor lamp in the living room is plugged into a Zigbee smart plug, a router
+with power metering. When Ольга adopted the plug she raised its `onoff.turn_on` to `confirm`: a
+heater had been on that socket before, and she wanted to be asked. Now the heater is gone, and she
+sticks a battery four-button scene switch by the door (Tuya `TS0044`: each button tells single,
+double and hold apart, and switches nothing itself). From the first light on the bench, 2026-10-11.
+
+**The moment.** Ольга pairs the switch from the app and adopts it. She wants button 1 pressed once to
+turn the lamp on, pressed twice to turn it off. The plug now carries a lamp, so she sets its
+`turn_on` back to the table's tier, and the plug's load to `lighting`.
+
+**What we want.**
+- A press is something that happens, not a value the switch holds: it reaches a rule as an
+  occurrence, at once, and takes no person's lease on the switch.
+- A rule turns the lamp on and off from the presses, with no question on Ольга's phone; once she has
+  lowered the tier she raised, her own requests and a rule a brain wrote for her reach the lamp
+  without one too.
+- The owner can undo her own stricter choice, down to the table's tier for the plug's class and load,
+  and never under it. Nobody else can.
+- Holding a button is told apart from a press; a press missed while the applier was away is lost, not
+  replayed hours later.
+
+**Decomposed.**
+
+| Hop | What happens | Governed by |
+|---|---|---|
+| Ольга → app → applier → bridge | A join window; the switch joins and is described: a sensor key `battery`, an extension event key `…action` with its twelve values, no actions; proposed class `sensor` | Applier; Bridge |
+| Ольга → app → applier | `configure`: adopt the switch; the plug's `load: lighting`; delete her raised tier on the plug's `onoff.turn_on`, which falls back to the table's tier for a lighting socket (GA-DESC-3) | Applier |
+| Ольга → app → steward | `define`: the switch's name and room, and two rules, `{ event: { target: switch, type: occurrence, key: …action, value: 1_single } }` → `onoff.turn_on` on the plug, `1_double` → `onoff.turn_off` | Steward |
+| Switch → bridge → applier → steward | A press is published on the bridge's event topic, never retained (GA-BRIDGE-75); the applier's `occurrence` event, cause `device`, no lease (GA-EVT-8, GA-LEASE-2); the rule fires on the edge (*Rules*) | Bridge; Applier; Steward |
+| Steward → applier → bridge | The rule's plan at the lamp's tier: `reversible`, applied without an ask, acked on the plug's report | Steward; Applier |
+
+**Trust and guardrails.** Only the owner's credential reaches `configure`. Lowering is bounded by the
+*Default tiers* table, with the plug's class and load: a socket declared `heating` keeps its floor
+however the owner asks. A rule Ольга defines in the app carries her confirmation as its author
+(GA-SCN-4), so it would switch the lamp even at `confirm`; but a rule a brain wrote for her may do
+nothing above `reversible` (GA-DEF-7), and every request by voice, through a brain or from the app is
+asked. That guard is right while she wants it and wrong once she has changed her mind.
+
+**Verdict, today:** ❌ the owner cannot lower a tier she raised: applier 0.15 says `configure` only
+raises a standard action's tier (GA-DESC-3, *Default tiers*), so the reference applier refuses it and
+refuses deleting it, and the only way back is to remove and re-pair the plug. The presses, the
+occurrence events and the rule's trigger work as designed (seen on the bench, 2026-10-11).
+**Against the draft of applier 0.16:** ⚠️ partly: the owner lowers her raise (GA-DESC-3, GA-DESC-13, GA-DESC-14) and presses take no lease (GA-EVT-8, GA-LEASE-2); but a person's lease on the lamp (her app, its own button) refuses the button's rule for `hold_time_s` (GA-LEASE-1), a steward gap tracked for steward 0.12.
+
 ## The grades
 
 | # | Scenario | Bridge 0.4 / applier 0.11 / steward 0.6 | Brain 0.5 / voice 0.1 |
@@ -1538,6 +1585,7 @@ cannot be commanded until its mode is seen. **Against the draft of bridge 0.6, a
 | HS32 | A temperature promised, never sent | ⚠️ · ✅ in the draft where the maker named the key (GA-BRIDGE-80, GA-DEF-12) | — |
 | HS33 | «Что-нибудь не так с домом?» | ⚠️ · ✅ in the draft (GA-BRIDGE-76) | ✅ |
 | HS34 | A button pusher's mode by voice, and a power cut | ⚠️ · ✅ in the draft (GA-BRIDGE-79; *Settings* tentative) | ✅ the refusal relayed |
+| HS35 | A wall button for the lamp the owner once guarded | ❌ (GA-DESC-3: `configure` only raises) · in the draft of applier 0.16, ⚠️ partly: the owner lowers her raise (GA-DESC-3, GA-DESC-13, GA-DESC-14) and presses take no lease (GA-EVT-8, GA-LEASE-2); but a person's lease on the lamp (her app, its own button) refuses the button's rule for `hold_time_s` (GA-LEASE-1), a steward gap tracked for steward 0.12 | — (no brain) |
 
 **Against bridge 0.4, applier 0.11, steward 0.6, brain 0.5 and voice 0.1, twenty-three of
 twenty-seven drive as designed or within the standards' stated scope, three partly (HS11's service

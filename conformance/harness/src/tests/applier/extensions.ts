@@ -34,10 +34,50 @@ async function mode(ctx: TestContext, to: "click" | "switch"): Promise<void> {
 }
 
 requirement("GA-DESC-14", {
-  seam: "applier", fixture: { devices: ["lamp"] },
-  covers: "a door lock's extension action set to confirm, below its floor of no_voice, is invalid_request, nothing changed and not clamped; a plugin's requested_tier is the PC build's",
+  seam: "applier", fixture: { devices: ["lamp", "heater"] },
+  covers: "the owner's raise of a lamp's turn_on to confirm is taken, and so are its lowering back to reversible and its delete; a heating socket's turn_on set to reversible, below its floor, is invalid_request, nothing changed and not clamped; a change set that turns the socket to lighting and its turn_on to reversible is taken in either order, one that turns it to heating with reversible is refused; a door lock's extension action set to confirm, below its floor of no_voice, is invalid_request, nothing changed and not clamped. A plugin's requested_tier is GA-DESC-11's test",
 }, async (ctx) => {
-  const { owner, bridge } = { owner: ctx.owner!, bridge: ctx.bridge! };
+  const owner = ctx.owner!;
+  const LAMP_ID = "sim-bridge:lamp";
+  const HEATER = "sim-bridge:heater";
+  const tierOf = async (device: string, action: string) => (await declared(ctx, device, action))?.tier;
+  const set = async (changes: unknown[], why: string) => {
+    const r = await ownerConfigure(owner, changes);
+    must(r.ok, `${why} returned ${r.ok ? "" : r.error}`, r.body);
+  };
+  // Nothing changed is judged against the tier before the refused set, not the table: what the load gives is GA-DESC-13's.
+  const refusedAt = async (changes: unknown[], why: string, device: string) => {
+    const before = (await owner.callOk("describe")).revision;
+    const tier = await tierOf(device, "onoff.turn_on");
+    const r = await ownerConfigure(owner, changes);
+    ctx.evidence(`${why}: ${r.ok ? "ok" : r.error}`);
+    must(!r.ok && r.error === "invalid_request", `${why} returned ${r.ok ? "a result" : r.error}, not invalid_request`, r.body);
+    mustEqual((await owner.callOk("describe")).revision, before, `the revision after ${why}`);
+    mustEqual(await tierOf(device, "onoff.turn_on"), tier, `${device}'s turn_on after ${why}, as it was before`);
+  };
+  const turnOn = (device: string, tier: string) => up("tier", { device, action: "onoff.turn_on", tier });
+  const load = (load: string) => up("load", { device: HEATER, load });
+
+  // The owner's raise, brought back down by a set and by a delete (HS35).
+  await set([turnOn(LAMP_ID, "confirm")], "raising the lamp's turn_on");
+  await set([turnOn(LAMP_ID, "reversible")], "lowering the owner's raise of the lamp's turn_on to its floor");
+  mustEqual(await tierOf(LAMP_ID, "onoff.turn_on"), "reversible", "the lamp's turn_on after the owner lowered it");
+  await set([turnOn(LAMP_ID, "confirm")], "raising the lamp's turn_on again");
+  await set([{ op: "delete", kind: "tier", value: { device: LAMP_ID, action: "onoff.turn_on" } }], "deleting the owner's raise");
+  mustEqual(await tierOf(LAMP_ID, "onoff.turn_on"), "reversible", "the lamp's turn_on after the owner deleted the raise");
+
+  // A heating socket's turn_on: confirm is its floor.
+  await set([load("heating")], "a heating load");
+  await refusedAt([turnOn(HEATER, "reversible")], "a heating socket's turn_on set to reversible", HEATER);
+  // Judged against the floor the whole change set leaves, in either order.
+  await set([turnOn(HEATER, "reversible"), load("lighting")], "a lighting load and a reversible turn_on, the tier first");
+  mustEqual(await tierOf(HEATER, "onoff.turn_on"), "reversible", "the socket's turn_on on a lighting load");
+  await set([load("heating"), { op: "delete", kind: "tier", value: { device: HEATER, action: "onoff.turn_on" } }], "a heating load again");
+  await set([load("lighting"), turnOn(HEATER, "reversible")], "a lighting load and a reversible turn_on, the load first");
+  mustEqual(await tierOf(HEATER, "onoff.turn_on"), "reversible", "the socket's turn_on on a lighting load, set after it");
+  await refusedAt([load("heating"), turnOn(HEATER, "reversible")], "a heating load and a reversible turn_on in one change set", HEATER);
+
+  const bridge = ctx.bridge!;
   const X = "org.galatea.test.lockx";
   const doc = lastDevices(bridge);
   await bridge.publishRaw("devices", { ...doc, devices: [...doc.devices, { id: "door", stableIdentifier: "test:door", transport: "test",

@@ -721,7 +721,10 @@ export class SimBridge {
     if (how.result === "unreachable" || how.result === "expired") return answer("failed", how.result);
     if (how.result === "unsupported") return answer("unsupported");
     this.received.push({ device: id, action, args, state: cmd.value.state, commandId: cmd.commandId, realAt: Date.now() });
-    await this.publish(`${this.controlTopic}/received`, { device: id, action, args, ...(cmd.value.state ? { state: cmd.value.state } : {}) }, false);
+    // The echo is the harness's, never the device's: a broker that refuses it (an installation's ACL,
+    // where the simulator stands in for a device) must not cost the command its ack.
+    await this.publish(`${this.controlTopic}/received`, { device: id, action, args, ...(cmd.value.state ? { state: cmd.value.state } : {}) }, false)
+      .catch(() => undefined);
     if (how.result === "none") return;
     if (how.result === "received") return answer("received");
     if (how.result === "no_confirmation") return answer("failed", "no_confirmation");

@@ -78,6 +78,11 @@ export interface TestContext {
    * a fresh port, stopped at teardown; for a start the test expects to be refused.
    */
   startSteward?: (env: Record<string, string>) => Promise<SubjectProcess>;
+  /**
+   * Steward seam, a `standIn.bare` test only: defines the baseline house, as the setup does for any
+   * other test, and connects a seam per baseline credential into `steward`.
+   */
+  defineBaseline?: () => Promise<void>;
 }
 
 /** A proposed clause as a test judged it (`TestContext.proposed`). */

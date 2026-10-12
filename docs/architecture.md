@@ -148,7 +148,7 @@ The steward and the applier each guard something, and each checks for itself.
   rule's latch, a socket's load cap, and that a `confirm` or `no_voice` action carries a valid token.
 
 The link between them is the **confirmation token**. Each action has a tier: `reversible`,
-`confirm` or `no_voice`. The applier declares it and the owner may only raise it. For `confirm`
+`confirm` or `no_voice`. The applier declares it, never below its table's floor, and the owner may raise it and lower it back to that floor. For `confirm`
 and `no_voice`, only a person's "yes" to the steward's question earns a token. The token is an
 HMAC bound to the target, the action, its arguments, `via`, whether a brain served the request, and
 whom it is for. It is short-lived and used once, and the applier checks it. So a steward that is

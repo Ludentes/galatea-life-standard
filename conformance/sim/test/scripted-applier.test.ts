@@ -466,6 +466,20 @@ describe("the scripted stand-in: an unreachable end and refused plans (the miles
       'rule_fired leak  ""', "latch leak  cleared_by_owner"]);
   });
 
+  it("refuses a request for a device a safety rule actuates, from its firing until it completes (GA-SAFE-2)", async () => {
+    const applier = await standIn();
+    const client = applier.caller("steward-secret");
+    const body = async (tool: string, args: Record<string, unknown> = {}) => ((await applier.call(client, tool, args)) as { body: any }).body;
+    const [valve] = fixtureDevices(["valve"]);
+    applier.scriptDevice(valve!, { adopt: "water_valve" });
+    applier.scriptSafetyRule({ id: "shut", actuates: [{ target: "sim-bridge:valve", key: "open", value: false }] });
+    const open = { actions: [{ target: "sim-bridge:valve", action: "valve.open", args: {}, via: "app", brain: false, for: { endpoint: "e" } }] };
+    applier.scriptSafetyFire("shut", { complete: false });
+    expect((await body("plan", open)).steps.map((x: any) => `${x.verdict} ${x.reason ?? ""}`)).toEqual(["refuse safety"]);
+    applier.scriptSafetyComplete("shut");
+    expect((await body("plan", open)).steps.map((x: any) => x.verdict)).toEqual(["op"]);
+  });
+
   it("opens a gap: a follower's long-poll sees nothing past it, history keeps it, and its close expires every cursor given before", async () => {
     const clock = new SteppedClock();
     const applier = await standIn(clock);

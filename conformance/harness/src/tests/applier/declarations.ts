@@ -34,7 +34,7 @@ const up = (kind: string, value: Record<string, unknown>) => ({ op: "upsert", ki
 
 requirement("GA-DESC-3", {
   seam: "applier", fixture: { devices: ["lamp", "gate", "heater", "rack", "pusher"] },
-  covers: "the default tiers of a gate, a door lock, a water valve that opens with turn_off, a heating load and infrastructure power; an owner's raise is taken, and a lowering, of the floor or of the owner's own raise, is refused or ignored; a button pusher's extension action is confirm, and the owner's lowering of it to its floor is taken. The computer row is built and unit-tested, graded once the sim has a computer (the PC build); plugin clauses are the PC build's",
+  covers: "the default tiers of a gate, a door lock, a water valve that opens with turn_off, a heating load and infrastructure power; an owner's raise is taken, and so is the owner's lowering of it back to the floor; a lowering of the floor is refused or ignored; a button pusher's extension action is confirm, and the owner's lowering of it to its floor is taken; a plugin's requested_tier raises its action's floor (GA-DESC-11's test); a computer its bridge proposes as infrastructure takes the infrastructure rows until the owner sets the flag; a device a computer hosts takes the computer row, and once the owner sets the host's infrastructure, in the same change set, its infrastructure row for a standard action and the no_voice floor for an extension action; the host's flag cleared, both come back down. A lowering below the floor is GA-DESC-14's test",
 }, async (ctx) => {
   const { mcp, owner, bridge } = { mcp: ctx.mcp!, owner: ctx.owner!, bridge: ctx.bridge! };
   await bridge.control({ requestId: "desc-3a", op: "join", device: "door", capabilities: ["lock"], feedback: "closed" });
@@ -68,14 +68,42 @@ requirement("GA-DESC-3", {
   await ownerConfigure(owner, [up("tier", { device: GATE, action: "cover.open", tier: "reversible" })]);
   mustEqual(await revision(), before, "revision after a lowering of the gate's floor");
   atLeast(await described(mcp, GATE, oneSecond(ctx)), "cover.open", "no_voice");
-  await ownerConfigure(owner, [up("tier", { device: LAMP, action: "onoff.turn_on", tier: "reversible" })]);
-  mustEqual(await revision(), before, "revision after a lowering of the owner's own raise");
-  mustEqual(tierOf(await described(mcp, LAMP, oneSecond(ctx)), "onoff.turn_on"), "confirm", "the lamp's turn_on after the owner tried to lower it");
+  // The owner's own raise is the owner's to bring back down, to the floor (HS35).
+  const back = await ownerConfigure(owner, [up("tier", { device: LAMP, action: "onoff.turn_on", tier: "reversible" })]);
+  must(back.ok, `lowering the owner's own raise of the lamp's turn_on to its floor returned ${back.ok ? "" : back.error}`, back.body);
+  mustEqual(tierOf(await described(mcp, LAMP, oneSecond(ctx)), "onoff.turn_on"), "reversible", "the lamp's turn_on after the owner lowered it back");
+
+  // A computer proposed as the broker's host, and a plugin's player hosted by another computer (applier, *Plugins' actions*).
+  const X = "org.galatea.test.player";
+  const player = { id: "player", stableIdentifier: "plugin:player@1", transport: "lan", model: { vendor: "demo", model: "player" },
+    capabilities: ["media", "power"], sensorKeys: [], feedback: "closed", reachMs: 1000, proposedClass: "player", classEvidence: "protocol",
+    otherAdmins: [], host: "desk",
+    actions: [{ action: "power.shutdown", idempotent: false, stateless: true, confirms: true, requestedTier: "reversible", toolHash: "e".repeat(64) },
+      { action: `${X}.quit`, idempotent: false, stateless: true, confirms: true, requestedTier: "reversible", toolHash: "f".repeat(64) }],
+    extensions: [{ capability: X, actions: [{ action: `${X}.quit`, schema: { type: "object" } }], keys: [] }] };
+  // Their identifiers are the simulated PC's own: none is the fixture's (the rack's is `test:rack`).
+  await simPc(ctx, [computer("tower", { proposedInfrastructure: true }), computer("desk"), player]);
+  const PLAYER = `${SIM_PC}:player`;
+  const playerTiers = async () => {
+    const d = await described(mcp, PLAYER, oneSecond(ctx));
+    return [tierOf(d, "power.shutdown"), tierOf(d, `${X}.quit`)];
+  };
+  mustEqual(tierOf(await described(mcp, `${SIM_PC}:tower`, oneSecond(ctx)), "power.sleep"), "no_voice",
+    "power.sleep on a computer its bridge proposes as infrastructure, the owner having set nothing");
+  mustEqual(await playerTiers(), ["confirm", "confirm"], "the hosted player's power.shutdown and extension action, its host not infrastructure");
+  const hosted = await ownerConfigure(owner, [up("adopt", { device: `${SIM_PC}:desk`, class: "computer" }),
+    up("infrastructure", { device: `${SIM_PC}:desk`, infrastructure: true })]);
+  must(hosted.ok, `adopting the player's host as infrastructure returned ${hosted.ok ? "" : hosted.error}`, hosted.body);
+  mustEqual(await playerTiers(), ["no_voice", "no_voice"], "the hosted player's tiers once the owner set its host's infrastructure");
+  // A lowering below that floor is GA-DESC-14's to grade: none is tried here.
+  const cleared = await ownerConfigure(owner, [up("infrastructure", { device: `${SIM_PC}:desk`, infrastructure: false })]);
+  must(cleared.ok, `clearing the host's infrastructure returned ${cleared.ok ? "" : cleared.error}`, cleared.body);
+  mustEqual(await playerTiers(), ["confirm", "confirm"], "the hosted player's tiers once the owner cleared its host's infrastructure");
 });
 
 requirement("GA-DESC-13", {
   seam: "applier", fixture: { devices: ["heater"] },
-  covers: "a change of load raises a tier now below its new floor and keeps one at or above it, in the same change set; a change of infrastructure likewise. A computer's hosted devices are the PC build's",
+  covers: "a change of load raises a tier now below its new floor and keeps one at or above it, in the same change set; a change of infrastructure likewise; the flag cleared, the owner's value is back; a load changed from heating to lighting, the owner having set no tier, drops turn_on to its new default, the owner's value never written. A computer's hosted devices are GA-DESC-3's test",
 }, async (ctx) => {
   const owner = ctx.owner!;
   const set = async (changes: unknown[], why: string) => {
@@ -91,6 +119,80 @@ requirement("GA-DESC-13", {
     "the heater's tiers on a heating load: turn_on raised, turn_off kept");
   heater = await set([up("infrastructure", { device: HEATER, infrastructure: true })], "infrastructure");
   mustEqual(tierOf(heater, "onoff.turn_off"), "no_voice", "the heater's turn_off once it is infrastructure");
+  // The flag cleared: the owner's confirm, never rewritten, is back.
+  heater = await set([up("infrastructure", { device: HEATER, infrastructure: false })], "infrastructure cleared");
+  mustEqual(tierOf(heater, "onoff.turn_off"), "confirm", "the heater's turn_off once it is no longer infrastructure: the owner's value");
+  // The owner set no tier on turn_on: the table's confirm goes with the heating load (HS35).
+  heater = await set([up("load", { device: HEATER, load: "lighting" })], "the heater back to a lighting load");
+  mustEqual(tierOf(heater, "onoff.turn_on"), "reversible", "the heater's turn_on once its load is lighting again, the owner having set no tier");
+});
+
+const BOX = "org.galatea.test.box";
+
+/** A plugin device's devices-document entry: a standard action and an extension action, each with its manifest's tier and tool. */
+const boxEntry = (id: string, pause: string, go: string, tool: string, schema: Record<string, unknown> = { type: "object" }) =>
+  newcomer(id, { stableIdentifier: `plugin:box@${id}`, capabilities: ["media"],
+  actions: [{ action: "media.pause", idempotent: true, stateless: false, confirms: true, requestedTier: pause, toolHash: `${tool}`.repeat(64) },
+    { action: `${BOX}.go`, idempotent: false, stateless: true, confirms: true, requestedTier: go, toolHash: `${tool}${tool}`.repeat(32) }],
+  extensions: [{ capability: BOX, actions: [{ action: `${BOX}.go`, schema }], keys: [] }] });
+
+requirement("GA-DESC-11", {
+  seam: "applier", fixture: { devices: ["lamp"] }, timeoutMs: 120_000,
+  covers: "a plugin device's media.pause and extension action, their manifest requesting no_voice: a replacement whose manifest requests confirm and reversible keeps both at no_voice, as the owner's value, the extension action's deleted by the owner back to its default under the new manifest (a standard action's delete is GA-DESC-14's); a replacement whose tools changed drops the owner's lowering of the extension action to its floor, back to its default, and keeps media.pause's no_voice, the owner's value; the owner's lowering set again, the subject restarted while the version's tool changes, the lowering falls back once it is back (the tool hash kept across the restart); set again, a replacement whose argument schema changed, the tool the same, drops it too",
+}, async (ctx) => {
+  const bridge = ctx.bridge!;
+  // The seams as they are now: the restart opens others.
+  const mcp = () => ctx.mcp!;
+  const owner = () => ctx.owner!;
+  const doc = lastDevices(bridge);
+  const ID = "sim-bridge:box1";
+  const publish = async (entry: Record<string, unknown>, id: string) => {
+    await bridge.publishRaw("devices", { ...doc, devices: [...doc.devices, entry] }, true);
+    await described(owner(), `sim-bridge:${id}`, oneSecond(ctx));
+  };
+  const tiers = async () => {
+    const d = await described(mcp(), ID, oneSecond(ctx));
+    return [tierOf(d, "media.pause"), tierOf(d, `${BOX}.go`)];
+  };
+  const set = async (changes: unknown[], why: string) => {
+    const r = await ownerConfigure(owner(), changes);
+    must(r.ok, `${why} returned ${r.ok ? "" : r.error}`, r.body);
+  };
+  await publish(boxEntry("box1", "no_voice", "no_voice", "a"), "box1");
+  await set([up("adopt", { device: ID, class: "player" })], "adopting the box");
+  mustEqual(await tiers(), ["no_voice", "no_voice"], "the box's tiers, its manifest requesting no_voice");
+  // A new version whose manifest requests less: the tiers stay, stored as the owner's value.
+  await publish(boxEntry("box2", "confirm", "reversible", "a"), "box2");
+  await set([up("adopt", { device: "sim-bridge:box2", class: "player", replaces: ID })], "the box's replacement by a version requesting less");
+  mustEqual(await tiers(), ["no_voice", "no_voice"], "the replaced box's tiers: kept from the manifest it replaced");
+  // The extension action's kept tier deleted: a standard action's delete is GA-DESC-14's to grade.
+  await set([{ op: "delete", kind: "tier", value: { device: ID, action: `${BOX}.go` } }], "deleting the extension action's kept tier");
+  mustEqual(await tiers(), ["no_voice", "confirm"], "the box's tiers once the owner deleted the extension action's kept one: its default under the new manifest");
+  // The owner lowers the extension action to its floor, media.pause staying at no_voice; a version whose tools changed follows.
+  await set([up("tier", { device: ID, action: `${BOX}.go`, tier: "reversible" })], "the owner's lowering");
+  mustEqual(await tiers(), ["no_voice", "reversible"], "the box's tiers as the owner set them");
+  await publish(boxEntry("box3", "confirm", "reversible", "c"), "box3");
+  await set([up("adopt", { device: "sim-bridge:box3", class: "player", replaces: ID })], "the box's replacement by a version whose tools changed");
+  mustEqual(await tiers(), ["no_voice", "confirm"], "the box's tiers after its tools changed: the raise kept, the lowering dropped");
+
+  // Set again; the subject restarts while the version's tool changes: the hash it kept is compared once it is back.
+  const lower = () => set([up("tier", { device: ID, action: `${BOX}.go`, tier: "reversible" })], "the owner's lowering set again");
+  await lower();
+  mustEqual(await tiers(), ["no_voice", "reversible"], "the box's tiers with the lowering set again");
+  if (!ctx.restartApplier) throw new Error("the subject cannot restart the applier");
+  await ctx.restartApplier({ between: () => bridge.publishRaw("devices", { ...doc, devices: [...doc.devices, boxEntry("box3", "confirm", "reversible", "d")] }, true) });
+  // What it restored may say the old tool a moment, until the bridge's document is read.
+  let after: (string | undefined)[] = [];
+  try {
+    await pollUntil(async () => (after = await tiers())[1] === "confirm" ? after : undefined, 5 * oneSecond(ctx), "the lowering's fall-back");
+  } catch { /* judged below */ }
+  mustEqual(after, ["no_voice", "confirm"], "the box's tiers after a restart over which its tool changed: the lowering dropped");
+
+  // Set again; a replacement whose argument schema changed, the tool the same, drops it too.
+  await lower();
+  await publish(boxEntry("box4", "confirm", "reversible", "d", { type: "object", properties: { speed: { type: "number" } } }), "box4");
+  await set([up("adopt", { device: "sim-bridge:box4", class: "player", replaces: ID })], "the box's replacement by a version whose schema changed");
+  mustEqual(await tiers(), ["no_voice", "confirm"], "the box's tiers after its schema changed: the lowering dropped");
 });
 
 requirement("GA-DESC-4", {

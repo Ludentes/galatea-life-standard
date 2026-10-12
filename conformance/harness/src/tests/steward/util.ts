@@ -76,6 +76,18 @@ export async function scripted(ctx: TestContext, devices: { fixture: string; ado
   return ids;
 }
 
+/**
+ * A speaker on the stand-in that announces: the fixture's speaker with `media.announce` declared, a
+ * channel that speaks a notice but never delivers one (steward, *Notices*). Adopted; its id.
+ */
+export async function announcer(ctx: TestContext): Promise<string> {
+  const speaker = fixtureDevices(["speaker"])[0]!;
+  const id = ctx.standIn!.applier.scriptDevice({ ...speaker, id: "announcer",
+    actions: [...speaker.actions, { action: "media.announce", idempotent: false, stateless: true, confirms: false }] }, { adopt: "speaker" });
+  await stewardSees(ctx, `the stand-in's ${id}`, (d) => targetIn(d, id) !== undefined);
+  return id;
+}
+
 /** `plan` from `seam` at `endpoint`, respecting occupancy when told. */
 export function planAt(seam: McpSeam, endpoint: string, actions: unknown[], o: { speaker?: string; respect_occupancy?: boolean } = {}): Promise<McpResult> {
   return seam.call("plan", { endpoint, ...(o.speaker ? { speaker: o.speaker } : {}), actions,

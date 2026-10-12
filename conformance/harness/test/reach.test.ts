@@ -1,6 +1,6 @@
 // The reach mapper (`src/reach.ts`): sites, the lint, coverage to reach, the guards, the union.
 import { describe, expect, it } from "vitest";
-import { findSites, lint, mutationReads, withoutDeclarations, measureReach, misses, perMutation, reached, reachMarkdown, scopeOf, unionReach,
+import { findSites, flagOf, lint, mutationReads, withoutDeclarations, measureReach, misses, perMutation, reached, reachMarkdown, scopeOf, unionReach,
   type CheckCoverage, type ScriptCoverage, type Site } from "../src/reach.js";
 
 const names = new Set(["drops-it", "keeps-it", "at-start"]);
@@ -98,6 +98,92 @@ describe("reads of the mutation (an allowlist)", () => {
     const more = `${decl}\nexport const SECRET = process.env.GALATEA_MUTATION;\nexport const bad = (m: string) => m === "drops-it";`;
     expect(mutationReads("src/mutations.ts", withoutDeclarations(more), callees)[0]).toMatch(/GALATEA_MUTATION is read outside mutationFromEnv/);
     expect(findSites("src/mutations.ts", withoutDeclarations(more), names).problems).toHaveLength(1);
+  });
+});
+
+describe("a mutant record", () => {
+  const callees = new Set(["Applier", "EventLog", "judge", "mutantOf"]);
+  const problems = (text: string) => [...findSites("f.ts", text, names).problems, ...mutationReads("f.ts", text, callees, names)];
+
+  it("names each mutation's flag in camel case", () => {
+    expect(flagOf("drops-it")).toBe("dropsIt");
+    expect(flagOf("speaks-only-2025")).toBe("speaksOnly2025");
+  });
+
+  it("finds each read of a flag as a site, at the flag, beside the literal form, and none in a comment or a string", () => {
+    const text = [
+      "if (this.o.mutant.dropsIt) x();",
+      'const keep = !ctx?.mutant?.keepsIt && this.mutation === "at-start";',
+      "// mutant.dropsIt in a comment",
+      'const s = "mutant.keepsIt";',
+    ].join("\n");
+    const { sites, problems: p } = findSites("f.ts", text, names);
+    expect(p).toEqual([]);
+    expect(sites.map((x) => [x.mutation, x.line])).toEqual([["drops-it", 1], ["keeps-it", 2], ["at-start", 2]]);
+    expect(text.slice(sites[0]!.offset, sites[0]!.offset + 7)).toBe("dropsIt");
+  });
+
+  it("names a flag no mutation has", () => {
+    expect(findSites("f.ts", "if (mutant.dropsThat) x();", names).problems).toEqual(["f.ts:1: mutant.dropsThat is the flag of no mutation"]);
+  });
+
+  it.each([
+    ["destructuring", "const { dropsIt } = this.o.mutant;\nif (dropsIt) x();"],
+    ["destructuring under another name", "const { dropsIt: d } = this.mutant;"],
+    ["an index", 'const on = this.mutant["dropsIt"];'],
+    ["a dynamic index", "const on = this.mutant[key];"],
+    ["an alias of another name", "const f = this.o.mutant;\nif (f.dropsIt) x();"],
+    ["a truth test", "if (this.mutant) x();"],
+    ["an argument to code the build does not declare", "report(this.o.mutant);"],
+    ["Object.keys", "const all = Object.keys(this.mutant);"],
+    ["a shorthand given to code the build does not declare", "log({ mutant });"],
+    ["a stringified holder", "if (this.o.mutant.dropsIt) x();\nconsole.log(JSON.stringify(this.o));"],
+    ["a holder spread into other code", "if (this.o.mutant.dropsIt) x();\nreport({ ...this.o });"],
+    ["a field under another name", "this.flags = o.mutant;"],
+    ["a default other than Mutant.none", "this.mutant = o.mutant ?? ALL;"],
+    ["narrowed to another record", "const mutant = gate.mutant.dropsIt ? ALL : gate.mutant;"],
+    ["a flag read off another record", "if (this.o.flags.dropsIt) x();"],
+  ])("refuses %s", (_what, text) => {
+    expect(problems(text)).not.toEqual([]);
+  });
+
+  it.each([
+    ["a site", "if (this.o.mutant.dropsIt) x();"],
+    ["a negated site", "if (!j.g.mutant.keepsIt) y();"],
+    ["an optional site", "const on = o.mutant?.dropsIt ? 1 : 0;"],
+    ["a type", "interface O { readonly mutant?: Mutant }\nconstructor(private readonly mutant: Mutant = Mutant.none) {}"],
+    ["a field copied", "this.mutant = o.mutant;"],
+    ["a field copied with its default", "this.mutant = o.mutant ?? Mutant.none;"],
+    ["an alias named mutant", "const mutant = this.o.mutant;\nif (mutant.dropsIt) x();"],
+    ["built by the build's own call", "const mutant = mutantOf(s.mutation);"],
+    ["an argument of the build's own code", "this.log = new EventLog(o.store, o.mutant);"],
+    ["a shorthand or key in the build's own call", "new Applier({ store, mutant });\nnew Applier({ store, mutant: this.o.mutant });"],
+    ["a key in a context object, spread", "judge(s, { ...gate, mutant });"],
+    ["Mutant.none given", "new Applier({ store, mutant: Mutant.none });"],
+    ["narrowed by a site", "const mutant = gate.mutant.dropsIt ? Mutant.none : gate.mutant;\njudge(s, { ...gate, mutant });"],
+  ])("allows %s", (_what, text) => {
+    expect(problems(text)).toEqual([]);
+  });
+
+  it("blanks mutantOf in a declaration file, which alone compares the mutation with every name", () => {
+    const decl = [
+      'export const MUTATIONS = ["drops-it", "keeps-it"] as const;',
+      "export function mutantOf(mutation?: Mutation): Mutant {",
+      "  return Object.freeze(Object.fromEntries(MUTATIONS.map((m) => [flag(m), m === mutation]))) as Mutant;",
+      "}",
+      "export const Mutant = Object.freeze({ none: mutantOf() });",
+    ].join("\n");
+    expect(mutationReads("src/mutations.ts", withoutDeclarations(decl), callees, names)).toEqual([]);
+    expect(mutationReads("src/mutations.ts", decl, callees, names)).not.toEqual([]);
+  });
+
+  it("counts a build's sites of both forms, as many built as written", () => {
+    const src = 'if (this.mutant.dropsIt) x();\nif (!this.o.mutant.keepsIt) y();\nif (this.mutation === "at-start") z();';
+    expect(lint({ mutations: ["drops-it", "keeps-it", "at-start"], sources: [{ file: "src/a.ts", text: src }],
+      built: [{ file: "dist/a.js", text: src }], declarations: [] })).toEqual([]);
+    expect(lint({ mutations: ["drops-it", "keeps-it", "at-start"], sources: [{ file: "src/a.ts", text: src }],
+      built: [{ file: "dist/a.js", text: "if (this.mutant.dropsIt) x();" }], declarations: [] }))
+      .toEqual(["keeps-it has 1 sites in the sources and 0 built", "at-start has 1 sites in the sources and 0 built"]);
   });
 });
 

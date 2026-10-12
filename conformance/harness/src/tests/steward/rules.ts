@@ -7,7 +7,7 @@ import { pollUntil } from "../../util.js";
 import { sentFrom } from "./answers.js";
 import { cursorExpiredGap, mustDefine, mustRefuse, ownerOf, raiseTier, scripted, stewardSees, targetIn, up } from "./util.js";
 import { failedOf, runReads, runSent, startRun } from "./scenarios.js";
-import { scheduleSoon } from "./schedules.js";
+import { minuteAfter, scheduleSoon, wall } from "./schedules.js";
 
 /** One of the steward's events. */
 export type Ev = { seq: number; time: string; type: string } & Record<string, any>;
@@ -94,10 +94,10 @@ export async function restartSteward(ctx: TestContext, between?: () => unknown):
 
 requirement("GA-RULE-1", {
   seam: "steward",
-  covers: "a level rule (the lamp on → the dimmer on) fires once when the lamp comes on, and not again on a state the steward reads again (a model change) nor after a restart while it holds; the lamp coming on while the steward is down, it fires once at the restart, and once more at a restart while it held, having fired, the lamp having gone off and on while the steward was down; the lamp going off and on inside a cursor_expired gap, it fires once the steward reads the gap back; a gap in which only the dimmer's level moves, the lamp on throughout, fires it not",
+  covers: "a level rule (the lamp on → the dimmer on) fires once when the lamp comes on, and not again on a state the steward reads again (a model change) nor after a restart while it holds; the lamp coming on while the steward is down, it fires once at the restart, and once more at a restart while it held, having fired, the lamp having gone off and on while the steward was down; the lamp going off and on inside a cursor_expired gap, it fires once the steward reads the gap back; a gap in which only the dimmer's level moves, the lamp on throughout, fires it not; describe's edge_replay_s, if stated, is at most 300; a motion edge from a cursor_expired gap, the lamp turned off after it in the gap, fires a motion rule conditioned on the lamp not; a motion edge 10 s old fires it at most once, and not at all when describe states no edge_replay_s; one older than edge_replay_s (300 s when none is stated) not; an edge that fired the rule before a restart does not fire it again after; a time trigger whose minute fell while the steward was down does not fire after the restart; «no motion for 180 s», held 100 s before a restart, does not fire 10 s after it, and fires no sooner than 180 s after it",
 }, async (ctx) => {
   const applier = ctx.standIn!.applier;
-  const [dimmer] = await scripted(ctx, [{ fixture: "dimmer", adopt: "light" }]);
+  const [dimmer, motion] = await scripted(ctx, [{ fixture: "dimmer", adopt: "light" }, { fixture: "motion", adopt: "sensor" }]);
   // A witness on the dimmer's level: it fires on an event the steward follows after its start's state read.
   await mustDefine(ctx, [up("rule", { id: "lamp", name: "Лампа", conditions: [{ target: LAMP, key: "on", op: "eq", value: true }],
     actions: [{ target: dimmer, action: "onoff.turn_on", args: {} }] }),
@@ -147,6 +147,85 @@ requirement("GA-RULE-1", {
   await cursorExpiredGap(ctx, () => applier.scriptValue(dimmer!, "level", 70, { cause: "device" }));
   const still = await relayed(ctx, held, dimmer!, "level", 70, "the dimmer's level inside a cursor_expired gap");
   mustEqual(firedOf(still, "lamp").length, 0, "the lamp rule's firings after a gap in which the lamp stayed on");
+
+  // Edges from a gap: replayed only within the edge_replay_s describe states, its reading still holding, conditions judged now.
+  const bound = (await ownerOf(ctx).callOk("describe")).edge_replay_s as number | undefined;
+  ctx.evidence(`edge_replay_s: ${bound ?? "not stated"}`);
+  must(bound === undefined || (typeof bound === "number" && bound >= 0 && bound <= 300), `edge_replay_s is ${bound}, not at most 300`);
+  const seenAfter = async (c: string) => firedOf(await eventsAfter(ctx, c), "seen").length;
+  const followed = async (target: string, key: string, value: unknown, what: string) => {
+    const c = await cursorNow(ctx);
+    applier.scriptValue(target, key, value, { cause: "device" });
+    await relayed(ctx, c, target, key, value, what);
+  };
+  await followed(motion!, "motion", true, "motion before the rule");
+  await followed(motion!, "motion", false, "no motion");
+  await mustDefine(ctx, [up("rule", { id: "seen", name: "Движение", trigger: { state: { target: motion, key: "motion", op: "eq", value: true } },
+    conditions: [{ target: LAMP, key: "on", op: "eq", value: true }], actions: [{ target: dimmer, action: "level.set_level", args: { level: 20 } }] })],
+  "a rule on motion while the lamp is on");
+  // The lamp on at the edge and off since: the conditions are judged now.
+  let c = await cursorNow(ctx);
+  await cursorExpiredGap(ctx, async () => {
+    applier.scriptValue(motion!, "motion", true, { cause: "device" });
+    await ctx.time.stepAndWait(10_000);
+    applier.scriptValue(LAMP, "on", false, { cause: "device" });
+  });
+  await relayed(ctx, c, LAMP, "on", false, "the lamp off inside a gap");
+  await ctx.time.stepAndWait(5_000);
+  mustEqual(await seenAfter(c), 0, "the motion rule's firings for an edge from a gap whose conditions no longer hold");
+  await followed(motion!, "motion", false, "no motion again");
+  await followed(LAMP, "on", true, "the lamp on again");
+  // A recent edge: replayed at most once, and only by a steward that states edge_replay_s.
+  c = await cursorNow(ctx);
+  await cursorExpiredGap(ctx, async () => {
+    applier.scriptValue(motion!, "motion", true, { cause: "device" });
+    await ctx.time.stepAndWait(10_000);
+  });
+  await relayed(ctx, c, motion!, "motion", true, "motion inside a gap");
+  await ctx.time.stepAndWait(5_000);
+  const recent = await seenAfter(c);
+  ctx.evidence(`a motion edge 10 s old at the gap's end: ${recent} firing(s)`);
+  must(recent <= (bound === undefined ? 0 : 1), `a motion edge from a gap fired the rule ${recent} times, edge_replay_s ${bound ?? "not stated"}`);
+  await followed(motion!, "motion", false, "no motion after the recent edge");
+  // An edge older than the bound: lost.
+  c = await cursorNow(ctx);
+  await cursorExpiredGap(ctx, async () => {
+    applier.scriptValue(motion!, "motion", true, { cause: "device" });
+    await ctx.time.stepAndWait((bound ?? 300) * 1000 + 30_000);
+  });
+  await relayed(ctx, c, motion!, "motion", true, "motion inside a long gap");
+  await ctx.time.stepAndWait(5_000);
+  mustEqual(await seenAfter(c), 0, "the motion rule's firings for an edge older than edge_replay_s");
+  await followed(motion!, "motion", false, "no motion after the long gap");
+  // An edge fired before a restart is not fired again after it.
+  c = await cursorNow(ctx);
+  applier.scriptValue(motion!, "motion", true, { cause: "device" });
+  await fires(ctx, c, "seen", 1, "motion with the lamp on");
+  await restartSteward(ctx);
+  await ctx.time.stepAndWait(5_000);
+  mustEqual(await seenAfter(c), 1, "the motion rule's firings for one edge, a restart after it");
+  // A time trigger's minute in a restart's gap is lost.
+  const minute = minuteAfter(ctx, 60_000);
+  await mustDefine(ctx, [up("rule", { id: "minute", name: "Минута", trigger: { time: { at: wall(minute).hhmm } },
+    actions: [{ target: dimmer, action: "level.set_level", args: { level: 25 } }] })], "a rule at the next minute");
+  c = await cursorNow(ctx);
+  await restartSteward(ctx, () => ctx.time.stepAndWait(minute + 60_000 - ctx.time.now()));
+  await ctx.time.stepAndWait(5_000);
+  mustEqual(firedOf(await eventsAfter(ctx, c), "minute").length, 0, "the time rule's firings after a restart whose gap held its minute");
+  // A held duration holds afresh after a restart: «no motion for 180 s», 100 s held before it.
+  await followed(motion!, "motion", false, "no motion before the held rule");
+  await mustDefine(ctx, [up("rule", { id: "still", name: "Тихо", trigger: { held: { target: motion, key: "motion", op: "eq", value: false, for_s: 180 } },
+    actions: [{ target: dimmer, action: "level.set_level", args: { level: 30 } }] })], "no motion for 180 s");
+  c = await cursorNow(ctx);
+  await ctx.time.stepAndWait(100_000);
+  await restartSteward(ctx);
+  const backAt = ctx.time.now();
+  await ctx.time.stepAndWait(10_000);
+  mustEqual(firedOf(await eventsAfter(ctx, c), "still").length, 0, "the held rule's firings 10 s after a restart, 110 s after its define");
+  await ctx.time.stepAndWait(backAt + 181_000 - ctx.time.now());
+  const late = await pollUntil(async () => firedOf(await eventsAfter(ctx, c), "still")[0], 10_000, "the held rule never fired after the restart", 100);
+  ctx.evidence(`restarted ${new Date(backAt).toISOString()}, the held rule fired ${late.time}`);
+  must(Date.parse(late.time) >= backAt + 180_000 - 1_000, `the held rule fired at ${late.time}, before 180 s from the restart`);
 });
 
 requirement("GA-RULE-2", {

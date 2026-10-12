@@ -128,15 +128,17 @@ requirement("GA-RULE-7", {
 
 requirement("GA-RULE-8", {
   seam: "steward",
-  covers: "a lock that ends failed(not_locked) 1 s after dispatch raises no notice at once and one once its ack_within_s and the late-ack slack have passed, naming the rule, the action, its target and the outcome, delivered on the channel, and still when Лиза's session closed 5 s after it; one with a late_ack 3 s later raises none; a failed(no_graphical_session) raises one at once; the pulse relay's turn_on (not idempotent) that ends failed(no_ack) raises none 61 s after it, and none when a late_ack comes then or 20 s after it; a third that has no late_ack raises one once the 60 s window and the slack have passed; an air conditioner's set_mode that ends unanswered twice raises one after its one further try (each of these two skipped with evidence where GA-RULE-7's retries, its precondition, went otherwise); a rule on the IR tv's toggling turn_off raises one notice at its define, and none when its firing ends skipped(toggle_only); a rule naming a second tv whose turn_off its bridge re-declares toggles: true raises one notice then; a step refused(leased) raises none (a clause whose step never ends so, the steward not refusing or skipping it, is skipped with evidence: that is GA-LEASE-3's or GA-SCN-4's failure); a schedule of a scenario whose run step reaches the tv's toggle raises one notice at its define, naming the schedule, and one of a scenario of the lamp none; skipped(in_use) slice 8's; a held notice across a restart is GA-PERSIST-2's case",
+  covers: "a lock that ends failed(not_locked) 1 s after dispatch raises no notice at once and one once its ack_within_s and the late-ack slack have passed, naming the rule, the action, its target and the outcome, delivered on the channel, and still when Лиза's session closed 5 s after it; one with a late_ack 3 s later raises none; a failed(no_graphical_session) raises one at once; the pulse relay's turn_on (not idempotent) that ends failed(no_ack) raises none 61 s after it, and none when a late_ack comes then or 20 s after it; a third that has no late_ack raises one once the 60 s window and the slack have passed; an air conditioner's set_mode that ends unanswered twice raises one after its one further try (each of these two skipped with evidence where GA-RULE-7's retries, its precondition, went otherwise); a rule on the IR tv's toggling turn_off raises one notice at its define, and none when its firing ends skipped(toggle_only); a rule naming a second tv whose turn_off its bridge re-declares toggles: true raises one notice then; a step refused(leased) raises none (a clause whose step never ends so, the steward not refusing or skipping it, is skipped with evidence: that is GA-LEASE-3's or GA-SCN-4's failure); a schedule of a scenario whose run step reaches the tv's toggle raises one notice at its define, naming the schedule, and one of a scenario of the lamp none; skipped(in_use) slice 8's; a held notice across a restart is GA-PERSIST-2's case; the first laptop's lock failing not_locked a second night raises its notice again; a rule's skipped(occupancy_unknown) in an attic whose motion sensor has never seen motion raises one, and, the attic occupied and then not known again past the occupancy hold, the rule's next skipped(occupancy_unknown) raises one again",
 }, async (ctx) => {
   const applier = ctx.standIn!.applier;
   const slack = constantMs("steward", "late-ack-slack");
   const devices = await scripted(ctx, [{ fixture: "laptop", adopt: "computer", bridge: "pc-a" }, { fixture: "laptop", adopt: "computer", bridge: "pc-b" },
     { fixture: "laptop", adopt: "computer", bridge: "pc-c" }, { fixture: "laptop", adopt: "computer", bridge: "pc-d" }, { fixture: "motion", adopt: "sensor" },
     { fixture: "pulse", adopt: "socket", bridge: "relay-e" }, { fixture: "pulse", adopt: "socket", bridge: "relay-f" }, { fixture: "tv", adopt: "tv" },
-    { fixture: "tv", adopt: "tv", bridge: "tv-h" }, { fixture: "pulse", adopt: "socket", bridge: "relay-g" }, { fixture: "ac", adopt: "ac", bridge: "ac-n" }]);
-  const [pcA, pcB, pcC, pcD, motion, pulseE, pulseF, tv, tvH, pulseG, acN] = devices as [string, string, string, string, string, string, string, string, string, string, string];
+    { fixture: "tv", adopt: "tv", bridge: "tv-h" }, { fixture: "pulse", adopt: "socket", bridge: "relay-g" }, { fixture: "ac", adopt: "ac", bridge: "ac-n" },
+    { fixture: "motion", adopt: "sensor", bridge: "motion-o" }, { fixture: "lamp", adopt: "light", bridge: "lamp-o" }]);
+  const [pcA, pcB, pcC, pcD, motion, pulseE, pulseF, tv, tvH, pulseG, acN, motionO, lampO] = devices as
+    [string, string, string, string, string, string, string, string, string, string, string, string, string];
   const pcs = { a: pcA, b: pcB, c: pcC, d: pcD };
   for (const pc of Object.values(pcs)) session(ctx, pc, "liza", "locked");
   // The second tv's turn_off is no toggle yet; the lamp is someone's, turned off by hand (GA-LEASE-2).
@@ -263,6 +265,43 @@ requirement("GA-RULE-8", {
     mustEqual(firedOf(await eventsAfter(ctx, cursor), "cool-n").length, 2, "the air conditioner's firings: the first and its one further try");
     must(noticeN.outcome === "unanswered", "the air conditioner's notice does not name unanswered", noticeN);
   }
+
+  // A second night: the first laptop's lock fails not_locked again, and raises its notice again; only
+  // skipped(occupancy_unknown)'s may be coalesced.
+  session(ctx, pcA, "liza", "locked");
+  await ctx.time.stepAndWait(1_000);
+  applier.scriptOutcome(pcA, "session.lock", { outcome: "failed", reason: "not_locked", afterMs: 1_000 });
+  const night2 = await cursorNow(ctx);
+  session(ctx, pcA, "liza", "active");
+  await endedAs(ctx, night2, "limit-a", "failed(not_locked)", "Лиза's lock on the first laptop, a second night");
+  const firedA2 = Date.parse(firedOf(await eventsAfter(ctx, night2), "limit-a")[0]!.time);
+  await stepTo(ctx, firedA2 + ack + slack + 1_000);
+  await pollUntil(async () => (await failuresOf(ctx, night2, "limit-a"))[0], 10_000,
+    "no notice for the lock that ended failed(not_locked) a second night", 100);
+
+  // A room not known: a rule's skipped(occupancy_unknown) is noticed, and noticed again after the room was known in between.
+  const hold = Number((await ownerOf(ctx).callOk("describe")).home.occupancy_hold_s) * 1000;
+  await mustDefine(ctx, [up("room", { id: "attic", name: "Чердак" }), up("target", { id: lampO, room: "attic" }), up("target", { id: motionO, room: "attic" })],
+    "the attic, its lamp and its motion sensor");
+  const attic = await cursorNow(ctx);
+  await mustDefine(ctx, [up("rule", { id: "attic-o", name: "Чердак", conditions: [{ target: pcB, key: "session.liza", not_in: ["locked", "disconnected", "none"] }],
+    actions: [{ target: lampO, action: "onoff.turn_on", args: {}, respect_occupancy: true }] })], "a rule turning the attic's lamp on, respecting occupancy");
+  // The second laptop's lock took late: its session reads locked; opened, the rule becomes true.
+  session(ctx, pcB, "liza", "active");
+  await endedAs(ctx, attic, "attic-o", "skipped(occupancy_unknown)", "the attic's lamp, its room not known");
+  await pollUntil(async () => (await failuresOf(ctx, attic, "attic-o"))[0], 10_000, "no notice for a skipped(occupancy_unknown)", 100);
+  applier.scriptValue(motionO, "motion", true, { cause: "device" });
+  await ctx.time.stepAndWait(1_000);
+  applier.scriptValue(motionO, "motion", false, { cause: "device" });
+  await ctx.time.stepAndWait(hold + 5_000);
+  const known = await cursorNow(ctx);
+  session(ctx, pcB, "liza", "locked");
+  await ctx.time.stepAndWait(1_000);
+  session(ctx, pcB, "liza", "active");
+  await endedAs(ctx, known, "attic-o", "skipped(occupancy_unknown)", "the attic's lamp, its room not known again");
+  const again = await pollUntil(async () => (await failuresOf(ctx, known, "attic-o"))[0], 10_000,
+    "no notice for a skipped(occupancy_unknown) after the room was known in between", 100);
+  ctx.evidence(`the attic's notice after the room was known: ${again.text}`);
 });
 
 /**

@@ -3,13 +3,13 @@ import { must, mustEqual } from "../../assert.js";
 import type { TestContext } from "../../context.js";
 import { constantMs } from "../../manifest.js";
 import { requirement } from "../../registry.js";
-import { LAMP } from "../../steward-home.js";
+import { CHANNEL, LAMP } from "../../steward-home.js";
 import { pollUntil } from "../../util.js";
 import { answer, applyInline, applyPlan, mustAccept, outcomes, planned, sentFrom } from "./answers.js";
 import { ackWithinMs, endedAs, failuresOf, received, stepTo, unlessRetried } from "./outcomes.js";
 import { cursorNow, eventsAfter, firedOf, restartSteward } from "./rules.js";
 import { runReads, scene, startRun } from "./scenarios.js";
-import { act, mustDefine, ownerOf, raiseTier, scripted, up } from "./util.js";
+import { act, mustDefine, ownerOf, raiseTier, scripted, stewardSees, targetIn, up } from "./util.js";
 
 const ON = "onoff.turn_on";
 const iso = (ms: number) => new Date(ms).toISOString();
@@ -34,24 +34,33 @@ async function leaseLines(ctx: TestContext): Promise<string[]> {
 
 requirement("GA-PERSIST-2", {
   seam: "steward",
-  covers: "restarted cleanly, the steward keeps the house (describe's revision, home, rooms, groups, endpoints, scenarios, rules, schedules and modes as before); the member's lease of the lamp, with its expiry; an apply's key, its repeat returning the first apply and sending nothing; a plan of a confirm step answered yes before the restart, applied after it with a token; the events history needs, a history read after the restart giving the lamp's change from before it; the notice a pulse relay's failed(no_ack) holds, raised after the restart once its wait has passed and not inside the late-ack window, and none for a second relay whose late_ack came while the steward was down; a third dimmer's turn_on in flight at the stop, ended unreachable while the steward was down, is relayed naming its rule, and is tried again after the restart under a key other than the one before it; a run of a long scenario ends ended(interrupted) at the restart, its lease released; a held trigger's duration starts afresh at the restart. Each schedule's last run is GA-SCHED-2's case; the narrowings and the front's records are slice 9's, a session's persons slice 8's",
+  covers: "a notice held for want of a notify channel (the home's channel unadopted through the applier) is kept across the restart and delivered once the channel is adopted again; restarted cleanly, the steward keeps the house (describe's revision, home, rooms, groups, endpoints, scenarios, rules, schedules and modes as before); the member's lease of the lamp, with its expiry; an apply's key, its repeat returning the first apply and sending nothing; a plan of a confirm step answered yes before the restart, applied after it with a token; a plan with no ask either kept or lost, its answer and its apply unknown_plan both or neither; an answer to a plan never made unknown_plan; the events history needs, a history read after the restart giving the lamp's change from before it; the notice a pulse relay's failed(no_ack) holds, raised after the restart once its wait has passed and not inside the late-ack window, and none for a second relay whose late_ack came while the steward was down; a third dimmer's turn_on in flight at the stop, ended unreachable while the steward was down, is relayed naming its rule, and is tried again after the restart under a key other than the one before it; a run of a long scenario ends ended(interrupted) at the restart, its lease released. A held trigger's duration starting afresh at the restart is GA-RULE-1's case; each schedule's last run is GA-SCHED-2's case; the narrowings and the front's records are slice 9's, a session's persons slice 8's",
 }, async (ctx) => {
   const s = ctx.steward!;
   const applier = ctx.standIn!.applier;
   const slack = constantMs("steward", "late-ack-slack");
-  const [dimmer, held, motion, still, pulseE, pulseF, pulseH, warm] = await scripted(ctx, [{ fixture: "dimmer", adopt: "light" },
-    { fixture: "dimmer", adopt: "light", bridge: "dim-b" }, { fixture: "motion", adopt: "sensor" }, { fixture: "motion", adopt: "sensor", bridge: "motion-b" },
+  const [dimmer, held, motion, pulseE, pulseF, warm] = await scripted(ctx, [{ fixture: "dimmer", adopt: "light" },
+    { fixture: "dimmer", adopt: "light", bridge: "dim-b" }, { fixture: "motion", adopt: "sensor" },
     { fixture: "pulse", adopt: "socket", bridge: "relay-e" }, { fixture: "pulse", adopt: "socket", bridge: "relay-f" },
-    { fixture: "pulse", adopt: "socket", bridge: "relay-h" }, { fixture: "dimmer", adopt: "light", bridge: "dim-w" }]) as
-    [string, string, string, string, string, string, string, string];
+    { fixture: "dimmer", adopt: "light", bridge: "dim-w" }]) as [string, string, string, string, string, string];
   await raiseTier(ctx, dimmer, ON, "confirm");
   const pulse = (id: string, target: string) => up("rule", { id, name: id, conditions: [{ target: motion, key: "motion", op: "eq", value: true }],
     actions: [act(target)] });
+  // A notice held for want of a notify channel: the home's channel unadopted through the applier (no define, so no
+  // GA-DEF-8 check leans on this case), the notice raised before the restart.
+  // Waited for by describe's adopted, not by the steward's notice of the loss, which is GA-NOTE-4's.
+  applier.scriptAdopted(CHANNEL, false);
+  await stewardSees(ctx, "the home's channel no longer adopted", (d) => targetIn(d, CHANNEL)?.adopted === false);
+  const heldNotice = `n-${randomUUID().slice(0, 8)}`;
+  const raisedFrom = await cursorNow(ctx);
+  applier.scriptNotice({ notice_id: heldNotice, cause: "join_window", text: "Окно сопряжения закрыто" });
+  await pollUntil(async () => (await eventsAfter(ctx, raisedFrom)).some((e) => e.type === "notice" && e.change === "raised" && e.notice_id === heldNotice) || undefined,
+    10_000, "the steward did not raise the notice the stand-in gave with no notify channel", 100);
+  must(!applier.taken.includes(heldNotice), "the steward took a notice no notify channel delivered, before the restart");
+
   const start = await cursorNow(ctx);
-  // «No motion for 180 s» on the second sensor counts from its define.
-  await mustDefine(ctx, [pulse("pulse-e", pulseE), pulse("pulse-f", pulseF), pulse("warm", warm), scene("long", [act(held), { delay: 3600 }], { owned: [held] }),
-    up("rule", { id: "still", name: "Тихо", trigger: { held: { target: still, key: "motion", op: "eq", value: false, for_s: 180 } }, actions: [act(pulseH)] })],
-  "the relays' rules, a long scenario and a held trigger");
+  await mustDefine(ctx, [pulse("pulse-e", pulseE), pulse("pulse-f", pulseF), pulse("warm", warm), scene("long", [act(held), { delay: 3600 }], { owned: [held] })],
+  "the relays' rules and a long scenario");
   const defined = Date.parse((await eventsAfter(ctx, start)).find((e) => e.type === "define")!.time);
 
   // The member's lamp on, under a key, leases the lamp to her; a plan of a confirm step answered yes; a run of the long scenario.
@@ -67,6 +76,8 @@ requirement("GA-PERSIST-2", {
   const p = await planned(s.olga, "olga-app", [act(dimmer)]);
   mustEqual(p.steps.map((x: { verdict: string }) => x.verdict), ["ask"], "the plan's steps");
   mustAccept(ctx, await answer(s.olga, p.plan_id, "olga-app", { s1: "yes" }), "the member's yes");
+  // A plan with no ask: it may be lost at the restart, and is then unknown_plan.
+  const plain = await planned(s.olga, "olga-app", [act(LAMP)]);
   const { run_id } = await startRun(ctx, s.olga, "olga-app", "long");
   await pollUntil(async () => (await leaseLines(ctx)).some((l) => l.startsWith(`${held} `)) || undefined, 10_000, "the run took no lease of its dimmer", 100);
 
@@ -125,11 +136,27 @@ requirement("GA-PERSIST-2", {
   await pollUntil(async () => !(await leaseLines(ctx)).some((l) => l.startsWith(`${held} `)) || undefined, 10_000,
     "the interrupted run's lease of its dimmer was not released", 100);
 
+  // The plan with no ask: kept, or lost, its answer and its apply then both unknown_plan.
+  const plainAnswer = await answer(s.olga, plain.plan_id, "olga-app", { s1: "yes" });
+  const plainApply = await applyPlan(s.olga, plain.plan_id);
+  const said = (r: { ok: boolean; error?: string }) => (r.ok ? "ok" : r.error!);
+  ctx.evidence(`the plan with no ask after the restart: answer ${said(plainAnswer)}, apply ${said(plainApply)}`);
+  must((said(plainAnswer) === "unknown_plan") === (said(plainApply) === "unknown_plan"),
+    `the plan with no ask after the restart: answer ${said(plainAnswer)}, apply ${said(plainApply)}: lost to one and not the other`);
+  mustEqual(said(await answer(s.olga, "no-such-plan", "olga-app", { s1: "yes" })), "unknown_plan", "an answer to a plan never made");
+
   // The plan answered yes before the restart is applied after it, with a token.
   const yes = await applyPlan(s.olga, p.plan_id);
   mustEqual(outcomes(yes, "the plan's apply after the restart"), [`${dimmer} dispatched`], "the plan's outcomes after the restart");
   const dim = sent().filter((x) => x.target === dimmer && x.action === ON);
   mustEqual(dim.map((x) => [x.token, x.tokenFault ?? ""]), [[true, ""]], "the plan's step at the stand-in, its token and whether it stands");
+
+  // The held notice survived it: delivered once the notify channel is adopted again (its taking is GA-NOTE-1's).
+  const heard = sentFrom(ctx);
+  applier.scriptAdopted(CHANNEL, true);
+  const heldSent = await pollUntil(async () => heard().find((x) => x.action === "notify.notify" && x.for?.notice === heldNotice), 10_000,
+    "the notice held across the restart was never delivered once the notify channel was adopted again", 100);
+  ctx.evidence(`the notice held across the restart: sent on ${heldSent.target} once the channel was adopted again`);
 
   // History from before the restart: its events, by seq (before the cursor taken after it), not by the case's clock (the milestone 7+10+11 review, I1).
   const past = ((await ownerOf(ctx).callOk("history", { targets: [LAMP], from: iso(defined - 1_000), to: iso(ctx.time.now() + 60_000) })).events as
@@ -159,14 +186,6 @@ requirement("GA-PERSIST-2", {
   mustEqual(lost.cause, { rule: "warm" }, "the cause of an outcome of a firing in flight at the stop");
   const warmKeys = () => [...new Set(warmSent().slice(warmSentBefore).map((x) => String(x.key)))];
 
-  // The held trigger: its 180 s started afresh at the restart, not at its define.
-  await stepTo(ctx, defined + 185_000);
-  mustEqual(firedOf(await eventsAfter(ctx, after), "still").length, 0, "the held trigger's firings 180 s after its define, the restart inside them");
-
-  await stepTo(ctx, restarted + 181_000);
-  const late = await pollUntil(async () => firedOf(await eventsAfter(ctx, after), "still")[0], 10_000, "the held trigger never fired after the restart", 100);
-  ctx.evidence(`defined ${iso(defined)}, restarted ${iso(restarted)}, fired ${late.time}`);
-  must(Date.parse(late.time) >= restarted + 180_000 - 1_000, `the held trigger fired at ${late.time}, before 180 s from the restart`);
 
   // Its retry's spacing is GA-RULE-7's: here, that a retry is made after the restart, under a key other than the one before it
   // (the milestone 7+10+11 review, I5). Last in the case, the clock stepped on five minutes at a time for up to two hours until
