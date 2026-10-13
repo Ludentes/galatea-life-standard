@@ -1,0 +1,3 @@
+{ "targets": {}, "transports": [], "latches": [], "groups": {}, "rooms": {},
+  "leases": { "sim-bridge:lamp": { "holder": { "rule": "bench-on", "press": { "target": "sim-bridge:button",
+    "key": "org.galatea.test.button.action", "value": "1_single" } }, "precedence": "person", "expires": "2030-01-01T10:00:00Z" } } }

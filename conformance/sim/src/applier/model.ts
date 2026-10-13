@@ -20,6 +20,8 @@ export interface HeldDevice {
   infrastructure?: boolean;
   /** The scripted stand-in: an owner's freshness bound (`fresh_s`), or null for none known, over the declared one. */
   freshS?: number | null;
+  /** The scripted stand-in: the `onoff` action that opens a water or gas valve (applier, *Adoption*), shown in `describe`. */
+  opensWith?: "onoff.turn_on" | "onoff.turn_off";
 }
 
 export type Tier = "reversible" | "confirm" | "no_voice";
@@ -71,6 +73,7 @@ export function describeDevice(d: HeldDevice): Record<string, unknown> {
     ...(d.internal ? { internal: true } : {}),
     ...((d.doc as { accounts?: Record<string, string> }).accounts ? { accounts: (d.doc as { accounts?: Record<string, string> }).accounts } : {}),
     ...(d.infrastructure ? { infrastructure: true } : {}),
+    ...(d.opensWith ? { opens_with: d.opensWith } : {}),
     // The keys its bridge declares personal (applier, *Personal keys*, GA-DESC-9).
     ...(d.doc.personal?.length ? { personal: [...d.doc.personal] } : {}),
     ...(d.doc.extensions ? { extensions: d.doc.extensions.map((e) => ({ ...e, keys: (e.keys ?? []).map((k) => ({ ...k, kind: k.kind ?? "state" })) })) } : {}),

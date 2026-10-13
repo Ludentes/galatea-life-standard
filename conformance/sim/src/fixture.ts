@@ -186,6 +186,21 @@ const SCRIPTED: Record<string, FixtureDevice> = {
   laptop: device({ id: "laptop", capabilities: ["session"], feedback: "closed", proposedClass: "computer",
     initial: { "session.liza": "active", "session.dmitry": "locked" }, accounts: { liza: "Лиза", dmitry: "Дмитрий" },
     actions: declare(["session"], "closed", { args: { account: ["liza", "dmitry"] } }), selfChanging: ["session.liza", "session.dmitry"] }),
+  // A wall scene switch: each press an occurrence (bridge, *Occurrences*), never state (HS35).
+  button: device({ id: "button", capabilities: ["sensor"], sensorKeys: ["battery"], feedback: "closed", proposedClass: "sensor",
+    initial: { battery: 90 }, actions: [], extensions: [{ capability: "org.galatea.test.button", description: "The switch's presses.", actions: [],
+      keys: [{ key: "org.galatea.test.button.action", kind: "event", description: "1_single, 1_double, 1_hold.", schema: { type: "string" } }] }] }),
+  // A door lock (HS18) and a valve its protocol shows as a switch (GA-LEASE-11).
+  doorlock: device({ id: "doorlock", capabilities: ["lock"], feedback: "closed", proposedClass: "door_lock", initial: { locked: true } }),
+  watervalve: device({ id: "watervalve", capabilities: ["onoff"], feedback: "closed", proposedClass: "water_valve", initial: { on: true } }),
+  // A metering plug: a socket that reports its power, which the heater does not.
+  meteringplug: device({ id: "meteringplug", capabilities: ["onoff"], sensorKeys: ["power"], feedback: "closed", proposedClass: "socket",
+    initial: { on: false, power: 0 } }),
+  // A radio lamp that reports nothing, its codes discrete: an open-loop lamp, whose hold's floor ends at `sent` (GA-LEASE-7).
+  rflamp: device({ id: "rflamp", capabilities: ["onoff"], feedback: "open", proposedClass: "light", initial: {} }),
+  // A multisensor: presence and light readings, neither set by any action (GA-LEASE-2).
+  multisensor: device({ id: "multisensor", capabilities: ["sensor"], sensorKeys: ["occupancy", "illuminance"], feedback: "closed",
+    proposedClass: "sensor", initial: { occupancy: false, illuminance: 0 } }),
 };
 
 /** A device's entry in its bridge's `devices` document (`bridge/devices.json`), as the simulated bridge publishes it. */

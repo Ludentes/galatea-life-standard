@@ -1,0 +1,10 @@
+{
+  "seq": 7,
+  "time": "2030-01-01T08:00:00.000Z",
+  "type": "lease",
+  "target": "sim-bridge:lamp",
+  "change": "ended",
+  "holder": "load_cap",
+  "precedence": "person",
+  "expires": "2030-01-01T09:00:00.000Z"
+}

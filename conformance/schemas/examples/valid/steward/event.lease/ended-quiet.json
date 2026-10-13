@@ -1,0 +1,15 @@
+{
+  "seq": 7,
+  "time": "2030-01-01T08:00:00.000Z",
+  "type": "lease",
+  "target": "sim-bridge:lamp",
+  "change": "ended",
+  "holder": {
+    "person": "olga",
+    "endpoint": "olga-app"
+  },
+  "precedence": "person",
+  "expires": "2030-01-01T09:00:00.000Z",
+  "end": "quiet",
+  "quiet_since": "2030-01-01T08:40:00.000Z"
+}

@@ -6,7 +6,7 @@ import { CHANNEL, LAMP } from "../../steward-home.js";
 import { pollUntil } from "../../util.js";
 import { sentFrom } from "./answers.js";
 import { cursorNow, eventsAfter, firedOf, limit, relayed, session, type Ev } from "./rules.js";
-import { mustDefine, ownerOf, scripted, stewardSees, targetIn, up } from "./util.js";
+import { ackWithinOf, mustDefine, ownerOf, scripted, stepTo, stewardSees, targetIn, up } from "./util.js";
 
 /** A rule of conditions only on the motion sensor reading motion, acting on `target`. */
 const onMotion = (id: string, motion: string, target: string, action: string, args: Record<string, unknown> = {}) => ({ id, name: id,
@@ -14,10 +14,7 @@ const onMotion = (id: string, motion: string, target: string, action: string, ar
 
 /** The `ack_within_s` the stand-in declares for `target`'s `action`, as the steward's `describe` shows it. */
 export async function ackWithinMs(ctx: TestContext, target: string, action: string): Promise<number> {
-  const d = await ownerOf(ctx).callOk("describe");
-  const a = (targetIn(d, target)?.actions as { action: string; ack_within_s: number }[] | undefined)?.find((x) => x.action === action);
-  must(typeof a?.ack_within_s === "number", `the steward's describe shows no ack_within_s for ${target} ${action}`, a);
-  return a!.ack_within_s * 1000;
+  return (await ackWithinOf(ctx, target, action)) * 1000;
 }
 
 /** Waits until the steward has relayed a final outcome `outcome` of a firing of `rule` since `cursor`; returns that event. */
@@ -44,12 +41,6 @@ async function togglesOf(ctx: TestContext, cursor: string, rule: string): Promis
 export async function received(sent: () => { target: string; for: any }[], targets: string[], what: string): Promise<void> {
   await pollUntil(async () => targets.every((t) => sent().some((x) => x.target === t && x.for?.rule !== undefined)) || undefined,
     10_000, `${what}: the stand-in never received the rules' applies`, 100);
-}
-
-/** Steps the clock to `atMs` (the clock moves with wall time too, so the step is measured now), the stepped time taken by every client. */
-export async function stepTo(ctx: TestContext, atMs: number): Promise<void> {
-  const left = atMs - ctx.time.now();
-  if (left > 0) await ctx.time.stepAndWait(left);
 }
 
 requirement("GA-RULE-7", {

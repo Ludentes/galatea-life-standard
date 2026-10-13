@@ -75,7 +75,21 @@
                       "type": "string",
                       "minLength": 1
                     },
-                    "value": {}
+                    "value": {},
+                    "press": {
+                      "type": "boolean",
+                      "description": "The author's mark that the occurrence is a person's physical act (GA-LEASE-9); only on an occurrence trigger"
+                    }
+                  },
+                  "if": {
+                    "required": ["press"]
+                  },
+                  "then": {
+                    "properties": {
+                      "type": {
+                        "const": "occurrence"
+                      }
+                    }
                   }
                 }
               }

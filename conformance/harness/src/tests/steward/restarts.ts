@@ -6,15 +6,17 @@ import { requirement } from "../../registry.js";
 import { CHANNEL, LAMP } from "../../steward-home.js";
 import { pollUntil } from "../../util.js";
 import { answer, applyInline, applyPlan, mustAccept, outcomes, planned, sentFrom } from "./answers.js";
-import { ackWithinMs, endedAs, failuresOf, received, stepTo, unlessRetried } from "./outcomes.js";
+import { ackWithinMs, endedAs, failuresOf, received, unlessRetried } from "./outcomes.js";
 import { cursorNow, eventsAfter, firedOf, restartSteward } from "./rules.js";
 import { runReads, scene, startRun } from "./scenarios.js";
-import { act, mustDefine, ownerOf, raiseTier, scripted, stewardSees, targetIn, up } from "./util.js";
+import { answered, endedAtRestart, endsAt, expiresBetween, grantsOf, lampOn, restartReadBack, room, Seen, sensorOn, stepOf } from "./hold-helpers.js";
+import { act, holderWord, iso, leaseEventsSince, leaseOf, mustDefine, ownerOf, pinHold, raiseTier, scripted, SECOND, setFlag, stepTo, stewardSees, targetIn, up } from "./util.js";
 
 const ON = "onoff.turn_on";
-const iso = (ms: number) => new Date(ms).toISOString();
 /** How far GA-PERSIST-2 steps the clock on for a firing's retry after the restart: past GA-RULE-7's 300 s, any retry at all. */
 const RETRY_LOOK_MS = 2 * 3_600_000;
+/** How far the long gap of GA-PERSIST-2's hold part runs: two hours, past a missed change's whole `fixed_s` (3600 s pinned). */
+const LONG_GAP_MS = 2 * 3_600_000;
 
 /** `v` with every object's keys in order: a restart may give a definition's fields in another order, which is the same house. */
 const sorted = (v: unknown): unknown => (Array.isArray(v) ? v.map(sorted) : v && typeof v === "object"
@@ -29,12 +31,12 @@ async function houseOf(ctx: TestContext): Promise<unknown> {
 /** The leases the owner's `state` shows, `target holder precedence expires`. */
 async function leaseLines(ctx: TestContext): Promise<string[]> {
   const l = ((await ownerOf(ctx).callOk("state")).leases ?? {}) as Record<string, { holder: any; precedence: string; expires: string }>;
-  return Object.entries(l).map(([t, x]) => `${t} ${typeof x.holder === "string" ? x.holder : x.holder?.endpoint ?? JSON.stringify(x.holder)} ${x.precedence} ${x.expires}`).sort();
+  return Object.entries(l).map(([t, x]) => `${t} ${holderWord(x.holder)} ${x.precedence} ${x.expires}`).sort();
 }
 
 requirement("GA-PERSIST-2", {
   seam: "steward",
-  covers: "a notice held for want of a notify channel (the home's channel unadopted through the applier) is kept across the restart and delivered once the channel is adopted again; restarted cleanly, the steward keeps the house (describe's revision, home, rooms, groups, endpoints, scenarios, rules, schedules and modes as before); the member's lease of the lamp, with its expiry; an apply's key, its repeat returning the first apply and sending nothing; a plan of a confirm step answered yes before the restart, applied after it with a token; a plan with no ask either kept or lost, its answer and its apply unknown_plan both or neither; an answer to a plan never made unknown_plan; the events history needs, a history read after the restart giving the lamp's change from before it; the notice a pulse relay's failed(no_ack) holds, raised after the restart once its wait has passed and not inside the late-ack window, and none for a second relay whose late_ack came while the steward was down; a third dimmer's turn_on in flight at the stop, ended unreachable while the steward was down, is relayed naming its rule, and is tried again after the restart under a key other than the one before it; a run of a long scenario ends ended(interrupted) at the restart, its lease released. A held trigger's duration starting afresh at the restart is GA-RULE-1's case; each schedule's last run is GA-SCHED-2's case; the narrowings and the front's records are slice 9's, a session's persons slice 8's",
+  covers: "a notice held for want of a notify channel (the home's channel unadopted through the applier) is kept across the restart and delivered once the channel is adopted again; restarted cleanly, the steward keeps the house (describe's revision, home, rooms, groups, endpoints, scenarios, rules, schedules and modes as before); the member's lease of the lamp, with its expiry; an apply's key, its repeat returning the first apply and sending nothing; a plan of a confirm step answered yes before the restart, applied after it with a token; a plan with no ask either kept or lost, its answer and its apply unknown_plan both or neither; an answer to a plan never made unknown_plan; the events history needs, a history read after the restart giving the lamp's change from before it; the notice a pulse relay's failed(no_ack) holds, raised after the restart once its wait has passed and not inside the late-ack window, and none for a second relay whose late_ack came while the steward was down; a third dimmer's turn_on in flight at the stop, ended unreachable while the steward was down, is relayed naming its rule, and is tried again after the restart under a key other than the one before it; a run of a long scenario ends ended(interrupted) at the restart, its lease released. A held trigger's duration starting afresh at the restart is GA-RULE-1's case; each schedule's last run is GA-SCHED-2's case; the narrowings and the front's records are slice 9's, a session's persons slice 8's. A person's hold, under the pinned windows with presence_renews set true (a steward that refuses the flag: the quiet parts skipped and said): an outside on in a room whose motion cleared 3000 s after it, the steward then down 300 s with no presence in its room, ends on_s after the motion's false and names it as quiet_since, not on_s after the restart; another room's outside on, motion true and false in that gap, ends on_s after that false, counted at its event's time and not at the read-back; a hold whose quiet end fell in a two-hour gap, motion only later in the gap, ends at the restart, end quiet with end_time that end, not revived; a roomless lamp's outside on 10 s into that gap, its fixed_s end passed by the read-back, takes no lease and puts no lease event; with other_s pinned apart from on_s and off_s, a member's turn_off in a room quiet throughout, its expires off_s after its dispatch before the stop, ends off_s after its dispatch across a restart (its direction kept), `quiet` with presence_renews and `window` without; with owner_work_passes_guest_holds set true (a steward that refuses it: skipped and said), after a restart the owner's rule passes the guest panel's acked hold and is refused(leased) by the member's acked hold beside it (each hold's derived role kept); each restart's gap end read within the hold end lateness of the read-back, its end_time the hold's expires before the stop",
 }, async (ctx) => {
   const s = ctx.steward!;
   const applier = ctx.standIn!.applier;
@@ -201,4 +203,131 @@ requirement("GA-PERSIST-2", {
     + (stepped ? `, once the clock was stepped ${stepped / 60_000} min on (its spacing is GA-RULE-7's)` : ""));
   must(warmKeys().every((k) => /^rule:warm:\d+$/.test(k) && !warmBefore.includes(k)), "the retry's key after the restart, against the one before it",
     { before: warmBefore, after: warmKeys() });
+  // A person's hold across a restart (the hold part), under the pinned windows, other_s apart from on_s and off_s: with
+  // presence_renews, the quiet kept and the gap's presence counted at its event's time; a member's turn_off keeping its
+  // direction (off_s, not on_s or other_s); with owner_work_passes_guest_holds, the guest panel's hold keeping its role
+  // (the owner's rule passes it) and a member's hers (the rule refused); an end in the gap ended at the restart with
+  // end_time and not revived; a missed change whose end passed in the gap taking no lease. Motion sensors only: no
+  // room here can be vacant (GA-OCC-1).
+  const pol = await pinHold(ctx, { other_s: 1800 });
+  const seen = new Seen();
+  const renews = await setFlag(ctx, "presence_renews", true, ["restarts-the-quiet", "GA-PERSIST-2: a gap's presence counted at its event's time"]);
+  const passes = await setFlag(ctx, "owner_work_passes_guest_holds", true, ["GA-PERSIST-2: a guest's hold keeping its derived role across a restart"]);
+  {
+    const [lampA, motionA] = renews ? await scripted(ctx, [lampOn("persist-a"), sensorOn("motion", "persist-a")]) : [];
+    const [lampB, motionB] = renews ? await scripted(ctx, [lampOn("persist-b"), sensorOn("motion", "persist-b")]) : [];
+    const [lampE, motionE] = await scripted(ctx, [lampOn("persist-e"), sensorOn("motion", "persist-e")]);
+    const [lampG, lampM, motionR] = passes ? await scripted(ctx, [lampOn("persist-g"), lampOn("persist-g2"), sensorOn("motion", "persist-g3")]) : [];
+    await mustDefine(ctx, [...(renews ? [...room("persist-hall", [lampA!, motionA!]), ...room("persist-den", [lampB!, motionB!])] : []),
+      ...room("persist-kitchen", [lampE!, motionE!]),
+      ...(passes ? [up("rule", { id: "persist-off-g", name: "persist-off-g", conditions: [{ target: motionR, key: "motion", op: "eq", value: true }],
+        actions: [{ target: lampG, action: "onoff.turn_off", args: {} }] }),
+      up("rule", { id: "persist-off-m", name: "persist-off-m", conditions: [{ target: motionR, key: "motion", op: "eq", value: true }],
+        actions: [{ target: lampM, action: "onoff.turn_off", args: {} }] })] : [])], "the hold part's rooms and rules");
+    applier.scriptValue(lampE!, "on", true, { cause: "device" });
+    const c = await cursorNow(ctx);
+    const t0 = ctx.time.now();
+    if (renews) {
+      applier.scriptValue(lampA!, "on", true, { cause: "external" });
+      applier.scriptValue(lampB!, "on", true, { cause: "external" });
+      await grantsOf(ctx, seen, c, [lampA!, lampB!], "outside ons in the hall and the den");
+    }
+    await stepTo(ctx, t0 + 2_990 * SECOND);
+    // The kitchen quiet throughout: a member's turn_off there ends off_s after its dispatch, across the restart.
+    const offAt = ctx.time.now();
+    mustEqual(outcomes(await applyInline(s.olga, "olga-app", [act(lampE!, "onoff.turn_off")]), "the member's turn_off in the kitchen"),
+      [`${lampE} dispatched`], "the member's turn_off in the kitchen");
+    const offSent = ctx.time.now();
+    // Its direction shows in its expires (off_s); the granted event's direction and role are GA-LEASE-7's to read.
+    await grantsOf(ctx, seen, c, [lampE!], "the member's turn_off in the kitchen");
+    await expiresBetween(ctx, lampE!, offAt + pol.off_s * SECOND, offSent + pol.off_s * SECOND, "the kitchen hold before the stop, off_s from dispatch");
+    if (passes) {
+      // The guest panel's and the member's holds, acked before the stop, so each is past its floor.
+      const cg = await cursorNow(ctx);
+      mustEqual(outcomes(await applyInline(s.panel, "hall-panel", [act(lampG!)]), "the guest panel's turn_on"), [`${lampG} dispatched`],
+        "the guest panel's turn_on");
+      mustEqual(outcomes(await applyInline(s.olga, "olga-app", [act(lampM!)]), "the member's turn_on"), [`${lampM} dispatched`], "the member's turn_on");
+      const g = await grantsOf(ctx, seen, cg, [lampG!, lampM!], "the guest panel's and the member's holds");
+      mustEqual([g[lampG!]!.role, g[lampM!]!.role], ["guest", "member"], "the roles the holds' granted events name");
+      await answered(ctx, cg, lampG!, "the guest panel's turn_on");
+      await answered(ctx, cg, lampM!, "the member's turn_on");
+    }
+    if (renews) {
+      // The hall's motion, true then false at +3000 s, seen live before the stop: quiet from then.
+      await stepTo(ctx, t0 + 3000 * SECOND);
+      const m = await cursorNow(ctx);
+      applier.scriptValue(motionA!, "motion", true);
+      applier.scriptValue(motionA!, "motion", false);
+      await pollUntil(async () => (await eventsAfter(ctx, m)).some((e) => e.type === "state" && e.target === motionA && e.key === "motion" && e.value === false)
+        || undefined, 10_000, "the steward did not relay the hall's motion clearing", 100);
+    } else await stepTo(ctx, t0 + 3000 * SECOND);
+    // Down 300 s: no presence in the hall; the den's motion true at +3010 s and false at +3040 s, stamped at those
+    // times (stepped and waited for), read back at +3300 s.
+    await restartReadBack(ctx, async () => {
+      await ctx.time.stepAndWait(10 * SECOND);
+      if (renews) applier.scriptValue(motionB!, "motion", true);
+      await ctx.time.stepAndWait(30 * SECOND);
+      if (renews) applier.scriptValue(motionB!, "motion", false);
+      await ctx.time.stepAndWait(t0 + 3300 * SECOND - ctx.time.now());
+    });
+    ctx.evidence(`restarted at ${iso(ctx.time.now())}, the outside changes at ${iso(t0)}, the kitchen's turn_off at ${iso(offAt)}`);
+    if (passes) {
+      // The roles kept: the owner's rule passes the guest's hold, and the member's hold refuses it.
+      const cr = await cursorNow(ctx);
+      const sent = sentFrom(ctx);
+      applier.scriptValue(motionR!, "motion", true, { cause: "device" });
+      mustEqual(await stepOf(ctx, cr, sent, "persist-off-g", lampG!, "onoff.turn_off", "the owner's rule over the guest's hold after the restart"), "sent",
+        "the owner's rule over the guest panel's hold after the restart");
+      mustEqual(await stepOf(ctx, cr, sent, "persist-off-m", lampM!, "onoff.turn_off", "the owner's rule over the member's hold after the restart"),
+        "refused(leased) olga-app", "the owner's rule over the member's hold after the restart");
+      applier.scriptValue(motionR!, "motion", false, { cause: "device" });
+    }
+    await endsAt(ctx, seen, lampE!, offAt + pol.off_s * SECOND, "the kitchen's off hold, its direction kept across the restart",
+      { end: renews ? "quiet" : "window", quietSince: null, byExpires: true });
+    if (renews) {
+      await endsAt(ctx, seen, lampA!, t0 + (3000 + pol.on_s) * SECOND, "the hall's hold, its quiet kept across the restart",
+        { end: "quiet", quietSince: t0 + 3000 * SECOND, byExpires: true });
+      await endsAt(ctx, seen, lampB!, t0 + (3040 + pol.on_s) * SECOND, "the den's hold, the gap's motion counted at its time",
+        { end: "quiet", quietSince: t0 + 3040 * SECOND, byExpires: true });
+    }
+  }
+
+  // A two-hour gap: the study's hold, its quiet end inside it and motion only later, ends at the restart with end_time
+  // that end and is not revived; a roomless lamp's outside on 10 s into it, its fixed_s end passed by the read-back,
+  // takes no lease. Neither needs presence_renews: the study's room is quiet from the change to its end.
+  {
+    const [lampC, motionC] = await scripted(ctx, [lampOn("persist-c"), sensorOn("motion", "persist-c")]);
+    const [lampD] = await scripted(ctx, [lampOn("persist-d")]);
+    await mustDefine(ctx, room("persist-study", [lampC!, motionC!]), "the study");
+    const c = await cursorNow(ctx);
+    const t1 = ctx.time.now();
+    applier.scriptValue(lampC!, "on", true, { cause: "external" });
+    await grantsOf(ctx, seen, c, [lampC!], "an outside on in the study");
+    await stepTo(ctx, t1 + 600 * SECOND);
+    // The room quiet throughout, its expires before the stop is its quiet end, which end_time must name.
+    const before = await leaseOf(ctx, lampC!);
+    must(before !== undefined, "the study's hold before the stop: no lease");
+    const down = await cursorNow(ctx);
+    const stopped = ctx.time.now();
+    const readBack = await restartReadBack(ctx, async () => {
+      await ctx.time.stepAndWait(10 * SECOND);
+      applier.scriptValue(lampD!, "on", true, { cause: "external" });
+      await ctx.time.stepAndWait(t1 + (pol.on_s + 300) * SECOND - ctx.time.now());
+      applier.scriptValue(motionC!, "motion", true);
+      await ctx.time.stepAndWait(30 * SECOND);
+      await ctx.time.stepAndWait(stopped + LONG_GAP_MS - ctx.time.now());
+    });
+    await endedAtRestart(ctx, seen, down, lampC!, Date.parse(before!.expires), "quiet", "the study's hold, its quiet end in a two-hour gap", readBack);
+    // Not revived, and the missed change none: a further look, so a lease granted just after the end is seen.
+    const late = await pollUntil(async () => seen.keep(await leaseEventsSince(ctx, down)).find((e) => e.change === "granted" && (e.target === lampC || e.target === lampD)),
+      2_000, "", 100).catch(() => undefined);
+    must(late === undefined, `${late?.target === lampD ? "the roomless lamp's outside change in the gap, its end passed, took a lease" : "the study's hold granted again after the restart"}`, late);
+    must((await leaseOf(ctx, lampC!)) === undefined, "the motion later in the gap revived the study's hold");
+    const missed = await leaseOf(ctx, lampD!);
+    must(missed === undefined, "the roomless lamp's outside change 10 s into a two-hour gap, its fixed_s end passed at the read-back, holds a lease", missed);
+    mustEqual(seen.keep(await leaseEventsSince(ctx, down)).filter((e) => e.target === lampD).length, 0,
+      "lease events for the roomless lamp's outside change whose end passed in the gap");
+    ctx.evidence(`the roomless lamp's outside change at ${iso(stopped + 10 * SECOND)}, read back at ${iso(stopped + LONG_GAP_MS)}: no lease`);
+  }
+  await mustDefine(ctx, [up("home", { hold: { presence_renews: null, owner_work_passes_guest_holds: null } })], "the flags back to the steward's own");
 });

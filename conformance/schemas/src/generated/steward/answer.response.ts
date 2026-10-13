@@ -225,7 +225,7 @@ export interface StewardAnswerResponse {
               | "not_confirmed"
             );
         /**
-         * Who holds a lease (steward, Clients, endpoints and principals): a principal, or safety_rule or load_cap
+         * Who holds a lease (steward, Clients, endpoints and principals): a principal (a press rule's `{ rule, press }` among them), or safety_rule, external or load_cap
          */
         holder?:
           | {
@@ -235,6 +235,15 @@ export interface StewardAnswerResponse {
             }
           | {
               rule: string;
+              /**
+               * A press rule's hold: the press it came from, the occurrence's reported value (GA-LEASE-9)
+               */
+              press?: {
+                target: string;
+                key: string;
+                value: unknown;
+                [k: string]: unknown | undefined;
+              };
               [k: string]: unknown | undefined;
             }
           | {

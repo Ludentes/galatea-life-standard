@@ -7,7 +7,7 @@ import { pollUntil } from "../../util.js";
 import { applyInline, outcomes, sentFrom } from "./answers.js";
 import { cursorNow, eventsAfter, fires, type Ev } from "./rules.js";
 import { ackWithinMs } from "./outcomes.js";
-import { act, cursorExpiredGap, mustDefine, ownerOf, scripted, up } from "./util.js";
+import { act, cursorExpiredGap, holderWord, mustDefine, ownerOf, scripted, up } from "./util.js";
 
 const MINUTE = 60_000;
 const DAY = 24 * 60 * MINUTE;
@@ -27,10 +27,10 @@ export async function historyOf(ctx: TestContext, from: number, to: number = ctx
 /** An event as `type target key`, what a list of them is compared by. */
 const kind = (e: Ev) => [e.type, e.target ?? e.rule_id ?? e.rule ?? "", e.key ?? e.latch ?? e.change ?? ""].join(" ").trim();
 
-/** Each device's lease as the owner's `state` shows it, `target holder precedence`, a safety rule's holder by its rule. */
+/** Each device's lease as the owner's `state` shows it, `target holder precedence`, the holder a `holderWord`. */
 async function leases(ctx: TestContext): Promise<string[]> {
   const l = ((await ownerOf(ctx).callOk("state")).leases ?? {}) as Record<string, { holder: any; precedence: string; expires: string }>;
-  return Object.entries(l).map(([t, x]) => `${t} ${typeof x.holder === "string" ? x.holder : x.holder.safety_rule ?? x.holder.endpoint} ${x.precedence}`).sort();
+  return Object.entries(l).map(([t, x]) => `${t} ${holderWord(x.holder)} ${x.precedence}`).sort();
 }
 
 /** The owner's `state` leases until `want`, as the steward relays the stand-in's events. */
@@ -128,20 +128,20 @@ requirement("GA-LEASE-6", {
   applier.scriptSafetyRule({ id: "leak", actuates: [{ target: valve!, key: "open", value: false }], latch: true });
   applier.scriptSafetyRule({ id: "night", actuates: [{ target: LAMP, key: "on", value: true }] });
   applier.scriptSafetyFire("leak");
-  await leasesBecome(ctx, [`${valve} leak safety_rule`], "the latching rule fired");
+  await leasesBecome(ctx, [`${valve} safety:leak safety_rule`], "the latching rule fired");
   const open = outcomes(await applyInline(s.olga, "olga-app", [act(valve!, "valve.open")]), "the member's open of the leased valve");
   ctx.evidence(`the member's open: ${open.join(", ")}`);
   mustEqual(open, [`${valve} refused(leased)`], "the member's open of the valve a safety rule leased");
   applier.scriptLatchClear("leak", "cleared_by_owner");
   await leasesBecome(ctx, [], "the latch cleared by the owner");
   applier.scriptSafetyFire("night", { complete: false });
-  await leasesBecome(ctx, [`${LAMP} night safety_rule`], "the latchless rule running");
+  await leasesBecome(ctx, [`${LAMP} safety:night safety_rule`], "the latchless rule running");
   applier.scriptSafetyComplete("night");
   await leasesBecome(ctx, [], "the latchless rule complete");
 
   // Across a gap.
   await cursorExpiredGap(ctx, () => { applier.scriptSafetyFire("leak"); });
-  await leasesBecome(ctx, [`${valve} leak safety_rule`], "a latch set inside a gap");
+  await leasesBecome(ctx, [`${valve} safety:leak safety_rule`], "a latch set inside a gap");
   await cursorExpiredGap(ctx, () => { applier.scriptLatchClear("leak"); });
   await leasesBecome(ctx, [], "a latch cleared inside a gap");
   const cursor = await cursorNow(ctx);
@@ -151,7 +151,7 @@ requirement("GA-LEASE-6", {
     10_000, "the latchless rule's completion inside the gap was not recorded", 100);
   mustEqual(await leases(ctx), [], "the leases after a latchless rule fired and completed inside a gap");
   applier.scriptSafetyFire("night", { complete: false });
-  await leasesBecome(ctx, [`${LAMP} night safety_rule`], "the latchless rule running before a gap");
+  await leasesBecome(ctx, [`${LAMP} safety:night safety_rule`], "the latchless rule running before a gap");
   // It runs a second before it completes: the steward times its lease by its own clock and the completion it reads from
   // history by the applier's, and the two may stand a few milliseconds apart (under load, an SNTP offset).
   await ctx.time.stepAndWait(1_000);
@@ -169,19 +169,19 @@ requirement("GA-LEASE-6", {
   await ctx.time.stepAndWait(1_000);
   const granted = ctx.time.now();
   applier.scriptSafetyFire("shut", { complete: false });
-  await leasesBecome(ctx, [`${valve} shut safety_rule`], "the latchless rule on the valve running");
+  await leasesBecome(ctx, [`${valve} safety:shut safety_rule`], "the latchless rule on the valve running");
   await ctx.time.stepAndWait(floor - 5_000);
-  mustEqual(await leases(ctx), [`${valve} shut safety_rule`], "the leases before the valve's ack bound and the late-ack window passed");
+  mustEqual(await leases(ctx), [`${valve} safety:shut safety_rule`], "the leases before the valve's ack bound and the late-ack window passed");
   if (bound === undefined) {
     await ctx.time.stepAndWait(20 * 60_000);
-    mustEqual(await leases(ctx), [`${valve} shut safety_rule`], "the leases 20 minutes on, the rule not complete and no safety_lease_s stated");
+    mustEqual(await leases(ctx), [`${valve} safety:shut safety_rule`], "the leases 20 minutes on, the rule not complete and no safety_lease_s stated");
     applier.scriptSafetyComplete("shut");
     await leasesBecome(ctx, [], "the latchless rule on the valve complete");
     return;
   }
   const ends = granted + Math.max(bound * 1000, floor);
   if (ends - 5_000 > ctx.time.now()) await ctx.time.stepAndWait(ends - 5_000 - ctx.time.now());
-  mustEqual(await leases(ctx), [`${valve} shut safety_rule`], "the leases before safety_lease_s passed");
+  mustEqual(await leases(ctx), [`${valve} safety:shut safety_rule`], "the leases before safety_lease_s passed");
   await ctx.time.stepAndWait(10_000 + ctx.allowanceMs);
   await leasesBecome(ctx, [], "the latchless lease past safety_lease_s");
   // Ended early, the rule still running: a rule opening the valve is refused safety, and fires again once the rule completes.

@@ -7,8 +7,8 @@ import { pollUntil } from "../../util.js";
 import { answer, heard, mustAccept, sentFrom } from "./answers.js";
 import { cursorNow, eventsAfter, fires, type Ev } from "./rules.js";
 import { failedOf, runReads, runSent, scene, startRun } from "./scenarios.js";
-import { minuteAfter, stepOver, wall } from "./schedules.js";
-import { act, brainChat, mustDefine, ownerOf, raiseTier, revisionOf, scripted, up } from "./util.js";
+import { minuteAfter, stepOver } from "./schedules.js";
+import { act, brainChat, mustDefine, ownerOf, raiseTier, revisionOf, scripted, up, wall } from "./util.js";
 
 const ON = "onoff.turn_on";
 const NOTIFY = "notify.notify";

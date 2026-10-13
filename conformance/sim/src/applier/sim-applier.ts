@@ -98,6 +98,11 @@ type Event = ApplierEvent & { timeMs: number };
 
 export class SimApplier {
   readonly requests: RecordedRequest[] = [];
+  /**
+   * Each client's read-back call (`history`, `state`), in order: a check times what a restarted steward does at its
+   * read-back from the last of them, whichever its recovery uses.
+   */
+  readonly readBacks: { tool: "history" | "state"; client: string }[] = [];
   /** The MCP revision each client's calls came at, in order (the steward's GA-BIND-2). */
   readonly revisions = new Map<string, string[]>();
   private revision = 0;
@@ -241,6 +246,12 @@ export class SimApplier {
   /** The scripted stand-in: a device marked, or unmarked, `internal` or `infrastructure`, as an owner's `configure` does; a model change. */
   scriptMarks(id: string, marks: { internal?: boolean; infrastructure?: boolean }): void {
     Object.assign(this.scripted(id), marks);
+    this.modelChanged();
+  }
+
+  /** The scripted stand-in: the `onoff` action that opens a water valve, as its `describe` shows `opens_with`; a model change. */
+  scriptOpensWith(id: string, action: "turn_on" | "turn_off"): void {
+    this.scripted(id).opensWith = `onoff.${action}`;
     this.modelChanged();
   }
 
@@ -460,12 +471,16 @@ export class SimApplier {
   private dispatch(tool: string, client: string, a: Args): Promise<Record<string, unknown>> | Record<string, unknown> {
     switch (tool) {
       case "describe": return this.describe(a);
-      case "state": return this.state(a);
+      case "state":
+        this.readBacks.push({ tool: "state", client });
+        return this.state(a);
       case "plan": return this.plan(client, a);
       case "apply": return this.apply(client, a);
       case "outcome": return this.outcome(a);
       case "events": return this.eventsCall(a);
-      case "history": return this.history(a);
+      case "history":
+        this.readBacks.push({ tool: "history", client });
+        return this.history(a);
       case "configure": return this.configure(a);
       default: throw new RequestError("not_claimed", `${tool} is not claimed by the simulated applier`);
     }

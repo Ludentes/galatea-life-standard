@@ -1,0 +1,7 @@
+{
+  "error": "invalid_request",
+  "message": "hold.schedule_ends: not implemented",
+  "data": {
+    "field": "schedule_ends"
+  }
+}

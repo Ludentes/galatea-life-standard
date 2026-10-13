@@ -1,0 +1,3 @@
+{ "id": "bench-on", "name": "Кнопка 1", "trigger": { "event": { "target": "sim-bridge:button", "type": "occurrence",
+  "key": "org.galatea.test.button.action", "value": "1_single", "press": "yes" } },
+  "actions": [{ "target": "sim-bridge:lamp", "action": "onoff.turn_on", "args": {} }] }

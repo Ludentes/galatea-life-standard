@@ -17,5 +17,11 @@ export interface StewardError {
       )
     | "unknown_run";
   message: string;
+  /**
+   * What the error names: for a refused hold flag, field (GA-LEASE-8)
+   */
+  data?: {
+    [k: string]: unknown | undefined;
+  };
   [k: string]: unknown | undefined;
 }

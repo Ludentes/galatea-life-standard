@@ -5,17 +5,10 @@ import { LAMP } from "../../steward-home.js";
 import { pollUntil } from "../../util.js";
 import { sentFrom } from "./answers.js";
 import { cursorNow, eventsAfter, restartSteward, type Ev } from "./rules.js";
-import { act, del, mustDefine, up } from "./util.js";
+import { act, del, mustDefine, up, wall } from "./util.js";
 
 const MINUTE = 60_000;
 const DAY = 24 * 60 * MINUTE;
-
-/** The wall clock in `tz` at `ms`: `HH:MM` and the date `YYYY-MM-DD`. */
-export function wall(ms: number, tz = "Europe/Moscow"): { hhmm: string; date: string } {
-  const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: tz, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit" }).formatToParts(new Date(ms)).map((x) => [x.type, x.value]));
-  return { hhmm: `${p.hour}:${p.minute}`, date: `${p.year}-${p.month}-${p.day}` };
-}
 
 /** The next whole minute at least `ms` from now on the harness's clock. */
 export const minuteAfter = (ctx: TestContext, ms: number) => Math.ceil((ctx.time.now() + ms) / MINUTE) * MINUTE;

@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import formatsModule from "ajv-formats";
 import { describe, expect, it } from "vitest";
-import { requestOperations, requestSchemaFor, schemaRoot } from "../src/index.js";
+import { requestOperations, requestSchemaFor, schemaRoot, toolInputSchemaFor } from "../src/index.js";
 
 const addFormats = ((formatsModule as unknown as { default?: unknown }).default ?? formatsModule) as (a: Ajv2020) => Ajv2020;
 
@@ -73,5 +73,30 @@ describe("requestSchemaFor", () => {
     const a = requestSchemaFor("steward", "plan") as { properties: Record<string, unknown> };
     delete a.properties.actions;
     expect((requestSchemaFor("steward", "plan") as { properties: Record<string, unknown> }).properties.actions).toBeDefined();
+  });
+});
+
+describe("toolInputSchemaFor", () => {
+  const COMBINATORS = ["oneOf", "anyOf", "allOf"];
+  for (const side of ["steward", "applier"] as const) {
+    for (const op of requestOperations(side)) {
+      it(`${side} ${op}: no combinator at its top level, still accepting every valid example`, () => {
+        const schema = toolInputSchemaFor(side, op);
+        expect(schema.type).toBe("object");
+        for (const k of COMBINATORS) expect(schema, k).not.toHaveProperty(k);
+        const check = alone(schema);
+        for (const e of examples("valid", side, op)) expect(check(e.value), `${e.name}: ${JSON.stringify(check.errors)}`).toBe(true);
+      });
+    }
+  }
+
+  it("says the alternatives it took out in the schema's description", () => {
+    expect(toolInputSchemaFor("steward", "apply").description).toBe("Give exactly one of: plan_id; request.");
+    expect(toolInputSchemaFor("steward", "define").description).toBe("Give exactly one of: changes, expected_revision and dry_run; plan_id.");
+    expect(toolInputSchemaFor("applier", "provision").description).toMatch(/^Give exactly one of: join; join_close; commission;/);
+  });
+
+  it("leaves a schema with no top-level combinator as requestSchemaFor gives it", () => {
+    expect(toolInputSchemaFor("steward", "plan")).toEqual(requestSchemaFor("steward", "plan"));
   });
 });

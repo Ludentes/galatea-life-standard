@@ -5,9 +5,9 @@ import { McpSeam } from "../../seams/mcp.js";
 import { LAMP } from "../../steward-home.js";
 import { pollUntil } from "../../util.js";
 import { sentFrom } from "./answers.js";
-import { cursorExpiredGap, mustDefine, mustRefuse, ownerOf, raiseTier, scripted, stewardSees, targetIn, up } from "./util.js";
+import { cursorExpiredGap, mustDefine, mustRefuse, ownerOf, raiseTier, scripted, stewardSees, targetIn, up, wall } from "./util.js";
 import { failedOf, runReads, runSent, startRun } from "./scenarios.js";
-import { minuteAfter, scheduleSoon, wall } from "./schedules.js";
+import { minuteAfter, scheduleSoon } from "./schedules.js";
 
 /** One of the steward's events. */
 export type Ev = { seq: number; time: string; type: string } & Record<string, any>;
@@ -28,11 +28,11 @@ export async function cursorNow(ctx: TestContext): Promise<string> {
 export const firedOf = (events: Ev[], rule: string) => events.filter((e) => e.type === "rule_fired" && e.rule === rule);
 
 /** Waits until `rule` has fired `n` times since `cursor`; returns the events since `cursor`. */
-export async function fires(ctx: TestContext, cursor: string, rule: string, n: number, what: string): Promise<Ev[]> {
+export async function fires(ctx: TestContext, cursor: string, rule: string, n: number, what: string, wallMs = 10_000): Promise<Ev[]> {
   return pollUntil(async () => {
     const events = await eventsAfter(ctx, cursor);
     return firedOf(events, rule).length >= n ? events : undefined;
-  }, 10_000, `${what}: rule ${rule} did not fire ${n} time(s)`, 100);
+  }, wallMs, `${what}: rule ${rule} did not fire ${n} time(s)`, 100);
 }
 
 /**

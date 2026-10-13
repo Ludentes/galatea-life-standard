@@ -117,6 +117,9 @@ export function toMarkdown(report: Report): string {
       lines.push(`| \`${n.mutation}\` | ${n.broken.join(", ")} | ${n.state} | ${n.failed.join(", ") || "—"} | ${n.detail} |`);
     }
   }
+  // The subjects a check skipped because the steward refused the setting it needed (*Conformance*): counted and listed.
+  const skipped = report.rows.flatMap((r) => (r.evidence ?? []).filter((e) => e.startsWith("skipped: ")));
+  if (skipped.length) lines.push("", `Skipped subjects: ${skipped.length}.`, ...skipped.map((x) => `- ${x}`));
   const shown = report.rows.filter((r) => r.state !== "not_claimed" && r.state !== "untested");
   if (shown.length) {
     lines.push("", "| Id | Level | Conf. | State |", "|---|---|---|---|");

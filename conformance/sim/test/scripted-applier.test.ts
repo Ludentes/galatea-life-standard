@@ -83,6 +83,48 @@ describe("the scripted stand-in applier", () => {
     expect(d.devices.find((x: { id: string }) => x.id === "sim-bridge:lamp")).not.toHaveProperty("personal");
   });
 
+  it("scripts a button whose presses are occurrences, a door lock, a water valve with its opens_with and a metering plug", async () => {
+    const applier = await standIn();
+    const client = applier.caller("steward-secret");
+    const [button, lock, valve, plug, multi] = [["button", "sensor"], ["doorlock", "door_lock"], ["watervalve", "water_valve"], ["meteringplug", "socket"],
+      ["multisensor", "sensor"]]
+      .map(([f, adopt]) => applier.scriptDevice(fixtureDevices([f!])[0]!, { adopt }));
+    applier.scriptOpensWith(valve!, "turn_off");
+    const d = ((await applier.call(client, "describe", {})) as { body: any }).body;
+    const of = (id: string | undefined) => d.devices.find((x: { id: string }) => x.id === id);
+    expect(of(valve).opens_with).toBe("onoff.turn_off");
+    expect(of(lock).class).toBe("door_lock");
+    expect(of(lock).actions.map((a: { action: string }) => a.action).sort()).toEqual(["lock.lock", "lock.unlock"]);
+    expect(of(button).extensions[0].keys[0]).toMatchObject({ key: "org.galatea.test.button.action", kind: "event" });
+    expect(of(button).actions).toEqual([]);
+    expect(of(plug).sensor_keys).toEqual(["power"]);
+    expect(of(multi).class).toBe("sensor");
+    expect(of(multi).sensor_keys).toEqual(["occupancy", "illuminance"]);
+    expect(of(multi).actions).toEqual([]);
+    expect(of(lock)).not.toHaveProperty("opens_with");
+  });
+
+  it("records each client's read-back calls, history and state, so a check can time a restarted steward's read-back", async () => {
+    const applier = await standIn();
+    const client = applier.caller("steward-secret");
+    expect(applier.readBacks).toEqual([]);
+    await applier.call(client, "describe", {});
+    await applier.call(client, "history", { from: new Date(0).toISOString(), to: new Date().toISOString() });
+    await applier.call(client, "state", {});
+    expect(applier.readBacks).toEqual([{ tool: "history", client: "steward" }, { tool: "state", client: "steward" }]);
+  });
+
+  it("scripts an open-loop lamp: a light that reports nothing, its onoff discrete (GA-LEASE-7)", async () => {
+    const applier = await standIn();
+    const client = applier.caller("steward-secret");
+    const id = applier.scriptDevice(fixtureDevices(["rflamp"])[0]!, { adopt: "light" });
+    const d = ((await applier.call(client, "describe", {})) as { body: any }).body;
+    const lamp = d.devices.find((x: { id: string }) => x.id === id);
+    expect(lamp).toMatchObject({ class: "light", feedback: "open" });
+    expect(lamp.actions.map((a: { action: string }) => a.action).sort()).toEqual(["onoff.turn_off", "onoff.turn_on"]);
+    expect(lamp.actions.some((a: { toggles?: boolean }) => a.toggles)).toBe(false);
+  });
+
   it("holds an events long-poll on its clock: a stepped clock ends it, and a model change wakes it", async () => {
     const clock = new SteppedClock();
     const applier = await standIn(clock);

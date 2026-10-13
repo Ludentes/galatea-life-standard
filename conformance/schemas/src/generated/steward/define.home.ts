@@ -2,7 +2,24 @@
 
 export interface StewardDefineHome {
   timezone?: string | null;
-  hold_time_s?: number | null;
+  /**
+   * The hold policy (GA-LEASE-8): an upsert sets the fields it names, a null field back to the steward's own; null whole puts every field back
+   */
+  hold?: {
+    on_s?: number | null;
+    off_s?: number | null;
+    other_s?: number | null;
+    fixed_s?: number | null;
+    load_cap_s?: number | null;
+    /**
+     * 0: no cap; null: back to the steward's own
+     */
+    cap_s?: number | null;
+    presence_renews?: boolean | null;
+    vacant_ends?: boolean | null;
+    schedule_ends?: boolean | null;
+    owner_work_passes_guest_holds?: boolean | null;
+  } | null;
   occupancy_hold_s?: number | null;
   ask_expiry_s?: number | null;
   notice_channels?: string[] | null;

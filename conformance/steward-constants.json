@@ -36,15 +36,6 @@
     "where": "GA-CONF-2"
   },
   {
-    "key": "hold-time-default",
-    "name": "Hold time, default",
-    "value": "7200 s",
-    "number": 7200,
-    "unit": "s",
-    "guess": false,
-    "where": "GA-LEASE-1"
-  },
-  {
     "key": "notice-retry-interval",
     "name": "Notice retry interval",
     "value": "at most 60 s",
@@ -52,6 +43,15 @@
     "unit": "s",
     "guess": false,
     "where": "GA-NOTE-1"
+  },
+  {
+    "key": "hold-end-lateness",
+    "name": "Hold end lateness",
+    "value": "2 s after the hold's computed end; ⚠️ a guess",
+    "number": 2,
+    "unit": "s",
+    "guess": true,
+    "where": "GA-LEASE-7"
   },
   {
     "key": "occupancy-hold-default",

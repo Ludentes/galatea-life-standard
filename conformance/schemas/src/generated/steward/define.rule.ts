@@ -59,6 +59,10 @@ export interface StewardDefineRule {
               new?: "live" | "stale" | "dead";
               key?: string;
               value?: unknown;
+              /**
+               * The author's mark that the occurrence is a person's physical act (GA-LEASE-9); only on an occurrence trigger
+               */
+              press?: boolean;
             };
           }
         | {

@@ -22,6 +22,7 @@ related:
 
 | Date | Version | Change |
 |---|---|---|
+| 2026-10-12 | 17 (draft, passed review with steward 0.12) | For steward 0.12's quiet-room hold (change record `docs/reviews/2026-10-12-steward-0.12.md`): HS3's flick is an other change, held for `other_s`; its lease ends once the hall has been quiet for that window (03:12, motion sensors only) or when the hall goes `vacant` (about 02:17, the radar on a short bound), not two hours from the flick, and its grade rests on a steward declaring `presence_renews`; a reader in a motion-only room keeps the hold while the sensor sees them; HS5's lights lease until their hold ends; HS35: a press rule replaces a person's hold on the lamp and takes its own (GA-LEASE-9), graded ✅ in the draft. From round 2: HS3's flick seen as off then on is an on change, with the same end under the reference values. From round 3, with E-key, E-role and E-narrow: HS3's cat and the cap that bounds it; HS9's owner rule passing Лиза's guest hold, with the residue (HS8 through Алиса, the wall switch, a press); HS18's auto-lock rule, a narrowing action that passes the phone's hold; GA-LEASE-2 cited where sensor readings, metering and unadopted devices take no lease (HS10, HS14, HS18, HS27, HS35); HS14's guard on `load_cap_s`; the grades table's header. From round 4: HS9's owner rule is one rule per lamp; HS3's cat keeps HS1's 06:40 step away, with the owner's ways out; HS18's auto-lock rule reads the door contact; `last_presence` renamed `quiet_since`; HS3's and HS9's grades rest on steward 0.12's declared flags. The scenario walk confirmed the grades in each of steward 0.12's four review rounds (PASS, 2026-10-12) |
 | 2026-10-11 | 16 | HS35 from the first light on the bench: a wall scene switch's presses drive a rule for a lamp whose `turn_on` the owner once raised, and the owner lowers it back to the table's tier. Graded ❌ against applier 0.15 (GA-DESC-3: `configure` only raises a tier); walked against the draft of applier 0.16, steward 0.11 and bridge 0.6 in its review (HS1–HS35; only HS35 moved): ⚠️ partly, the tier part works, and a person's lease on the lamp refuses the button's rule for `hold_time_s`, a steward gap tracked for steward 0.12; **PASS** with applier 0.16, 2026-10-11 |
 | 2026-10-06 | — | Editorial: private references removed for publication; no scenario or grade changed. Links to documents that are not public are reworded; the goals are cited from the architecture overview |
 | 2026-10-06 | 15 | HS28–HS34 from the Zigbee bridge's live bench run: a sleeping sensor's setting (HS28), a radar deciding a room is empty (HS29), a PIR and a radar in one room (HS30), dusk by `illuminance` (HS31), a reading promised and never sent (HS32), a device's unknown data (HS33), a button pusher's mode by voice, and a power cut (HS34); HS17 gains a `battery_low` warning and where a Tuya sensor's bound comes from. Graded against the drafts of bridge 0.6, applier 0.15 and steward 0.10, before their review. Walked against bridge 0.6, applier 0.15 and steward 0.10 in each round of their review; **PASS** 2026-10-06 |
@@ -257,7 +258,9 @@ a motion-only room the re-check finds `unknown`, and an ask that first appears a
 
 ## HS3 · 02:10 — the hall light, and the father who wanted it on
 
-**The home.** The flat.
+**The home.** The flat. The hall has a motion sensor (a PIR) and, since HS28, the battery radar
+presence sensor, an `occupancy` sensor; whether the radar can make the hall `vacant` depends on its
+freshness bound (HS29). The steward's hold policy here is the reference's (`on_s` 3600, `other_s` 3600, `cap_s` 43200, `presence_renews` and `vacant_ends` true, `schedule_ends` false).
 
 **The moment.** The night light is authored as the steward standard's worked example, two rules: an
 edge-triggered one, *motion in the hall after 23:00 → hall light at 10 %*, and a level-triggered one,
@@ -273,9 +276,9 @@ get full light. In the morning he asks: «Галатея, почему свет 
 |---|---|---|
 | Wall switch → device → bridge | The wall switch cuts and restores the dimmer module's power; when power returns, the module reports `on, 100 %` with no command behind it | Bridge |
 | Applier | A `state` event with cause `external` (GA-EVT-1) | Applier |
-| Steward | A person-precedence lease on the light, held by `external`, for the hold time (GA-LEASE-2). The 02:10 rule action took no lease (GA-LEASE-5) | Steward |
-| Steward | The off rule's action is refused while the lease holds (GA-LEASE-3). The lease records the off rule as one it refused (at about 02:15, once the hall has been still 180 s); should a second flick of the switch replace the lease, the refusal passes to the new one. When the lease ends, the rules it refused are re-evaluated (GA-LEASE-4, GA-RULE-1): the hall has been still, so the light goes off, with the rule as its cause | Steward |
-| Morning: person → brain → steward | The LLM calls the steward's `history` for the hall light (GA-STW-7) and answers from the causes it returns: «В 02:10 его включило ночное правило, в 02:12 — не через меня, на полную. В 04:12 его выключило ночное правило» | Brain; Steward |
+| Steward | A person-precedence lease on the light, held by `external`. The light was on at 10 % and is on at 100 %: the change left `on` as it was, so it is an **other** change, held for `other_s`, and the granted `lease` event says `other`. Had the module reported the flick as two changes, off then on, the second is an **on** change, held for `on_s`; under the reference values both give the same end. It ends as the steward's declared hold policy says (GA-LEASE-2, GA-LEASE-7, GA-LEASE-8). The 02:10 rule action took no lease (GA-LEASE-5) | Steward |
+| Steward | The off rule's action is refused while the lease holds (GA-LEASE-3). The lease records the off rule as one it refused (at about 02:15, once the hall has been still 180 s); should a second flick of the switch replace the lease, the refusal passes to the new one. While the hall is busy the hold is renewed; Дмитрий goes back to bed and the hall is quiet from 02:12. Two ends, by the hall's sensors (GA-LEASE-7): **with the PIR alone**, or a radar whose bound cannot make the hall `vacant`, the hall is never `vacant`, so the lease ends once the hall has been quiet for `other_s`, at 03:12, its `lease` event naming the end `quiet` with `quiet_since` 02:12; **with the radar on a short bound** (HS29), the hall reads `vacant` once the radar has read no presence for `occupancy_hold_s`, at about 02:17, and under `vacant_ends` the lease ends then, its event naming the end `vacant`. When the lease ends, the rules it refused are re-evaluated (GA-LEASE-4, GA-RULE-1): the hall has been still, so the light goes off, with the rule as its cause | Steward |
+| Morning: person → brain → steward | The LLM calls the steward's `history` for the hall light (GA-STW-7) and answers from the causes it returns: «В 02:10 его включило ночное правило, в 02:12 — не через меня, на полную. В 03:12 его выключило ночное правило» (or «в 02:17», with the radar) | Brain; Steward |
 
 **Trust and guardrails.** The flat's dimmers have no neutral at the switch, so a flick of the wall
 switch is a power cut to the module at the ceiling rose. The scenario depends on the module
@@ -284,8 +287,19 @@ the applier sees nothing or the wrong level. ⚠️ To be checked on the bench.
 
 The brain is trusted to explain, and it must explain *from the audit*. An explanation it invents is the failure this scenario tests. A wall switch is `external`, not
 «Дмитрий», so the brain must not guess who. The steward's `history` keeps `lease`, `refused` and
-`rule_fired` events for seven days (GA-STW-7), so "why the rule waited two hours" survives the event
-window.
+`rule_fired` events for seven days (GA-STW-7), so "why the rule waited" survives the event window,
+and the lease's end says the hall had been quiet since 02:12, or had gone `vacant`.
+
+**The cat.** Since HS28 the family has a cat, and the hall PIR sees it. A cat crossing the hall more
+often than once an hour, with gaps longer than 180 s, lets the off rule's condition hold, yet keeps
+the full-brightness hold renewed all night. The bound is the policy's `cap_s` (43200 s in the
+reference, so the light goes off by 14:12 at the latest), or a shorter `other_s` the owner sets (GA-LEASE-7, GA-LEASE-8). While the cat keeps the hold, every scheduled step on the hall light is `refuse(leased)`, as under any hold: HS1's «Доброе утро» step at 06:40, the hall light at 40 %, is refused and listed in the run's `failed_steps`, and HS28's night rule waits too. The owner's ways out are a shorter `other_s` or `cap_s`, or `schedule_ends`, under which the 06:40 step ends the hold.
+
+**The reader.** The same off rule over a living room with a motion sensor only, and a person reading
+under the lamp they switched on: each movement the sensor sees renews the hold, so the rule waits
+while they read, and acts once the room has been quiet for the window (GA-LEASE-7). A reader who
+sits still for longer than the window loses the hold, the stated limitation; the owner may lengthen
+it (GA-LEASE-8).
 
 **Dependency.** Both rules read the hall motion sensor, and the off rule also reads the hall
 dimmer's `on`. Each needs a known freshness bound: declared by its bridge, from the reporting it
@@ -294,7 +308,10 @@ the rule that reads it never holds (GA-RULE-2), and `define` says so in a notice
 
 **Verdict.** Applier 0.6 / steward 0.2: ✅. Brain 0.1: ✅ every cited event exists in `history`
 (GA-BRAIN-9), and the explanation names no cause or person beyond them, so the switch is «не через
-меня», not «Дмитрий» (GA-BRAIN-10).
+меня», not «Дмитрий» (GA-BRAIN-10). Steward 0.12 (draft): ✅, resting on the steward declaring
+`presence_renews`, as the reference does; the standard keeps the quiet-room rule a declared policy,
+and a steward declaring `presence_renews: false` holds the light for `other_s` from the flick
+whatever the hall does (GA-LEASE-7, GA-LEASE-8).
 
 ## HS4 · 14:30 — water under the washing machine, nobody home
 
@@ -346,7 +363,7 @@ TV's dialogue wakes nothing.
 | Brain | Arbitration keeps one utterance where the front did not merge; the zone is the winning endpoint's room. GA-BRAIN-5 grades identical transcripts; matching near-identical ones is the brain's choice | Brain |
 | Brain, resolver | «свет» + the living room → a selector `{ room, class: light }`. No LLM | Brain |
 | Steward | Expands the selector to exactly the matching lights (GA-PLAN-5), never an `infrastructure` device (GA-PLAN-6); one step per light, in code-point order (GA-STW-2, GA-STW-3); `turn_off` is `reversible` | Steward |
-| Steward → meta-applier | Applies inline (GA-STW-10); the lights are the box's own, so there is no child hop; `dispatched`, then `acked` (GA-EVT-3). The steward leases each light for the hold time (GA-LEASE-1) | Steward; Applier |
+| Steward → meta-applier | Applies inline (GA-STW-10); the lights are the box's own, so there is no child hop; `dispatched`, then `acked` (GA-EVT-3). The steward leases each light until its hold ends (GA-LEASE-1, GA-LEASE-7) | Steward; Applier |
 
 **Trust and guardrails.** The brain is trusted to arbitrate. If it lets both utterances through,
 the second `turn_off` may be dispatched again, harmlessly, because `turn_off` is idempotent. For a
@@ -449,7 +466,9 @@ the kettle on. Later Алиса's own «Спокойной ночи» switches i
 | Applier; Steward | Had the routine's `turn_on` been dispatched first and Лиза, through Алиса, switched the kettle off inside its ack window, that report moves away from what the routine set, so it is `external`, not the routine's (GA-EVT-1). It takes a person-precedence lease (GA-LEASE-2), and the applier does not reissue the routine's `turn_on`, since the device has reported a value moving away from it (applier *Reissue*) | Applier; Steward |
 
 **Trust and guardrails.** The brain is not in the path. The lease is the guardrail against a routine
-fighting a person or another assistant.
+fighting a person or another assistant. Лиза's words through Алиса are `external`, a person's hold
+that the owner's work never passes, while the same words at Galatea's hall satellite, naming no one,
+are a guest's hold that it may pass (HS9; steward GA-LEASE-10): a residue of the ruling.
 
 **Verdict.** Applier 0.6 / steward 0.2: ✅. ⚠️ Whether Yandex's Matter devices accept a second
 fabric is unverified, and this scenario rests on it.
@@ -472,7 +491,14 @@ the household may want a rule about it.
 | Steward | `via: voice` and `brain: true` come from the endpoint (GA-AUTH-1); the role is the lower of the speaker's and the satellite's `max_role` (GA-AUTH-2) | Steward |
 | Steward (the house), the gate | Named by no one, the cleaner is a `guest`: `refuse(role)` (GA-TIER-3), which comes before tier (GA-STW-4). Had the brain named Сергей, it would be `refuse(tier)`: `no_voice` through a brain-served endpoint, answered or not (GA-TIER-1) | Steward |
 | Meta-applier (the house), the gate | Would refuse it anyway: `no_voice` with `via: voice` is `refuse(tier)`, token or not (GA-TOKEN-3) | Applier |
-| Steward → applier (the flat), the lamps | A selector over lights (GA-PLAN-5); all `reversible`: dispatched | Steward; Applier |
+| Steward → applier (the flat), the lamps | A selector over lights (GA-PLAN-5); all `reversible`: dispatched. Named by no one, Лиза is a `guest` at the hall satellite, so each lamp takes a guest's hold, the derived role kept with it and named in its `lease` event (GA-LEASE-1, GA-LEASE-10) | Steward; Applier |
+| Steward, the lamps, at once | Ольга's rules of conditions only, one per lamp, *after 23:00 and this lamp on → this lamp off*, become true as the lamps report `on`: a condition reads one device's key, and a rule fires only as its conditions become true together, so a single rule over «any lamp» would not fire again once a lamp was already on. The steward declares `owner_work_passes_guest_holds` (the reference does; steward 0.12 draft, a MAY), and the rules are not `brain_authored`, so once each lamp's guest hold has passed its floor (the report of `on` comes after the ack), Лиза's hold does not refuse them: the lamps go off, the guest's hold stays in place, and the rules take no lease (GA-LEASE-10). A steward declaring it false refuses the rules until the hold ends (GA-LEASE-7) | Steward |
+
+**Residue.** Лиза's hold is passed only because it is an apply's guest hold. Had she pressed the hall
+wall switch (`external`) or a wall button wired as a press rule, or asked Алиса (HS8), her hold would
+be a person's like any other, and the owner's rule would wait for its end; had the brain named her,
+she would be a member there. These follow from the ruling (*What this standard does not define* in
+the steward standard).
 
 **Trust and guardrails.** The gate holds without speaker identity and without trusting the brain:
 nobody opens it by voice. Лиза's lamps are switched, and the standard says so on purpose: per-person
@@ -481,9 +507,7 @@ define; an owner approximates them with an endpoint's `max_role`. Until the brai
 it must not claim to.
 
 **Verdict.** Applier 0.6 / steward 0.2: ✅ for the gate. Per-person, per-hour permissions: outside
-the standard by its own scope. Brain 0.1: ✅ a speaker only from the satellite's hint
-(GA-BRAIN-11), the endpoint that heard (GA-BRAIN-4), and no route around the gate's refusal
-(GA-BRAIN-6).
+the standard by its own scope. Brain 0.1: ✅ a speaker only from the satellite's hint (GA-BRAIN-11), the endpoint that heard (GA-BRAIN-4), and no route around the gate's refusal (GA-BRAIN-6). Steward 0.12 draft: the owner's rules pass Лиза's guest hold only under the declared `owner_work_passes_guest_holds`, a MAY (GA-LEASE-10).
 
 ## HS10 · Saturday — the new lamp
 
@@ -504,7 +528,7 @@ with no installer. Only an owner adds a device; a member could not.
 |---|---|---|
 | App → applier → bridge | `provision { join }` with the owner's configuration credential (GA-PROV-1); the window is capped (GA-BRIDGE-25) | Applier; Bridge |
 | Lamp → coordinator → bridge | Joins; `joined`, `interviewed`, `window_closed` (GA-BRIDGE-25); a notice names it (GA-PROV-2) | Bridge; Applier |
-| App → applier | `configure { adopt: { device, class: light } }` (GA-ADOPT-1, GA-CFG-1); the `revision` changes (GA-DESC-2), and so does the house's (GA-HOUSE-1). Before this, a `define` naming it is `invalid_request` (GA-DEF-9) | Applier; Steward |
+| App → applier | `configure { adopt: { device, class: light } }` (GA-ADOPT-1, GA-CFG-1); the `revision` changes (GA-DESC-2), and so does the house's (GA-HOUSE-1). Before this, a `define` naming it is `invalid_request` (GA-DEF-9). Before adoption, nothing the lamp reports takes a lease (steward GA-LEASE-2) | Applier; Steward |
 | Brain, LLM | Names it, puts it in the living room, adds a 33 % step to «Кино» | Brain |
 | Brain → steward | `define`, `dry_run` first (GA-DEF-1). If the steward's policy accepts names, rooms and scenario edits through a brain from Ольга at this satellite (steward *define*, "Through a brain"), it returns `ask(confirm_define)` with the diff (GA-DEF-6); if not, `not_permitted` (GA-DEF-3) | Steward |
 | Brain → person | Reads the diff back as a question with no answer word (GA-BRAIN-22): «Назову его „Торшер у дивана“, поставлю в гостиную и добавлю в „Кино“ на треть яркости. Сохранить?». Ольга: «Галатея, да», `wake`, with her gate hint (GA-VOICE-14); a bare «Да» would be a follow-up, counted only with that hint (GA-CONF-6) | Brain; Voice |
@@ -664,7 +688,7 @@ load on indefinitely because someone said so once.
 | Brain → steward | `answer` with the utterance record, `asked_by` copied from the question's `played` report (GA-BRAIN-1); the steward checks it (GA-CONF-2, GA-CONF-6), and at dispatch issues a token bound to that step (GA-CONF-3) | Brain; Steward |
 | Applier | Takes the action only with that token (GA-TOKEN-1, GA-TOKEN-2) | Applier |
 | Applier, four hours later | The load has been on for `max_on_s`: the applier turns it off by itself, with cause `load_cap` and no client; a failed turn-off becomes a notice (GA-LOAD-2) | Applier, *Loads* |
-| Steward | A `person`-precedence lease held by `load_cap`, so no rule turns the heater straight back on (GA-LEASE-2) | Steward |
+| Steward | A `person`-precedence lease held by `load_cap`, for `load_cap_s` from the change, so no rule turns the heater straight back on (GA-LEASE-2, GA-LEASE-7); the plug's metering readings take no lease (GA-LEASE-2) | Steward |
 
 **Trust and guardrails.** The cap lives in the applier nearest the socket and holds with no brain
 and no steward; its on-time survives a restart. "For the night" longer than the cap is not honoured,
@@ -849,7 +873,8 @@ house knows before the door does.
 | Bridge → applier | The lock appears unadopted (GA-ADOPT-1), proposed as `door_lock` from its Matter device type, `class_evidence: protocol` (GA-BRIDGE-15). `lock.unlock` is `no_voice` on any device (*Default tiers*) | Bridge; Applier |
 | Bridge → applier → steward | The bridge reads every fabric on the lock: `other_admins` names the phone's ecosystem (GA-BRIDGE-14). At adoption, a notice with cause `other_admin` tells Ольга the phone can also unlock the door (GA-ADOPT-3); `describe` shows it, and the steward passes it through | Bridge; Applier; Steward |
 | Person → phone ecosystem → lock | Later, someone unlocks from the phone's app. The applier sees the change with no command behind it: `external` (GA-EVT-1), and a person-precedence lease (GA-LEASE-2). Galatea's `no_voice` did not apply to that path, and could not | Applier; Steward |
-| Lock → bridge → applier | Its `fresh_s` is the subscription's granted interval plus the controller's slack (GA-BRIDGE-13); past it, `stale`, which Ольга hears of only through a rule triggered by the lock's `liveness` event, since no safety rule does (GA-SAFE-10 covers only those). Its battery is a `battery` sensor key; a warning on a low one is a rule the owner writes, not a floor | Bridge; Applier |
+| Steward → applier → lock | Ольга's auto-lock rule (*door unlocked for 2 minutes and the front door's contact `opening` false → `lock.lock`*, so that the bolt is never thrown into an open door) fires. `lock.lock` is a narrowing action: the phone's hold does not refuse it, and it takes no lease and replaces no person's hold (steward GA-LEASE-11). A safety rule's lease on the lock would still refuse it | Steward; Applier |
+| Lock → bridge → applier | Its `fresh_s` is the subscription's granted interval plus the controller's slack (GA-BRIDGE-13); past it, `stale`, which Ольга hears of only through a rule triggered by the lock's `liveness` event, since no safety rule does (GA-SAFE-10 covers only those). Its battery is a `battery` sensor key, whose readings take no lease (steward GA-LEASE-2); a warning on a low one is a rule the owner writes, not a floor | Bridge; Applier |
 | Person → satellite → brain → steward | «Галатея, открой дверь»: `no_voice`, `refuse(tier)` (GA-TIER-1) | Steward |
 | Person → app → steward → applier → bridge | If the lock needs a PIN for remote operation, the bridge holds it in its own configuration and never sends it on the binding; without one it offers no `unlock` at all, and a `faults` entry names the lock (GA-BRIDGE-36), which reaches Ольга as a notice (GA-BUS-12) | Bridge; Applier |
 
@@ -1216,7 +1241,7 @@ Its design starts with a discussion with the Galatea brain project.
 
 ## HS27 · Saturday — a satellite and a plug, found
 
-***The home.** The flat. No Home Assistant, no other system's engine. The box runs an ESPHome bridge, which claims
+**The home.** The flat. No Home Assistant, no other system's engine. The box runs an ESPHome bridge, which claims
 Provision and whose manifest says it can `connect`, over one transport of kind `other` for the
 devices it reaches on the network; its finder listens on mDNS and DHCP. No Tuya or Hue bridge
 runs, but both manifests are installed.
@@ -1240,7 +1265,7 @@ it gets nowhere.
 | Person → app → applier | Ольга's app calls `candidates` with her configuration credential (GA-DISC-2). The satellite is offered with the running ESPHome bridge; the plug and the "hub" with no bridge. A steward calling `candidates` gets `not_permitted`, and no event names a candidate | Applier |
 | Person → box → bridge | A satellite set up over Improv, as this one is, has no API key. Ольга flashes it with one over USB, keeping its node name, with the box's tool, which builds ESPHome's firmware for her (a developer's job otherwise; outside these standards). Over USB, not over the Wi-Fi at the address the candidate names, which would prove only that the bridge reached what the tool reached. The same tool sets the key in the ESPHome bridge's configuration, as a lock's PIN is set; it never rides the binding (*Provisioning*). She reloads the list before taking it, since the reboot may have moved its address. Without a key, the next hop would end `connect_failed(unproven)`, and she could add the satellite by hand, knowing anyone on the Wi-Fi could pretend to be it | The box; Bridge |
 | Person → app → applier → bridge | The satellite: `provision { connect: { candidate, bridge, address } }`, with the address she was shown (GA-DISC-4, GA-PROV-1); had the address moved since, it would be `invalid_request`. The bridge connects over ESPHome's encrypted API, in which the device proves it holds the key, and ends it `connected` within 60 s (GA-BRIDGE-40); the satellite enters its `devices`, unadopted, with its `mdns:` key and the MAC it reports in `connections` (GA-BRIDGE-41), so the candidate is no longer listed (GA-DISC-2) | Applier; Bridge |
-| Bridge → applier → app | The satellite arrives unadopted: every action on it is `refuse(not_adopted)` (GA-ADOPT-1). Ольга adopts it as a `speaker` with `replaces` naming the old satellite, so it keeps the old one's id, declarations and place (GA-ADOPT-2), and removes the old hardware (`provision { remove }`). Making it a voice endpoint is the steward's `define`, with a voice record whose `heard_by` names the home's front and a `served_by` brain (GA-DEF-8). Carrying its audio to a brain is the voice front's (`standard/voice.md`): the front reads no frame until the device's link is authenticated, by a key its configuration binds to that endpoint, over an encrypted link (GA-VOICE-17, GA-VOICE-13) | Applier; Steward; Voice |
+| Bridge → applier → app | The satellite arrives unadopted: every action on it is `refuse(not_adopted)` (GA-ADOPT-1). Ольга adopts it as a `speaker` with `replaces` naming the old satellite, so it keeps the old one's id, declarations and place (GA-ADOPT-2), and removes the old hardware (`provision { remove }`). Making it a voice endpoint is the steward's `define`, with a voice record whose `heard_by` names the home's front and a `served_by` brain (GA-DEF-8). Carrying its audio to a brain is the voice front's (`standard/voice.md`): the front reads no frame until the device's link is authenticated, by a key its configuration binds to that endpoint, over an encrypted link (GA-VOICE-17, GA-VOICE-13); until adopted, nothing it reports takes a lease (steward GA-LEASE-2) | Applier; Steward; Voice |
 | Person → box | The plug: no Tuya bridge runs, and none can take it by address, since its local key comes only from her Smart Life account. The box's own tool starts a Tuya bridge and links the account once (outside the standards); the box registers the bridge's identity on its broker (GA-BOX-2), and her `configure` change set registers it with the applier as `{ id, identity }`, a model change. Heard only by DHCP, the plug's candidate would drop after 7 days unheard (GA-FIND-4); she takes it the same evening | The box |
 | Bridge → applier → app | The Tuya bridge lists the plug with its MAC in `connections` (GA-BRIDGE-41), and the vendor's cloud, which can still switch it from the Smart Life app, in `otherAdmins` (GA-BRIDGE-14); the candidate goes, and the plug arrives unadopted. Ольга adopts it as a `socket` with `load: lighting`, so it is not taken for a heater (GA-DESC-8), and the steward's `define` puts it in the hall and in a group of the hall's lights, which a brain can name for «выключи свет», since a selector for `class: light` does not reach a `socket` (GA-PLAN-5). Every other device in the Smart Life account arrives unadopted with it, and stays so until she adopts or removes it; the new bridge's first `status` has an `instanceId` the applier has not seen, so each arrives as a notice (GA-BUS-6), while a device added to the account later raises none, since only a closed join window is a notice (GA-PROV-2). Whether the candidate is hidden depends on the Tuya cloud reporting the plug's MAC, a bench check | Bridge; Applier; Steward |
 | Person → app → applier | The fake hub: Ольга ignores it (`configure { ignore_candidate }`); the applier keeps its keys, so it stays hidden after a restart or a new address (GA-DISC-3), and the ignore is no model change, so no steward's plan goes stale. The candidate proves nothing; whether a Hue bridge started for it would notice the fake depends on that bridge checking the hub, outside these standards | Applier |
@@ -1523,6 +1548,8 @@ turn the lamp on, pressed twice to turn it off. The plug now carries a lamp, so 
   and never under it. Nobody else can.
 - Holding a button is told apart from a press; a press missed while the applier was away is lost, not
   replayed hours later.
+- A press is a person's act: it wins over Ольга's earlier change from the app, or the plug's own
+  button, and the lamp it sets is then held from the house's rules like any person's change.
 
 **Decomposed.**
 
@@ -1530,9 +1557,11 @@ turn the lamp on, pressed twice to turn it off. The plug now carries a lamp, so 
 |---|---|---|
 | Ольга → app → applier → bridge | A join window; the switch joins and is described: a sensor key `battery`, an extension event key `…action` with its twelve values, no actions; proposed class `sensor` | Applier; Bridge |
 | Ольга → app → applier | `configure`: adopt the switch; the plug's `load: lighting`; delete her raised tier on the plug's `onoff.turn_on`, which falls back to the table's tier for a lighting socket (GA-DESC-3) | Applier |
-| Ольга → app → steward | `define`: the switch's name and room, and two rules, `{ event: { target: switch, type: occurrence, key: …action, value: 1_single } }` → `onoff.turn_on` on the plug, `1_double` → `onoff.turn_off` | Steward |
-| Switch → bridge → applier → steward | A press is published on the bridge's event topic, never retained (GA-BRIDGE-75); the applier's `occurrence` event, cause `device`, no lease (GA-EVT-8, GA-LEASE-2); the rule fires on the edge (*Rules*) | Bridge; Applier; Steward |
-| Steward → applier → bridge | The rule's plan at the lamp's tier: `reversible`, applied without an ask, acked on the plug's report | Steward; Applier |
+| Ольга → app → steward | `define`: the switch's name and room, and two rules, `{ event: { target: switch, type: occurrence, key: …action, value: 1_single, press: true } }` → `onoff.turn_on` on the plug, `1_double` → `onoff.turn_off`; she marks them `press`, saying these occurrences are a person's hand (GA-LEASE-9) | Steward |
+| Switch → bridge → applier → steward | A press is published on the bridge's event topic, never retained (GA-BRIDGE-75); the applier's `occurrence` event, cause `device`, no lease (GA-EVT-8, GA-LEASE-2), and the plug's metering readings take none either (GA-LEASE-2); the rule fires on the edge (*Rules*) | Bridge; Applier; Steward |
+| Steward | A press rule acts at `person` precedence (GA-LEASE-9): if Ольга switched the lamp off from her app a minute ago, or someone pressed the plug's own button, that person's hold does not refuse the press; it is replaced, and the rules it refused pass to the new one (GA-LEASE-3, GA-LEASE-4). A `safety_rule` lease would still refuse it | Steward |
+| Steward → applier → bridge | The rule's plan at the lamp's tier: `reversible`, applied without an ask, acked on the plug's report; it carries `via: rule` and `for: { rule }`, as any rule's (GA-AUTH-5) | Steward; Applier |
+| Steward | Once dispatched, the press takes a fresh person's hold on the lamp, held by `{ rule, press: { target: switch, key: …action, value: 1_single } }`, which ends as the declared hold policy says (GA-LEASE-7); while it holds, a motion rule's `turn_off` is `refuse(leased)`. `history` says a press on the switch, through the rule, took the lamp, never who pressed | Steward |
 
 **Trust and guardrails.** Only the owner's credential reaches `configure`. Lowering is bounded by the
 *Default tiers* table, with the plug's class and load: a socket declared `heating` keeps its floor
@@ -1545,21 +1574,25 @@ asked. That guard is right while she wants it and wrong once she has changed her
 raises a standard action's tier (GA-DESC-3, *Default tiers*), so the reference applier refuses it and
 refuses deleting it, and the only way back is to remove and re-pair the plug. The presses, the
 occurrence events and the rule's trigger work as designed (seen on the bench, 2026-10-11).
-**Against the draft of applier 0.16:** ⚠️ partly: the owner lowers her raise (GA-DESC-3, GA-DESC-13, GA-DESC-14) and presses take no lease (GA-EVT-8, GA-LEASE-2); but a person's lease on the lamp (her app, its own button) refuses the button's rule for `hold_time_s` (GA-LEASE-1), a steward gap tracked for steward 0.12.
+**Against applier 0.16 and the draft of steward 0.12:** ✅ the owner lowers her raise (GA-DESC-3,
+GA-DESC-13, GA-DESC-14), presses take no lease on the switch (GA-EVT-8, GA-LEASE-2), and a press rule
+replaces a person's hold on the lamp and takes its own (GA-LEASE-9, GA-LEASE-7). The guard it
+leaves: the `press` mark is the author's word, since the applier says nothing of who or what made
+an occurrence; a brain cannot set it to any effect (GA-LEASE-9). To be checked on the installation.
 
 ## The grades
 
-| # | Scenario | Bridge 0.4 / applier 0.11 / steward 0.6 | Brain 0.5 / voice 0.1 |
+| # | Scenario | Bridge, applier and steward (the versions each row names; steward 0.12 draft where it says so) | Brain 0.5 / voice 0.1 |
 |---|---|---|---|
 | HS1 | Morning, with an exception | ✅ (steward's `define` policy) | ✅ GA-BRAIN-1, GA-BRAIN-2, GA-BRAIN-7, GA-BRAIN-11, GA-BRAIN-22; «Галатея, да» with her gate hint (GA-CONF-6, GA-VOICE-14); read-back SHOULD only |
 | HS2 | «Мы ушли» with someone home | ✅ (an ask per light in unknown rooms, without presence sensors) | — (no brain; asks at a panel no brain serves bar no announcement, GA-LISTEN-4) |
-| HS3 | The wall switch and the night rule | ✅ (dimmer's power-restore report unchecked) | ✅ GA-BRAIN-9, GA-BRAIN-10 |
+| HS3 | The wall switch and the night rule | ✅ (dimmer's power-restore report unchecked; steward 0.12 draft: the hold's ends rest on the declared `presence_renews` and `vacant_ends`) | ✅ GA-BRAIN-9, GA-BRAIN-10 |
 | HS4 | Leak, nobody home | ✅ (notice points to the app) | — (no brain in the closing; the reopening's refusal, GA-BRAIN-6, GA-BRAIN-7) |
 | HS5 | «выключи свет» heard twice | ✅ | ✅ GA-VOICE-7 or GA-BRAIN-5, GA-BRAIN-4; resolver first SHOULD only; under a second is a target |
 | HS6 | «Сделай уютно» across two appliers | ✅ (no vacuum; saving is the steward's `define` policy) | ✅ GA-BRAIN-1, GA-BRAIN-2, GA-BRAIN-7, GA-BRAIN-8, GA-BRAIN-22; «Галатея, да» with his gate hint (GA-CONF-6); read-back and offer to save SHOULD only |
 | HS7 | Home Assistant down | ✅ | ✅ GA-BRAIN-7, GA-BRAIN-8, GA-BRAIN-15 |
 | HS8 | Алиса switches the kettle | ✅ (Matter multi-admin unverified) | — (no brain) |
-| HS9 | A child and a cleaner | ✅ gate · per-person out of scope | ✅ GA-BRAIN-4, GA-BRAIN-6, GA-BRAIN-11 |
+| HS9 | A child and a cleaner | ✅ gate · per-person out of scope · steward 0.12 draft: the owner's rules pass a guest's hold only under the declared `owner_work_passes_guest_holds`, a MAY | ✅ GA-BRAIN-4, GA-BRAIN-6, GA-BRAIN-11 |
 | HS10 | The new lamp | ✅ (steward's `define` policy) | ✅ GA-BRAIN-1, GA-BRAIN-2, GA-BRAIN-7, GA-BRAIN-11, GA-BRAIN-22; «Галатея, да» with her gate hint (GA-CONF-6); read-back SHOULD only |
 | HS11 | No internet | ✅ | ⚠️ GA-BRAIN-12 and the front's clip (GA-VOICE-11) graded; serving simple commands, the scenario's want, SHOULD only |
 | HS12 | IR and a dead bridge | ✅ bridge · ✅ AC: a blaster that answers nothing keeps it `live` (GA-BRIDGE-72), its state assumed and holding no rule (GA-STATE-4, GA-RULE-2), its whole-state codes built from the command (GA-APPLY-16, GA-BRIDGE-73); the witness behind the dead bridge is the installation's choice | ✅ GA-BRAIN-7 (`assumed` said as last sent), GA-BRAIN-8, GA-BRAIN-15 |
@@ -1585,7 +1618,7 @@ occurrence events and the rule's trigger work as designed (seen on the bench, 20
 | HS32 | A temperature promised, never sent | ⚠️ · ✅ in the draft where the maker named the key (GA-BRIDGE-80, GA-DEF-12) | — |
 | HS33 | «Что-нибудь не так с домом?» | ⚠️ · ✅ in the draft (GA-BRIDGE-76) | ✅ |
 | HS34 | A button pusher's mode by voice, and a power cut | ⚠️ · ✅ in the draft (GA-BRIDGE-79; *Settings* tentative) | ✅ the refusal relayed |
-| HS35 | A wall button for the lamp the owner once guarded | ❌ (GA-DESC-3: `configure` only raises) · in the draft of applier 0.16, ⚠️ partly: the owner lowers her raise (GA-DESC-3, GA-DESC-13, GA-DESC-14) and presses take no lease (GA-EVT-8, GA-LEASE-2); but a person's lease on the lamp (her app, its own button) refuses the button's rule for `hold_time_s` (GA-LEASE-1), a steward gap tracked for steward 0.12 | — (no brain) |
+| HS35 | A wall button for the lamp the owner once guarded | ❌ (GA-DESC-3: `configure` only raises) · with applier 0.16 and the draft of steward 0.12, ✅: the owner lowers her raise (GA-DESC-3, GA-DESC-13, GA-DESC-14), presses take no lease (GA-EVT-8, GA-LEASE-2), and a press rule replaces a person's hold on the lamp and takes its own (GA-LEASE-9, GA-LEASE-7) | — (no brain) |
 
 **Against bridge 0.4, applier 0.11, steward 0.6, brain 0.5 and voice 0.1, twenty-three of
 twenty-seven drive as designed or within the standards' stated scope, three partly (HS11's service

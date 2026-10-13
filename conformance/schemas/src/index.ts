@@ -100,3 +100,33 @@ export function requestSchemaFor(side: ToolSide, op: string): ToolInputSchema {
 
 export type { ToolInputSchema, ToolSide };
 export type * from "./generated/index.js";
+
+const COMBINATORS = ["oneOf", "anyOf", "allOf"] as const;
+
+/**
+ * `requestSchemaFor`, made fit to list as an MCP tool's `inputSchema`: no `oneOf`, `anyOf` or
+ * `allOf` at its top level, since the Anthropic API refuses such a schema and Claude Code drops the
+ * tool (with a debug line, nothing on screen). The properties stay, with the fields every request
+ * needs; alternatives that differ only in what they require are said in the schema's
+ * `description` instead. The server still validates each request against the full schema.
+ */
+export function toolInputSchemaFor(side: ToolSide, op: string): ToolInputSchema {
+  const schema: Record<string, unknown> = requestSchemaFor(side, op);
+  const said: string[] = [];
+  for (const k of COMBINATORS) {
+    const branches = schema[k];
+    if (!Array.isArray(branches)) continue;
+    delete schema[k];
+    const required = branches.map((b: { required?: unknown }) => (Array.isArray(b?.required) ? (b.required as string[]) : []));
+    if (k === "allOf") {
+      // Every branch binds, so its properties and required fields join the top level's.
+      schema.required = [...new Set([...((schema.required as string[] | undefined) ?? []), ...required.flat()])];
+      for (const branch of branches as { properties?: Record<string, unknown> }[]) Object.assign((schema.properties ??= {}) as object, branch?.properties ?? {});
+      continue;
+    }
+    const words = required.map((r) => (r.length > 1 ? `${r.slice(0, -1).join(", ")} and ${r[r.length - 1]}` : r.join(""))).join("; ");
+    said.push(`Give ${k === "oneOf" ? "exactly" : "at least"} one of: ${words}.`);
+  }
+  if (said.length) schema.description = [schema.description, ...said].filter((d) => typeof d === "string" && d !== "").join(" ");
+  return schema as ToolInputSchema;
+}

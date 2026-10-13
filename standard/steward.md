@@ -5,7 +5,7 @@ last_verified:
 area: architecture
 audience: dev
 author: Galatea maintainers
-version: 0.11
+version: 0.12
 related:
   - standard/applier.md
   - standard/brain.md
@@ -15,6 +15,8 @@ related:
   - CONTEXT.md
   - docs/reviews/2026-10-06-bridge-0.6-applier-0.15.md
   - docs/reviews/2026-10-07-steward-0.11.md
+  - docs/reviews/2026-10-12-steward-0.12.md
+  - docs/research/2026-10-12-manual-hold-time.md
 ---
 
 # The Galatea steward standard
@@ -23,6 +25,7 @@ related:
 
 | Date | Version | Change |
 |---|---|---|
+| 2026-10-12 | 0.12 (passed review 2026-10-12) | How a person's hold ends, by the maintainer's ruling of 2026-10-12 (the workshop's research note on manual hold time; change record `docs/reviews/2026-10-12-steward-0.12.md`): the quiet-room rule. A person's lease (GA-LEASE-1, an `external` change's GA-LEASE-2) ends once the device's room has been quiet for a window counted from the later of the change and the last presence, sooner when the room becomes `vacant`, with a fixed window for a device with no room or presence source, the windows possibly differing after an on, an off and any other change, and a floor from dispatch to the ack or the late-ack window (GA-LEASE-7, new); the steward declares the policy in `describe` as the home's `hold`, which the owner sets, every window of 1 s or more accepted (GA-LEASE-8, new); `hold_time_s` and its 7200 s default are gone; a `load_cap` lease ends its own window, `load_cap_s`, after the change; a hold keeps its quiet across a restart (GA-PERSIST-2); a `lease` event names how a hold ended; the renewable-lease gap restated to include presence, and stillness stated as a known limitation. From review round 1: the quiet window counts from the moment the room last became quiet, a held `true` busy until it clears; the floor bounds only the policy's own ends and not `unreachable`; the change's time, rooms and sources judged as of now, elapsed time; the heater's guard on its own `load_cap_s`; `expires` while busy; a press replaces a hold only at dispatch, a `brain_authored` step of it at `rule` precedence per device, its holder a principal naming the reported value; the press's residue stated. From review round 2: a press passes only a person's hold, a `load_cap`, safety or run lease refusing it; an optional declared `cap_s`; the change's time on the steward's clock; a room whose sources are all not `live` takes `fixed_s`; `schedule_ends` only at dispatch and never for `brain_authored` runs; removal, unadoption and `internal` end a hold; the pinned policy stated once; the floor ends at any success; `expires` never before the floor. And, by the maintainer's ruling of 2026-10-12, only a change to a key one of the device's actions sets, on an adopted device, takes a hold (GA-LEASE-2): sensor readings, sensor keys on actuators and devices not adopted take none; and a steward MAY, declaring `owner_work_passes_guest_holds`, let the owner's rules and schedules through a guest's hold (GA-LEASE-10, new); and a narrowing action (`lock.lock`, `valve.close`, an `onoff` valve's closing action) is never refused by a person's hold and takes none, as `session.lock` (GA-LEASE-11, new; GA-LEASE-1, GA-LEASE-3 amended). The schemas follow in the build. The constant `hold-time-default` stays only for the harness until it reads `home.hold`. And HS35, by the maintainer's ruling of 2026-10-12 ("Yes for physical press"): a rule whose `occurrence` trigger its author marks `press: true` acts for its own device actions at `person` precedence, replacing a person's hold and taking a fresh one, while staying the rule's for `via`, `for`, its author's confirmation and the applier's gate; a `brain_authored` one acts as a rule (GA-LEASE-9, new; GA-LEASE-5 amended; the trigger's `press`). From review rounds 3 and 4: `cap_s` `0` for none, never before the floor; a narrowing action replaces no person's hold and ends a lower lease it displaces, taking none; a press replaces a guest's hold, and one ending `unreachable` restores the hold it replaced; a guest's hold is passed only after its floor, and a run takes no lease on a device while a guest's hold stands; a scheduled step inside the floor is refused and ends nothing; vacancy judged continuously; gap times clamped; the `fixed_s` anchor; a hold ends within the hold end lateness (2 s, a guess); the harness sets flags through `define`; `last_presence` renamed `quiet_since`. **Review: PASS**, 2026-10-12, four rounds with two readers each (Kimi and a no-context Claude reader) and a scenario walk each; rounds 1 to 3 had blockers and round 4 had one, fixed; the review was ended after round 4 on the maintainer's ruling, so round 4's fixes were not re-read; 144 findings, 138 fixed, 3 deferred, 3 rejected (`docs/reviews/2026-10-12-steward-0.12.md`). The frontmatter version went to 0.12 in the build PR, after the harness rework (C3-M8); the *Constants* row `Hold time, default`, kept for the harness, was removed with its rework |
 | 2026-10-11 | — | Editorial, for applier 0.16 (change record `docs/reviews/2026-10-11-applier-0.16.md`): *Tiers and confirmation* says the owner may lower a tier back to the applier's floor, not only raise it; no requirement changed |
 | 2026-10-07 | 0.11 | Where the reference build departed from the text, by the maintainer's rulings: open plans survive a restart only with an `ask` step, a lost plan being `unknown_plan` (GA-PERSIST-2); a steward MAY replay a state edge from a gap once, within the `edge_replay_s` it states in `describe` (at most 300 s), its conditions judged now, the gap defined for restarts too (GA-RULE-1); it MAY coalesce the `skipped(occupancy_unknown)` notice per rule and room while the room stays unknown (GA-RULE-8); a lease's end re-evaluates only the rules it refused, a replaced lease handing them on (GA-LEASE-4); a latchless safety lease MAY end after the `safety_lease_s` it states, no shorter than its actuation's `ack_within_s` plus the late-ack window (GA-LEASE-6); `scenario_stop` of a run no person started is never a visitor's (GA-SCN-9). `notice_channels` may be empty until first set, then never empty; notices are held until a channel exists and kept across restarts, `describe` counts them, and a channel that stops qualifying is noticed (GA-DEF-8, GA-NOTE-1, GA-NOTE-4, GA-PERSIST-2). The `ask` event carries the asked steps, to readers who may see the plan, personal values withheld (GA-CONF-5, GA-AUTH-7). The shapes the shared schemas held as provisional are written in and bind (*Change sets*, GA-DEF-13; every upsert merges, GA-DEF-14), with a step's `brain_authored` and `answer`, the `confirm_define` step, `define`'s `skipped` and `no_notify_channel`, and `describe`'s `persons`; from the maintainer's walk of the deferred items, a held duration holds afresh after a restart before its rule fires (GA-RULE-1), GA-RULE-7's bound past 300 s is `ack_within_s` plus 60 s, the `define` event's diff goes only to the readers an ask's `steps` would (GA-STW-7), one record answers one plan, the harness checks GA-NOTE-1 at 7 stepped days, and renewable leases are a known gap. Reviewed in `docs/reviews/2026-10-07-steward-0.11.md`: two rounds, each of two readers (Kimi; a no-context Claude reader) and a scenario walk; round 1 found blockers, round 2 none, so round 2's fixes were not re-read (the stopping rule); 89 finding rows, 80 fixed, 8 deferred (to 0.12 and the backlog's *Measurement*), 1 recorded with no text change, 0 rejected; the deferred items walked by the maintainer on 2026-10-07. **PASS** 2026-10-07 |
 | 2026-10-06 | — | Editorial: private references removed for publication; no requirement changed. Decisions once credited to another system now state what was decided and why; links to documents that are not public are reworded |
@@ -64,7 +67,7 @@ Two gates, and neither trusts the other to be the only one:
 It does not govern what a brain must do (`standard/brain.md`), how a voice front hears
 (`standard/voice.md`), or how the applier reaches devices.
 
-## Conformance
+## Conformance levels
 
 One level in this version, **Steward**. Every requirement in the index applies.
 
@@ -83,7 +86,7 @@ change of state (GA-HOUSE-1).
 
 | Object | Fields |
 |---|---|
-| Home | `timezone` (an IANA zone), `hold_time_s` (default 7200), `occupancy_hold_s` (default 300), `ask_expiry_s` (default 300), `notice_channels` (channel ids: adopted targets with `notify`, or with `media.announce`, which speak the notice's text; empty until the owner first sets it, and from then on never empty, GA-DEF-8), `other_wake_words` (default: the assistants listed under *Listening*), `answer_words` (default: the words listed under *Listening*), `audio_retention_s` (default 0: a voice front keeps no audio), `time_source` (harness only, GA-HARN-2) |
+| Home | `timezone` (an IANA zone), `hold` (the hold policy, *How a person's hold ends*; default: the steward's own, declared), `occupancy_hold_s` (default 300), `ask_expiry_s` (default 300), `notice_channels` (channel ids: adopted targets with `notify`, or with `media.announce`, which speak the notice's text; empty until the owner first sets it, and from then on never empty, GA-DEF-8), `other_wake_words` (default: the assistants listed under *Listening*), `answer_words` (default: the words listed under *Listening*), `audio_retention_s` (default 0: a voice front keeps no audio), `time_source` (harness only, GA-HARN-2) |
 | Room | `id`, `name` |
 | Target | `id` (the applier's device id), `name`, `aliases`, `room` or null, and everything the applier describes for it, `adopted`, `other_admins`, `internal` and `personal` included; on a `computer`, the applier's `accounts` and the steward's `account_persons` (*Sessions belong to persons*) |
 | Group | `id`, `name`, `aliases`, `room` or null, `members` (target ids), `aggregate` (`any` · `all`) |
@@ -164,7 +167,9 @@ A request names its `endpoint`. The steward derives everything else:
 `via: rule` (GA-AUTH-5).
 
 A **principal** is one of: `{ person?, endpoint }` (a person at an endpoint, or whoever stands at a
-shared panel); `{ rule }`; `{ run }` (a scenario run, which acts as whoever started it); `external`.
+shared panel); `{ rule }`; `{ run }` (a scenario run, which acts as whoever started it); `external`;
+`{ rule, press: { target, key, value } }` (a press rule's own action, which names the rule and the
+occurrence, never a person, *A press is a person's*).
 A lease may also be held by `safety_rule` or `load_cap`, which are not principals.
 
 ### Roles
@@ -320,23 +325,35 @@ a person for it (GA-SAFE-7), so no rule can undo a safety rule.
 ## Leases
 
 A lease is `{ holder: principal, targets: target id[], precedence, expires }`, where `expires` is a
-time or `run_end`. A lease's targets are always devices: a group is expanded to its members, leaving
+time or `run_end`; a person's hold's `expires` is the time it would end as of now, which presence
+may move later (*How a person's hold ends*, GA-LEASE-7). A lease's targets are always devices: a group is expanded to its members, leaving
 out `infrastructure` ones.
 
-**Precedence, highest first:** `safety_rule`; `person` (a person, `external`, or a run a person
-started); `scheduled_run`; `rule`.
+**Precedence, highest first:** `safety_rule`; `person` (a person, `external`, `load_cap`, a run a
+person started, or a press rule's own action, GA-LEASE-9); `scheduled_run`; `rule` (a rule's action, and a run a rule started).
 
 The steward:
 - MUST give each device an endpoint principal's apply dispatched a stateful action to (a `dispatched` outcome) a
-  `person` lease for `hold_time_s`, from dispatch, so that no rule acts between dispatch and ack.
+  `person` lease from dispatch, which ends as its hold policy says (*How a person's hold ends*) and
+  never before that policy's floor, so that no rule acts between dispatch and ack (GA-LEASE-7).
   Stateless actions take none, and neither does `session.lock`, a named exception: it only ever
   narrows use, and a lease would let a child who locks her own session at 20:55 hold the laptop
-  against her own limit for two hours. A rule's later action there is `refuse(leased)`. The lease
+  against her own limit for as long as her hold lasts. Nor does a narrowing action (*Narrowing
+  actions*), on the same model (GA-LEASE-11). A rule's later action there is `refuse(leased)`. The lease
   ends when the step ends `unreachable`, since nothing was sent (GA-LEASE-1);
-- MUST give a change the applier reports with cause `external` a `person` lease held by `external`
-  for `hold_time_s`, and a change with cause `load_cap` a `person` lease held by `load_cap` for
-  `hold_time_s`, so that no rule turns a capped heater straight back on; a change with cause
-  `device` takes none (GA-LEASE-2);
+- MUST give a change the applier reports with cause `external` a `person` lease held by `external`,
+  ending as an endpoint principal's does, and a change with cause `load_cap` a `person` lease held by
+  `load_cap`, ending `load_cap_s` after the change, so that no rule turns a capped
+  heater straight back on; a change with cause `device` takes none (GA-LEASE-2, GA-LEASE-7). Only a
+  change whose keys include one that one of the device's actions sets (the key its ack is matched on,
+  `standard/applier.md`, GA-EVT-3; for an extension action, its `confirmed_by`), on an adopted
+  device, takes a hold: a sensor reading
+  (`occupancy`, `illuminance`, `battery`, a vibration alarm's occurrence) takes none; a sensor key on
+  an actuator (a plug's metering, voltage or power, a lock's `battery`) takes none; and a device not
+  adopted takes none, so no lease is held on it at its adoption. A sensor reading is nobody's hand.
+  An `external` narrowing change (a keypad lock, a valve closed by hand) does take a hold, while the
+  same act through the steward takes none (GA-LEASE-11): deliberately, since the steward cannot tell
+  a person's lock from the echo of an unlock attempt (GA-LEASE-2);
 - MUST give a device a safety rule actuated a `safety_rule` lease, held until the applier reports
   that rule's latch `cleared` or `cleared_by_owner`, or, for a rule with no latch, until the rule is complete; after a
   `cursor_expired`, it reads held latches from the applier's `state`, and releases a latchless rule's
@@ -354,12 +371,17 @@ The steward:
   re-evaluated, and fires if its condition holds, when the steward sees that safety rule's
   `rule_fired` relayed (GA-LEASE-6);
 - MUST lease a running scenario's `owned` targets until the run ends, and release only the leases
-  that run holds (GA-SCN-2);
-- MUST NOT give a rule's action a lease (GA-LEASE-5);
+  that run holds (GA-SCN-2). This differs from an apply on purpose: a device a person switches off
+  by an apply is held as the hold policy says, while the same off as a step of a person-started run
+  is held only until the run ends. A run leases what its scenario's author made it own, for the run's
+  life; when it ends the house's rules have the devices back, and a person who wants a hold changes
+  the device directly;
+- MUST NOT give a rule's action a lease, except a press rule's own action on a device (*A press is a
+  person's*) (GA-LEASE-5, GA-LEASE-9);
 - MUST refuse a lower-precedence change to a leased device, and let an equal or higher one proceed
   and replace the lease, except a `session.lock`, which a lease never refuses and which replaces
-  none, so that a lease someone else took on the laptop does not stop a rule from locking it again
-  (GA-LEASE-3);
+  none, so that a lease someone else took on the laptop does not stop a rule from locking it again,
+  and except a press rule's action, which replaces only a person's hold, and a narrowing action, which a person's hold never refuses and which replaces no person's hold, a lower lease it displaces being ended with none taken in its place (GA-LEASE-3, GA-LEASE-9, GA-LEASE-11);
 - MUST, when a lease ends, re-evaluate every level-triggered rule the lease refused an action of
   while it held, and fire it if its condition holds; MUST NOT re-evaluate a rule the lease refused
   nothing of, nor re-run edge-triggered rules (GA-LEASE-4). A lease that refused nothing ends with
@@ -377,9 +399,255 @@ A **level-triggered** rule's trigger is a state held for a duration ("no motion 
 
 **Worked example (HS3).** A night light that must go off by itself is two rules: edge-triggered,
 *motion in the hall after 23:00 → hall light 10 %*; level-triggered, *hall light on and no motion for
-180 s → hall light off*. A person switching the light on by hand leases it; the second rule is
-refused; when the lease ends two hours later, GA-LEASE-4 re-evaluates it, finds no motion for 180 s, and
-turns the light off.
+180 s → hall light off*. A person flicking the wall switch off and on, so that the dimmed light comes
+back at full, leases it. Reported as one change, `on` before and after, it is an **other** change,
+held for `other_s`; reported as two, off then on, the second is an **on** change, held for `on_s`.
+The second rule is refused. In a hall with motion sensors only, the lease ends once the hall has been
+quiet for that window (an hour either way, with the reference values below), and GA-LEASE-4
+re-evaluates the rule, finds no motion for 180 s, and turns the light off; had he stayed in the hall,
+each motion the sensor saw would have kept the hold. In a hall with an `occupancy` sensor that can
+make it `vacant`, under `vacant_ends` the lease ends sooner, once he has gone back to bed and the hall
+reads `vacant`.
+
+### How a person's hold ends
+
+A **person's hold** is a `person` lease an endpoint principal's apply took (GA-LEASE-1), an
+`external` change took (GA-LEASE-2), or a press rule's own action took (GA-LEASE-9). How it ends is
+the steward's **hold policy**, its own choice, which it declares as the home's `hold` and which the
+owner may change. The standard fixes the shape of the policy and its floors, not its values: how
+long a person's change should stand is a heuristic, to be learnt in use.
+
+The policy is `{ on_s, off_s, other_s, fixed_s, load_cap_s, cap_s, presence_renews, vacant_ends,
+schedule_ends, owner_work_passes_guest_holds }`:
+
+| Field | Meaning |
+|---|---|
+| `on_s` | The quiet window after an **on** change: one whose action sets the device's `on` to `true` (`onoff.turn_on`, or an extension action whose `confirmed_by` is `on` true), or an `external` change that moved `on` to `true` |
+| `off_s` | The quiet window after an **off** change: one whose action sets the device's `on` to `false` (`onoff.turn_off`, or an extension action whose `confirmed_by` is `on` false), or an `external` change that moved `on` to `false` |
+| `other_s` | The quiet window after any other change: one that sets no `on` (a level, a set point, a position, a lock, `climate.set_mode` to `off`, `cover.close`), one that leaves `on` as it was, or an action declared `toggles`, whose direction is not known when it is sent |
+| `fixed_s` | The window for a device with no room, or in a room with no live presence source, whatever the change's direction, counted from its **anchor**: the latest of the change, the device's last move during the hold, and the moment its room lost its last live source; the change alone when there was neither (no room, or a room that never had a live source, and no move) |
+| `load_cap_s` | The window from the change for a `load_cap` lease, the heater's guard, apart from every person's hold |
+| `cap_s` | A bound on every person's hold from its change, whatever presence does; `0` for no cap |
+| `presence_renews` | Whether presence in the device's room renews the hold; when `false`, in a room with a live presence source, each quiet window counts from the change alone |
+| `vacant_ends` | Whether the hold ends as soon as the device's room becomes `vacant` after the change |
+| `schedule_ends` | Whether a schedule's run that dispatches a step on the device ends the hold |
+| `owner_work_passes_guest_holds` | Whether a guest's hold lets the owner's rules and schedules through (*A guest's hold and the owner's work*) |
+
+**The change.** Its direction comes, for an apply or a press, from what its action sets: an **on**
+change sets `on` to true, an **off** change sets it to false (the `on_s` and `off_s` rows name the
+actions), and every other action, `climate.set_mode` to `off` and `cover.close` included, is an
+**other** change, as is an action declared `toggles` whatever it is named; for an `external` change,
+from what changed: the `on` the applier reports when the change moved it, a change that left `on` as
+it was being an other one. Its time is the steward's own: for an apply or a press, its dispatch; for
+an `external` or `load_cap` change seen live, the moment the steward received the event. The
+applier's clock moves no live hold (*not checked by the harness*, which gives both clocks from one
+`time_source`). A change missed in a gap, read back from the applier's `history`, is timed by its
+event's `time`, clamped as *Judged as of now* says, since the steward never received it, and takes a
+hold only if the end the policy gives it, computed over the gap's presence reports as for a hold
+kept across the gap, has not passed at the read-back: none is taken whose end has passed
+(GA-LEASE-2).
+
+**Presence and quiet.** A **presence source** is an adopted device in the device's room that
+reports a `motion` or `occupancy` key, whatever its class (a light switch with a built-in PIR counts),
+the readings GA-OCC-1 reads. It **reports presence** while it is `live` and reads motion or
+presence, a held `true` counting until it clears; a source that is not `live` reports nothing, and a
+room whose every presence source is not `live` counts as having none, so `fixed_s` applies, counted from its anchor (the `fixed_s` row above), so that a sensor going stale does not end a renewed hold at once. The room
+is **busy** while any of its sources reports presence and **quiet** otherwise, and the readings that
+move it between the two are its **presence reports**. This differs from GA-OCC-1 on purpose, twice:
+an `occupancy` sensor that is not `live` still keeps its room from being `vacant` there, but renews no
+hold here, so that a dead sensor stuck at `true` does not hold a device for ever; and GA-OCC-1's
+`occupancy_hold_s` after a motion report does not apply here, so quiet starts the moment the last
+source clears.
+
+**Judged as of now.** The device's room, the room's presence sources and the policy are judged as of
+each moment, and a policy change applies at once to the holds already held. When the device moves
+room, or a source is adopted, removed or returns to `live`, during a hold, the quiet window counts
+from the later of that moment and the moment the room last became quiet as now known. Windows run on
+elapsed time within a run of the steward (*not checked by the harness*). Across a restart, a hold
+keeps its change's time, its holder's derived role and the moment its room last became quiet as
+wall-clock instants, and is judged again from them. A change or a presence report read back from a
+gap, a restart's or a `cursor_expired`'s, counts at its own event's `time`, clamped: never later
+than the read-back moment, and never earlier than the steward's last live reading before the gap, so
+that an applier's clock running ahead or behind moves no hold beyond the gap. A hold whose end
+passed inside the gap, with no presence before that end, is ended at the restart with `end_time`,
+and later reports in the gap do not revive it. Under the harness one `time_source` gives every clock
+(GA-HARN-2), and the harness steps it (GA-LEASE-7).
+
+The steward MUST end a person's hold at the first of these, at no earlier time, and no later than
+the hold end lateness (*Constants*) after it (GA-LEASE-7):
+- with `presence_renews`, in a room with at least one live presence source: once the room has been
+  quiet for the change's window (`on_s`, `off_s` or `other_s`), counted from the later of the change
+  and the moment the room last became quiet; without `presence_renews`, in such a room, once that
+  window has passed since the change;
+- in a room with no live presence source, or for a device with no room: once `fixed_s` has passed
+  since its anchor;
+- with `cap_s` above 0, once `cap_s` has passed since the change, however busy the room;
+- with `vacant_ends`, when the room's occupancy (GA-OCC-1) becomes `vacant` after the change, a room
+  `vacant` already at the change not ending it then. It becomes `vacant` at the first moment
+  GA-OCC-1's vacancy condition holds, judged continuously and not only on a report:
+  `occupancy_hold_s` running out with no report makes it `vacant` too. This holds for an off hold
+  too: once the room is `vacant`, a rule driven by vacancy may act on a device a person switched off;
+- with `schedule_ends`, when a schedule's run dispatches a step on the device: the step is planned as
+  if the hold were not there, and the hold ends when the step is dispatched; a step that is skipped or
+  refused, one met inside the hold's floor included (*The floor*), leaves the hold as it was, a
+  `brain_authored` run never ends a person's hold, and a step that passes a guest's hold under
+  GA-LEASE-10 does not end it;
+- when the device is removed, or stops being adopted, or becomes `internal`;
+- as every lease ends: replaced (GA-LEASE-3), or its step ended `unreachable` (GA-LEASE-1).
+
+**The floor.** A hold an endpoint principal's apply or a press rule's action took MUST NOT end by
+the policy's own ends (`quiet`, `window`, `cap`, `vacant`, `schedule`) before its step reaches a
+success GA-RULE-7 names (`acked`, `delivered`, `sent` or `confirmed`), or, when none comes, before
+the step's `ack_within_s` plus the late-ack window (60 s, `standard/applier.md`, GA-APPLY-11) have
+passed since dispatch, so that no rule acts between dispatch and a late ack (GA-LEASE-7). Quiet, a
+window, vacancy or a cap that comes inside the floor ends the hold when the floor has passed, not
+before. A schedule point does not wait: a scheduled step that meets a hold inside its floor is
+`refuse(leased)`, as under any hold, and leaves the hold as it was, ending it neither then nor when
+the floor passes. The floor does not bound a replacement, a removal, nor a step ending
+`unreachable`, after which nothing was sent and no late ack can come. On an open-loop device the
+floor ends at `sent`, since no ack can come; with short windows a rule may then act on it soon after
+a person's change, which is the owner's choice of window. On a closed-loop device a `delivered` step
+may still be confirmed later, but the device acted, so the floor ends there too. A `cap_s` never
+ends a hold before its floor either.
+
+**The heater's guard.** A `load_cap` lease ends once `load_cap_s` has passed since the change,
+presence neither renewing it nor vacancy, a schedule point or `cap_s` ending it: the cap is the
+device's, not a person's wish, and presence says nothing about it. It has its own window so that an
+owner shortening `fixed_s` for rooms without sensors does not shorten the heater's guard too. It
+ends sooner only as every lease does, replaced (GA-LEASE-3), or when the device is removed, stops
+being adopted or becomes `internal`, its end then `removed`. Its `expires` is its change plus
+`load_cap_s`. Its granted `lease` event names no direction, and its end at the window is `window`
+(GA-LEASE-2, GA-LEASE-7).
+
+**`expires`.** A person's hold's `expires` is its end as now computed from the windows, the cap and
+the floor: while the room is busy, now plus the window; once quiet, the moment the room became quiet
+(or the change, if later) plus the window; without `presence_renews`, the change plus the window;
+for a fixed window, its anchor plus that window; never later than the change plus `cap_s`, when
+`cap_s` is above 0, and never earlier than the floor, the floor winning when the two disagree. It
+may move later with presence, and vacancy or a `schedule_ends` run may end the hold sooner;
+`expires` foresees neither (GA-LEASE-7).
+
+**A guest's hold and the owner's work.** A **guest's hold** is a hold an endpoint principal's apply
+took whose derived role was `guest` (GA-AUTH-2), which includes one taken through a brain-served
+endpoint with no derived person (no `person` on the endpoint and no accepted `speaker`), the same
+guest. The steward keeps the derived role with the hold (GA-PERSIST-2) and names it in the granted
+`lease` event, so a later change of a person's role or an endpoint's `max_role` does not reclassify
+it. The **owner's work** is a rule, a scheduled run, or a run a rule started, that is not
+`brain_authored` for the device (GA-DEF-7): `define` is only ever an owner's (GA-DEF-3), and work
+defined through a brain, or reaching a device through a brain's grouping, carries `brain_authored`,
+so the mark alone tells the owner's work from a brain's. A steward MAY let the owner's work through
+a guest's hold once that hold's floor has passed (*The floor*): the step is not `refuse(leased)` by
+it, leaves the guest's hold in place, and takes no lease on that device. Inside the floor the
+owner's work is `refuse(leased)`, as under any hold, so that no rule acts between the guest's
+dispatch and a late ack. A run takes no lease on a device a guest's hold covers when the run starts,
+nor while that hold stands, so that a device carries one lease at a time; if that hold ends while
+the run goes on, the run takes its lease on the device then (GA-SCN-2). A steward does so only when
+it declares `owner_work_passes_guest_holds` true, and then for every guest's hold; it passes no
+other hold, a member's, an owner's, an `external` change's or a press's, and no `brain_authored`
+work (GA-LEASE-10). A press rule's own action is not passed under this rule: GA-LEASE-9 governs it,
+so it replaces a guest's hold and takes its own. This changes no role and no tier: the step is still
+the rule's, with its author's confirmation (GA-SCN-4), and the applier's gate is unchanged. So a
+guest at the hall satellite who switches every lamp on at 23:30 does not keep the owner's «lamps off
+after 23:00» away for the hold's window (HS9).
+
+**Declared and set.** `describe` MUST show the policy in force as the home's `hold`, every field
+present, to every reader but a front, whose `describe` GA-AUTH-8 limits, `cap_s` as `0` when there is none (GA-LEASE-8). The owner sets the policy through `define`
+(kind `home`): an upsert's `hold` sets only the fields it names, a field given as null returning to
+the steward's own value. The steward MUST accept each window as any whole number of seconds of 1 or
+more, and `cap_s` as any whole number of 0 or more, `0` meaning no cap, so an owner may always
+shorten or lengthen holds, and set or lift a cap; it MAY refuse a flag it does not implement, with `invalid_request` whose `data.field` names the flag, changing nothing (GA-LEASE-8). The standard sets no minimum and no maximum window: which windows suit
+a home is policy, left to implementations and owners; a steward's own windows are declared and
+visible in `describe`, so a short one is never hidden; and `cap_s` is the declared bound for an owner
+who wants one.
+
+**Explained.** A `lease` event that ends a person's hold names what ended it, as `end`: `quiet`
+(with `quiet_since`, the moment the room last became quiet, absent when it was quiet throughout),
+`window` (a window from the change), `cap`, `vacant`, `schedule` (with the run), `removed` (the
+device removed, no longer adopted, or `internal`), `replaced` or `unreachable`; a granted one names
+the change's direction, `on`, `off` or `other`, and, for an apply's hold, the derived role it was
+taken with. A replacement ends the old hold with its own `lease` event, `end: replaced`, and the new lease's granted event follows it. When a press's step ends `unreachable`, the press's hold's event ending it `unreachable` is followed by a granted event for the hold it had replaced, marked `restored: true` (*A press is a person's*). A hold whose end fell inside a restart's gap is ended
+at the restart, its event carrying the computed end as `end_time`. So `history` alone says why a rule
+waited and why it then acted (GA-LEASE-7, GA-STW-7).
+
+**Reference values, an example and not a requirement:** `on_s` 3600, `off_s` 600, `other_s` 3600,
+`fixed_s` 3600, `load_cap_s` 3600, `cap_s` 43200 (12 h), `presence_renews` `true`, `vacant_ends`
+`true`, `schedule_ends` `false`, `owner_work_passes_guest_holds` `true`, grounded in
+the workshop's research note on manual hold time and to be tested on a real installation. The research
+found no cap in the field; the reference sets one so that a busy room, a cat or a stuck sensor cannot
+hold a device for ever. ⚠️ The quiet-room rule is untried in use; a
+very still person loses the hold after the window, and a busy room may hold a device all day (*What
+this standard does not define*).
+
+### Narrowing actions
+
+A **narrowing action** only ever closes something off, so a person's hold has nothing to protect from
+it. The class is small and named: `lock.lock`; `valve.close`; and, on an `onoff` device of class
+`water_valve` or `gas_valve`, the `onoff` action that is not its `opens_with` (`standard/applier.md`,
+*Default tiers*). An action declared `toggles` is never narrowing, a valve's closing one included,
+since its direction is not known when it is sent. `session.lock` is the first of the kind and keeps its own rule. Nothing that opens,
+unlocks or switches a load on is narrowing, a heater's `turn_on` least of all, and nothing else joins
+the class but by a revision of this standard.
+
+A narrowing action, whoever sends it (a rule, a scheduled run, a person, a press), MUST NOT be
+refused by a person's hold (GA-LEASE-1, GA-LEASE-2, GA-LEASE-9); it takes no lease and replaces no
+person's hold (GA-LEASE-11). So an auto-lock rule locks a door a phone unlocked a minute ago (HS18),
+and a rule closes a valve a person opened. A step of it that is `brain_authored` for the device acts
+at `rule` precedence and does not pass a person's hold, as GA-LEASE-9 and GA-LEASE-10 treat a
+brain's work. The exemption is against a person's hold only: against any other lease (a run's, a
+`load_cap` lease, a `safety_rule` lease) a narrowing action goes by GA-LEASE-3's ordinary
+precedence, by its principal, a press's by GA-LEASE-9. Where that precedence would let it replace
+the lease, as a person's `lock.lock` would a run's, it ends that lease, with `end: replaced`, the
+rules that lease refused re-evaluated as at any lease's end (GA-LEASE-4), and takes none in its
+place, so the device has no lease after; where it would not, as a rule's `lock.lock` against a run's
+lease, it is `refuse(leased)`. The applier's gate (latches, `refuse(safety)`) is unchanged, so a
+door a safety rule unlocked for an escape stays as the safety rule holds it. Taking no hold, a
+person's own lock leaves the device open to the house's rules; an owner who wants a lock held writes
+no rule that unlocks it.
+
+### A press is a person's
+
+A rule whose trigger is an `occurrence` its author marks `press: true`, `{ event: { target, type:
+occurrence, key, value?, press: true } }`, is a **press rule**: its author says that the occurrence
+is a person's physical act on the device, such as a wall button pressed. The applier gives an event
+key no such meaning (`standard/applier.md`, *Occurrences*: a vibration alarm the device never clears
+is an occurrence too), so the mark is the author's alone, and nothing else makes a rule a press rule.
+`define` MUST refuse `press` on a trigger that is not an `occurrence` one with `invalid_request`,
+changing nothing (GA-DEF-13, GA-LEASE-9). A step of a press rule that is `brain_authored`, for the
+whole rule or for one device it reaches through a room or a group the device joined through a brain
+(GA-DEF-7), acts at `rule` precedence for that device, so that a brain can never put a device under
+a press that overrides a person's hold (GA-LEASE-9).
+
+A press rule fires as any rule does, its conditions still applying (*Rules*). When it fires, each of
+its own actions on a device, a `{ scenario }` action excepted, MUST (GA-LEASE-9):
+- be planned and dispatched at `person` precedence, a person's hold on its target not refusing it.
+  Only a person's hold gives way: a `load_cap` lease, a `safety_rule` lease and a lease a run holds
+  each refuse a press, though `load_cap` and a person-started run's lease are at `person` precedence
+  (the press's exception to GA-LEASE-3), so a misfiring button never lifts the heater's guard;
+- when its step is dispatched, and only then, unless it is a narrowing action (which passes the hold,
+  and takes and replaces none, as GA-LEASE-11 says), replace a person's hold on its target, a guest's included, GA-LEASE-10 not applying to a press (GA-LEASE-3), the rules the replaced hold refused on that device passing to the new one
+  (GA-LEASE-4), and take a fresh person's hold, held by `{ rule, press: { target, key, value } }`, `value` being the one the
+  occurrence reported; a step that ends `skipped(already)`, skipped otherwise or refused leaves the
+  earlier hold as it was. The fresh hold ends as GA-LEASE-7 says for an endpoint principal's apply,
+  floor included, and while it holds refuses every rule's and every scheduled run's action on the
+  device as any person's hold does (GA-LEASE-3). If the step ends `unreachable`, the fresh hold ends and the hold it replaced, if any, is restored as it was, with its change's time, the moment its room last became quiet and its derived role, the rules passed to the fresh hold passing back to it; a restored hold whose end has passed in the meantime ends at once, by the end the policy gives it (*Explained* names the events). So a misfiring or spoofed press at a dead device cancels no one's hold. It is a
+  person's hold, so it outlives its rule's deletion or deactivation;
+- remain the rule's in everything but precedence: it carries `via: rule` and `for: { rule }`
+  (GA-AUTH-5); its `confirm` and `no_voice` steps count as answered by the rule's author, as every
+  rule's do, a `brain_authored` rule's above `reversible` being `refuse(tier)` (GA-SCN-4, GA-DEF-7);
+  occupancy and session asks become skips (GA-SCN-4); and the applier's gate (liveness, latches,
+  loads, `refuse(safety)` while a safety rule runs, `standard/applier.md`, GA-SAFE-2) is unchanged. Precedence is not a
+  tier: a press reaches no device and no action it could not reach through the same rule before; it
+  passes only a person's hold.
+
+A `{ scenario }` action of a press rule starts its run as any rule's does, acting as the rule.
+
+**Who pressed.** A press names no person, so the hold's holder is `{ rule, press }`, a principal of its
+own (*Clients, endpoints and principals*), never a person, and no role is derived for it: whoever
+stands at the switch, a guest included, acts with the rule author's confirmation, as through the
+same rule before this revision. `state` shows the holder as given, and the `lease` event that grants
+the hold carries it, so `history` says that a press on the switch, through the rule, took the device,
+and never who pressed (GA-LEASE-9, GA-STW-7). When the occurrence's key is in its device's `personal`,
+the press's hold and its `lease` events are withheld as that occurrence is: left out of a guest's, a visitor's, or a no-endpoint brain read's `state`, `events` and `history`, and the `holder` of a plan step it refuses (`refuse(leased)`) is withheld wherever the hold itself is (GA-AUTH-7, GA-LEASE-9).
 
 ## Occupancy
 
@@ -870,8 +1138,14 @@ GA-LEASE-4). After a restart, the steward
 starts every held duration afresh (GA-PERSIST-2). After a restart or a `cursor_expired`, it first
 reads the applier's `history` from the time of the last event it had (it keeps its applier cursor
 and that time across a restart, GA-PERSIST-2), records the events it missed in its own
-`history`, and grants the leases the missed `external` and `load_cap` changes would have taken, for
-what is left of their `hold_time_s` (GA-LEASE-2). After a restart or a `cursor_expired`, it
+`history`, and grants the leases the missed `external` and `load_cap` changes would have taken
+(only those GA-LEASE-2 lets take one), each timed by its event's `time`, none taken whose end has
+passed at the read-back (GA-LEASE-2, GA-LEASE-7). A hold kept across a restart keeps its change's
+time, its direction, its holder's derived role and the moment its room last became quiet as
+wall-clock instants; a presence report read back from the gap counts at its own event's `time`, and a
+hold whose end passed inside the gap, with no presence before that end, is ended at the restart with
+`end_time` and not revived by later reports, so a restart neither ends a hold early nor keeps one
+past its end (GA-PERSIST-2). After a restart or a `cursor_expired`, it
 evaluates each level-triggered rule against current state, and one whose condition holds and has
 not fired for it since it last became true fires then, outside its exceptions (GA-RULE-6), a
 firing a lease refused not counting as fired; a rule whose trigger is a state held for a duration
@@ -1095,7 +1369,7 @@ A change set, `changes`, is a list of `{ op, kind, value }`, applied whole or no
 
 | Kind | Value | Created with | Defaults |
 |---|---|---|---|
-| `home` | The settings it sets, at least one, of the Home's fields (*The house model*) | — | As *The house model* gives them; `notice_channels` empty |
+| `home` | The settings it sets, at least one, of the Home's fields (*The house model*); a `hold` sets only the fields it names (GA-LEASE-8) | — | As *The house model* gives them; `notice_channels` empty; each of `hold`'s fields the steward's own |
 | `room` | `{ id, name? }` | `name` | — |
 | `person` | `{ id, name?, role? }`, `role` being `owner`, `member` or `guest` | `name`, `role` | — |
 | `endpoint` | `{ id, name?, type?, room?, person?, served_by?, max_role?, confirm_on? }`, `room`, `person` and `served_by` null where there is none; its voice record is kind `voice` | `name`, `type`, `room`, `person`, `served_by` | `max_role` as *Clients, endpoints and principals* gives it; `confirm_on` `same` |
@@ -1119,8 +1393,10 @@ A rule's parts:
   `ge`, `lt` or `le`, or `{ target, key, not_in }` (GA-RULE-4); `target` is a device id.
 - **A trigger** is one of `{ state: reading }`, which fires when the reading becomes true (an edge); `{ held }`, a
   reading with `for_s` added, the reading held for `for_s` seconds while its device is `live` (level);
-  `{ event: { target, type, new?, key?, value? } }`, `type` being `liveness` (with `new`, the
-  liveness reached) or `occurrence` (with `key` and `value`), an edge; or `{ time: { at, days? } }`,
+  `{ event: { target, type, new?, key?, value?, press? } }`, `type` being `liveness` (with `new`, the
+  liveness reached) or `occurrence` (with `key` and `value`, and `press: true` when its author says
+  the occurrence is a person's physical act, *A press is a person's*; `press` on any other trigger is
+  refused, GA-DEF-13, GA-LEASE-9), an edge; or `{ time: { at, days? } }`,
   an edge at that minute.
 - **A condition** is a reading or `{ between: { from, until, days? } }` (GA-RULE-3); `conditions`
   has at least one when present.
@@ -1138,7 +1414,9 @@ A scenario's steps, at least one, each one of:
 
 ## Restarts
 
-The steward MUST keep across a restart: the house model; leases; idempotency keys for their
+The steward MUST keep across a restart: the house model; leases, a person's hold with its change's
+time, its direction, its holder's derived role and the moment its room last became quiet (*How a
+person's hold ends*); idempotency keys for their
 retention; each lease's refused rules (GA-LEASE-4); open plans that have an `ask` step, and their
 answers (a plan with none may be lost, and an `apply` or `answer` of it is then `unknown_plan`);
 every notice of its own not yet delivered, those held for want of a channel included; the events `history` needs; each schedule's last run; and
@@ -1191,8 +1469,8 @@ obligation, *not checked by the harness*.
 | Token expiry | 60 s after issue | GA-CONF-3 |
 | Ask expiry, default | 300 s | GA-CONF-1 |
 | Clock tolerance | 1 s, a guess until measured | GA-CONF-2 |
-| Hold time, default | 7200 s | GA-LEASE-1 |
 | Notice retry interval | at most 60 s | GA-NOTE-1 |
+| Hold end lateness | 2 s after the hold's computed end; ⚠️ a guess | GA-LEASE-7 |
 | Occupancy hold, default | 300 s | GA-OCC-1 |
 | Idempotency key retention | 3600 s, per credential | GA-STW-6, GA-SCN-6 |
 | Event retention | 3600 s | GA-STW-7 |
@@ -1248,12 +1526,17 @@ obligation, *not checked by the harness*.
 | GA-NOTE-2 | MUST | Steward | wire | While its applier's `standard_version` is below 0.10 no `notify` the steward dispatches carries `from`; from 0.10 on, every one carries its own `from`: `{ endpoint, role }` for a request or a person-started run, `{ rule }` for a rule or a rule-started run, `{ scenario }` for a scheduled run, `{ notice }` for a notice, a `{ rule }` or `{ scenario }` of `brain_authored` work with `brain_authored: true`; a caller's `from` is overwritten, never passed on, and the overwrite recorded as `from_replaced` on the plan's step or the inline step's outcome |
 | GA-NOTE-3 | MUST | Steward | wire | When a token a computer's `account_persons` maps leaves its `accounts`, a notice naming the person, the token and the computer is delivered and retried as GA-NOTE-1's, once each time a mapped token leaves; the mapping is kept |
 | GA-NOTE-4 | MUST | Steward | wire | When a channel in `notice_channels` leaves adoption or offers neither `notify` nor `media.announce`, and when the list loses its last adopted channel offering `notify`, a notice naming it is delivered on the remaining channels as GA-NOTE-1's, and held if none remain |
-| GA-LEASE-1 | MUST | Steward | wire | An endpoint principal's apply leases each device it dispatched a stateful action to, from dispatch, for the hold time, ending if the step ends `unreachable`; a rule's later action there is `refuse(leased)`; stateless actions and `session.lock` take no lease |
-| GA-LEASE-2 | MUST | Steward | wire | An `external` or `load_cap` change takes a person-precedence lease for the hold time, one missed in any gap (a restart's or a `cursor_expired`'s) included, read back from the applier's `history` for what is left of it; a `device` change takes none |
-| GA-LEASE-3 | MUST | Steward | wire | Equal or higher precedence replaces a lease; lower is refused; a `session.lock` is never refused by a lease and replaces none; a duck while a front speaks is refused by no lease but a `safety_rule`'s |
+| GA-LEASE-1 | MUST | Steward | wire | An endpoint principal's apply leases each device it dispatched a stateful action to, from dispatch, ending as GA-LEASE-7 says, or if the step ends `unreachable`; a rule's later action there is `refuse(leased)`; stateless actions, `session.lock` and narrowing actions (GA-LEASE-11) take no lease |
+| GA-LEASE-2 | MUST | Steward | wire | An `external` or `load_cap` change takes a person-precedence lease, ending as GA-LEASE-7 says, one missed in any gap (a restart's or a `cursor_expired`'s) included, read back from the applier's `history`, timed by its event's `time` clamped as GA-LEASE-7 says, none taken whose end, computed by the policy over the gap's presence reports, has passed at the read-back; only a change whose keys include one that one of the device's actions sets (the key its ack is matched on; an extension action's `confirmed_by`), on an adopted device, takes one: a sensor reading, a sensor key on an actuator, and any change on a device not adopted take none; an `external` narrowing change takes one; a `device` change takes none |
+| GA-LEASE-3 | MUST | Steward | wire | Equal or higher precedence replaces a lease; lower is refused; a `session.lock` is never refused by a lease and replaces none; a narrowing action is never refused by a person's hold and replaces no person's hold, and a lower or equal lease it would replace it ends (`replaced`), taking none (GA-LEASE-11); a press passes only a person's hold (GA-LEASE-9); the owner's work may pass a guest's hold (GA-LEASE-10); a duck while a front speaks is refused by no lease but a `safety_rule`'s |
 | GA-LEASE-4 | MUST | Steward | wire | When a lease ends, the level-triggered rules it refused an action of are re-evaluated and fire, outside their exceptions, if their condition holds; rules it refused nothing of, and edge-triggered rules, are not; at a replacement, nothing is re-evaluated for the devices the new lease covers, the rules refused on them passing to it, and the rules refused on devices it does not cover are re-evaluated then |
-| GA-LEASE-5 | MUST | Steward | wire | No rule's action takes a lease |
+| GA-LEASE-5 | MUST | Steward | wire | No rule's action takes a lease, but a press rule's own action on a device (GA-LEASE-9) |
 | GA-LEASE-6 | MUST | Steward | wire | A device a safety rule actuated holds a `safety_rule` lease until the rule's latch clears, by itself or by the owner, or until the rule completes when it has none; held latches are re-read after `cursor_expired`, and a latchless rule's completion read from `history`; a steward MAY end a latchless rule's lease early only when it states `safety_lease_s` in `describe`, after the larger of that and, for each lease, the `ack_within_s` of the rule's actuation on that device plus the 60 s late-ack window; a level-triggered rule the applier then answers `refuse(safety)` is re-evaluated, and fires if its condition holds, when the rule's `rule_fired` is relayed |
+| GA-LEASE-7 | MUST | Steward | wire | A person's hold (GA-LEASE-1, an `external` change's GA-LEASE-2, a press rule's GA-LEASE-9) ends at the first of these, not before, and not later than the hold end lateness after it: with `presence_renews`, in a room with a live presence source (an adopted device there reporting `motion` or `occupancy`), the room quiet for `on_s`, `off_s` or `other_s` by the change's direction (an apply's or press's by what its action sets, `on` true or false, every other action, and one declared `toggles`, being other; an `external` change's by what changed), counted from the later of the change and the moment the room last became quiet, a source reporting presence while `live` and reading it, a held `true` until it clears, with no `occupancy_hold_s` after it; without it, in such a room, that window from the change; with no room, or no live presence source, `fixed_s` from its anchor (the latest of the change, a move during the hold and the moment the room lost its last live source; the change when there was neither); with `cap_s` above 0, `cap_s` from the change; with `vacant_ends`, the room becoming `vacant` after the change, at the first moment GA-OCC-1's condition holds, judged continuously, `occupancy_hold_s` running out with no report included; with `schedule_ends`, a schedule's run, not `brain_authored`, dispatching a step on the device that does not pass the hold under GA-LEASE-10; the device removed, unadopted or made `internal`; a replacement; an `unreachable` step; the change's time is the steward's: an apply's or press's dispatch, a live `external` or `load_cap` change's receipt, a gap's change by its event's `time`; room, sources and policy are judged as of now, a move or a source's adoption, removal or return to `live` restarting the count no earlier than then; a gap's change or presence report counts at its event's `time`, clamped to no later than the read-back and no earlier than the steward's last live reading before the gap, and a hold whose end passed in the gap ends at the restart with `end_time`; an apply's or press's hold never ends by `quiet`, `window`, `cap`, `vacant` or `schedule` before its step's success (`acked`, `delivered`, `sent`, `confirmed`; `sent` on an open-loop device) or, when none comes, its `ack_within_s` plus 60 s from dispatch: `quiet`, `window`, `cap` and `vacant` wait for the floor, and a scheduled step meeting the hold inside its floor is `refuse(leased)` and ends nothing; `expires` is the end as now computed from the windows, the cap and the floor, never earlier than the floor nor later than the change plus `cap_s` (when above 0) or the floor when later, and without `presence_renews` is the change plus the window; a `load_cap` lease ends `load_cap_s` after the change, or at removal, unadoption or `internal` (`removed`), its `expires` the change plus `load_cap_s`, its grant naming no direction and its end at the window `window`; an ended hold's `lease` event names its `end` (`quiet` with `quiet_since`, `window`, `cap`, `vacant`, `schedule` with the run, `removed`, `replaced`, `unreachable`), a replacement putting the old hold's ended event before the new lease's granted one, with `end_time` when the end fell in a restart's gap, and a granted one its direction and, for an apply's hold, its derived role |
+| GA-LEASE-8 | MUST | Steward | wire | `describe`, to every reader but a front (GA-AUTH-8), shows the hold policy in force as the home's `hold`, `{ on_s, off_s, other_s, fixed_s, load_cap_s, cap_s, presence_renews, vacant_ends, schedule_ends, owner_work_passes_guest_holds }`, every field present, `cap_s` `0` for none; `define` of the home's `hold` sets the fields it names, null returning one to the steward's own, accepts every window of 1 s or more and every `cap_s` of 0 or more, and may refuse only a flag the steward does not implement, with `invalid_request` whose `data.field` names the flag; a change applies at once to the holds held |
+| GA-LEASE-9 | MUST | Steward | wire | A rule whose `occurrence` trigger its author marks `press: true` acts, for each of its own actions on a device that is not `brain_authored` for that device, at `person` precedence: not refused by a person's hold; refused by a `load_cap` lease, a `safety_rule` lease and a run's lease; only when its step is dispatched, and unless it is a narrowing action (which passes a person's hold and takes and replaces none, GA-LEASE-11), does it replace a person's hold, a guest's included (GA-LEASE-10 not applying), its refused rules passing on, and take a person's hold held by `{ rule, press: { target, key, value } }`, `value` the occurrence's, ending as GA-LEASE-7 says for an apply, outliving the rule's deletion, and refusing other rules and scheduled runs while it holds; a step `skipped` or refused leaves the earlier hold; a step ending `unreachable` ends the press's hold and restores the hold it replaced as it was (its change's time, its quiet, its derived role, its refused rules), with a granted `lease` event marked `restored: true` after the press's hold's ended one; on a personal occurrence key the hold, its `lease` events and the `holder` of a plan step it refuses are withheld as the occurrence is (GA-AUTH-7); it stays the rule's in `via`, `for`, its author's confirmation, `brain_authored` and GA-SCN-4; its conditions still apply; a `{ scenario }` action is a rule's; a `brain_authored` step acts at `rule` precedence; `define` refuses `press` on any trigger but an `occurrence` one |
+| GA-LEASE-10 | MUST | Steward | wire | A steward lets a step of a rule, a scheduled run or a rule-started run that is not `brain_authored` for the device through a guest's hold (an apply's hold whose derived role, kept with the hold and named in its granted `lease` event, was `guest`, a brain-served endpoint's with no derived person included) only when `describe` declares `owner_work_passes_guest_holds` true, and then always once that hold's floor has passed, inside which the step is `refuse(leased)`: the step is not `refuse(leased)` by that hold, which stays in place and is not ended by `schedule_ends`, and takes no lease on that device; a run takes no lease on a device a guest's hold covers at its start or while that hold stands, and takes it when that hold ends mid-run; no other hold is passed, no `brain_authored` work passes, and a press rule's own action replaces a guest's hold as GA-LEASE-9 says |
+| GA-LEASE-11 | MUST | Steward | wire | A narrowing action (`lock.lock`; `valve.close`; on an `onoff` `water_valve` or `gas_valve`, the `onoff` action that is not its `opens_with`; never an action declared `toggles`), whoever sends it, a press included, is never refused by a person's hold, replaces no person's hold and takes no lease; a step of it `brain_authored` for the device acts at `rule` precedence and passes no person's hold; against any other lease it goes by GA-LEASE-3's precedence by its principal (a press's by GA-LEASE-9): a lease it would replace it ends, with `end: replaced`, the rules that lease refused re-evaluated (GA-LEASE-4), and takes none, the device having no lease after; a lease it would not replace refuses it; no other action, a heater's `turn_on` included, is narrowing |
 | GA-OCC-1 | MUST | Steward | wire | With `respect_occupancy`, an occupied room (an occupancy sensor reading presence now, or a `live` motion sensor reading motion now or within the hold) is `skip(occupied)` and an unknown one `ask(occupancy_unknown)`; vacant needs an occupancy sensor and every occupancy sensor live throughout the hold with a known `fresh_s` that, with its `fresh_slack_s`, is no greater than `occupancy_hold_s`, none reporting presence within it; a target with no room is unknown; without the flag, occupancy is not consulted |
 | GA-OCC-3 | MUST | Steward | wire | With `respect_occupancy`, a computer's `power.sleep` or `power.shutdown` is `ask(in_use)` when an account mapped to a person reads `active` or `idle`; else `ask(in_use_unknown)` when a mapped account reads `unknown` or its key is absent, or, with an account mapped, the computer is not `live`, and always when the computer has no `session` capability, an account mapped or not; else the room check applies as GA-OCC-1 says; unmapped accounts never count; the session check adds to the room check, never removes it; a `yes` to `ask(in_use)` or `ask(in_use_unknown)` also answers the room's `occupancy_unknown` for that step, and an `occupied` room still skips it |
 | GA-LISTEN-1 | MUST | Steward | wire | `narrow` is accepted from any credential bound to the endpoint, any role, and from its front, if it asks for nothing wider than the configured record, else `invalid_request`; it holds at most the narrowing limit; the effective record is the narrowest of the configured one and every narrowing in force, and returns to the configured one, never wider, when the last expires; each narrowing, lift and expiry changes the revision |
@@ -1301,7 +1584,7 @@ obligation, *not checked by the harness*.
 | GA-SEC-2 | MUST | Steward | wire | Every connection uses TLS, with the server's certificate validated, unless both ends are on one host's loopback |
 | GA-BIND-2 | MUST | Steward | wire | The steward serves MCP protocol revision `2026-07-28` to every caller, answering no revision but that one, `2025-06-18` and `2025-11-25`; it reaches its applier at `2026-07-28` where the applier serves it, and falls back, to one of those two only, for an applier that does not |
 | GA-HARN-2 | MUST | Steward | wire | Under the harness, the steward takes all time, elapsed time included, from the `time_source` set by `define`, and honours the harness stepping it; `time_source` is accepted only while its applier reports a `test_run_id` |
-| GA-PERSIST-2 | MUST | Steward | wire | The house model, leases with the rules each refused, the applier cursor and the time of the last applier event, idempotency keys and the counters they are made from, open plans with an `ask` step and their answers, history, schedules' last runs, and every notice of the steward's own not yet delivered (those GA-RULE-8 holds for a late ack, and those held for want of a channel, included) survive a restart, a plan with no ask possibly lost, `apply` and `answer` of it then `unknown_plan`; an interrupted run ends `ended(interrupted)` |
+| GA-PERSIST-2 | MUST | Steward | wire | The house model, leases with the rules each refused and a person's hold with its change's time, direction, holder's derived role and the moment its room last became quiet as wall-clock instants, a presence report read back from the gap counting at its event's `time`, a hold whose end passed in the gap ended at the restart with `end_time` and not revived, the applier cursor and the time of the last applier event, idempotency keys and the counters they are made from, open plans with an `ask` step and their answers, history, schedules' last runs, and every notice of the steward's own not yet delivered (those GA-RULE-8 holds for a late ack, and those held for want of a channel, included) survive a restart, a plan with no ask possibly lost, `apply` and `answer` of it then `unknown_plan`; an interrupted run ends `ended(interrupted)` |
 
 ## Conformance
 
@@ -1316,6 +1599,14 @@ steward then reports the same `test_run_id`. The
 run-id guard, negative subjects and exit rules are the applier standard's (*Conformance*). The
 harness checks GA-NOTE-1's "never giving up" as a notice still retried after 7 days of stepped
 time. The
+harness tests the hold policy the steward declares, not a value of its own: it reads the home's
+`hold` from `describe`, may shorten its windows through `define` (GA-LEASE-8), and steps the
+scripted presence sensors and the time (GA-HARN-2), checking that each hold ends when the declared policy says, not before and not later than the hold end lateness (*Constants*) after it (GA-LEASE-7). The **pinned policy** is windows: `on_s` 3600, `off_s`
+600, `other_s` 3600, `fixed_s` 3600, `load_cap_s` 3600 and `cap_s` 0, set through `define` one field at a time. Every negative subject on GA-LEASE-7, GA-LEASE-9 and GA-LEASE-10 runs under it, so that its result does not rest on the steward's own windows; a
+subject whose row needs a flag (`vacant_ends`, `schedule_ends` or `owner_work_passes_guest_holds` true, `presence_renews` false) sets that flag through `define`, as it sets the windows, in a call of its own, and is skipped, and said, only when the steward refuses the flag (GA-LEASE-8), so that no refused flag rejects the pinned windows. The reference steward refuses `schedule_ends: true`, so against it the subjects on `schedule_ends` are skipped, and said. A subject on the cap sets `cap_s` itself, as a window. The harness's summary says how
+many subjects it skipped, and why. The harness reaches the hold policy through the schemas, which follow this revision
+in its build: the build lands `home.hold`, the trigger's `press` and the `{ rule, press }` principal
+in the schemas before the harness pins a policy. The
 harness reaches the steward at `2026-07-28` where it serves it, and otherwise at `2025-11-25` or
 `2025-06-18` if it answers one; the reference applier serves all three and records which the
 steward used.
@@ -1444,6 +1735,67 @@ steward used.
 | `replays-past-its-bound` | GA-RULE-1 | — | After a `cursor_expired`, an edge older than the `edge_replay_s` the steward's `describe` states fires its rule |
 | `never-notices-again` | GA-RULE-8 | — | A rule's `skipped(occupancy_unknown)` in a room that was known in between raises no notice, coalesced with the one before |
 | `takes-a-silent-channel` | GA-DEF-8 | GA-NOTE-1 | `define` accepts `notice_channels` naming a lamp, which offers neither `notify` nor `media.announce`, beside a `notify` channel |
+| `ends-a-hold-while-busy` | GA-LEASE-7 | GA-LEASE-4 | Under the pinned policy, a member switches the lamp on from her app in a room whose motion sensor reads motion for 30 s every 600 s; the hold ends 3600 s after the change, though the room was never quiet that long, and the off rule fires |
+| `never-ends-a-quiet-hold` | GA-LEASE-7 | GA-LEASE-4 | Under the pinned policy, the room has been quiet for 3600 s after an on change, and the hold, and the off rule it refused, still wait |
+| `same-window-both-ways` | GA-LEASE-7 | — | Under the pinned policy, a hold after a switch-off ends only after 3600 s of quiet, not 600 s |
+| `renews-on-a-dead-sensor` | GA-LEASE-7 | — | Under the pinned policy, the room's only motion sensor goes `stale` while reading motion, and the hold outlasts the later of the change and the moment it went stale, plus `fixed_s` 3600 |
+| `vacant-ends-a-remote-hold` | GA-LEASE-7 | GA-LEASE-4 | Under the pinned policy, with `vacant_ends` set true, the owner switches on a lamp in a room `vacant` already, and the hold ends at the floor |
+| `ends-a-hold-before-the-ack` | GA-LEASE-7 | GA-LEASE-1 | Under the pinned policy with every window set to 1 s, a rule's action reaches the lamp after dispatch and before the member's `turn_on` is acked |
+| `renews-a-capped-heater` | GA-LEASE-7 | — | Under the pinned policy, a `load_cap` lease on the heater is renewed by motion in its room past 3600 s, or ends when `fixed_s` alone is set to 20 s |
+| `ends-without-a-reason` | GA-LEASE-7 | — | Under the pinned policy, a person's hold ends with a `lease` event that names no `end` |
+| `hides-the-hold-policy` | GA-LEASE-8 | GA-LEASE-7 | `describe`'s home has no `hold`, or one without `off_s` |
+| `refuses-a-short-hold` | GA-LEASE-8 | — | `define` of the home's `hold` `{ on_s: 20, off_s: 20, other_s: 20, fixed_s: 20 }` is refused: an owner running a short test, or one who wants brief holds, cannot set them |
+| `restarts-the-quiet` | GA-PERSIST-2 | GA-LEASE-7 | Under the pinned policy, after a restart with no presence in the gap, a hold whose room had been quiet for most of `on_s` before the steward stopped waits a whole `on_s` again from the restart |
+| `schedule-cannot-end` | GA-LEASE-7 | — | Under the pinned policy, with `schedule_ends` set true, a schedule's run reaches a step on the lamp after the floor, and the step is `refuse(leased)`: the hold survived it |
+| `roomless-on-window` | GA-LEASE-7 | — | Under the pinned policy with `fixed_s` set to 600, a lamp with no room switched on from the app is held for 3600 s (`on_s`) instead of 600 s |
+| `renews-when-told-not-to` | GA-LEASE-7 | — | Under the pinned policy, with `presence_renews` set false, motion in the room keeps the hold past 3600 s from the change |
+| `press-loses-the-hold` | GA-LEASE-9 | GA-LEASE-4 | Under the pinned policy, a press whose `turn_on` ends `skipped(already)` ends the member's hold on the lamp, and the off rule it refused fires |
+| `brain-groups-a-press` | GA-LEASE-9 | GA-DEF-7 | Under the pinned policy, a brain adds a lamp to the group an owner's press rule acts on, and the press replaces the member's hold on that lamp |
+| `refuses-the-press` | GA-LEASE-9 | GA-LEASE-3 | Under the pinned policy, HS35: Ольга switches the lamp off from her app, and button 1's press rule, marked `press`, is `refused(leased)` |
+| `press-over-safety` | GA-LEASE-9 | GA-LEASE-6 | Under the pinned policy, a press rule's action reaches a valve a latchless safety rule closed, while its `safety_rule` lease holds |
+| `press-without-a-hold` | GA-LEASE-9 | GA-LEASE-5 | Under the pinned policy, after the press turns the lamp on, a level rule turning it off fires within 3600 s with the room quiet: the press took no hold |
+| `any-occurrence-is-a-press` | GA-LEASE-9 | — | Under the pinned policy, a rule on a vibration sensor's `event` key, not marked `press`, replaces the member's hold on the lamp |
+| `brain-press-overrides` | GA-LEASE-9 | GA-DEF-7 | Under the pinned policy, a press rule a brain wrote replaces the member's hold on the lamp |
+| `press-skips-conditions` | GA-LEASE-9 | — | Under the pinned policy, a press rule with a condition `between` 18:00 and 23:00 turns the lamp on at 14:00 |
+| `press-asks-the-tier` | GA-LEASE-9 | GA-SCN-4 | Under the pinned policy, a press rule's `confirm` step on the plug is `skipped(not_confirmed)` though its author defined it from an app |
+| `names-the-presser` | GA-LEASE-9 | — | Under the pinned policy, the press's hold is held by the rule's author, or by the endpoint the switch's room has, not by `{ rule, press }` |
+| `press-on-liveness` | GA-LEASE-9 | GA-DEF-13 | Under the pinned policy, `define` accepts `press: true` on a `liveness` trigger |
+| `press-over-the-cap` | GA-LEASE-9 | GA-LEASE-2 | Under the pinned policy, the applier caps the heater (`load_cap`), and a press rule's `turn_on` replaces the `load_cap` lease and switches it back on |
+| `schedule-ends-without-dispatch` | GA-LEASE-7 | GA-LEASE-4 | Under the pinned policy, with `schedule_ends` set true, a schedule's step on the lamp is `skip(occupied)`, and the member's hold ends all the same, the off rule it refused firing |
+| `refuses-a-flag-unnamed` | GA-LEASE-8 | — | A steward that does not implement `schedule_ends` refuses `define` of `hold: { schedule_ends: true }` with an `invalid_request` that names no flag |
+| `fixed-expires` | GA-LEASE-7 | — | Under the pinned policy, `state` shows a hold's `expires` as the change plus `on_s` while motion every 600 s keeps the room busy, or, with every window set to 1 s, earlier than the floor |
+| `grants-no-direction` | GA-LEASE-7 | — | Under the pinned policy, the granted `lease` event of a member's `turn_off` names no direction |
+| `schedule-end-without-run` | GA-LEASE-7 | — | Under the pinned policy, with `schedule_ends` set true, a hold ends `schedule` with a `lease` event that names no run |
+| `gap-end-without-time` | GA-LEASE-7 | GA-PERSIST-2 | Under the pinned policy, a hold whose quiet window ran out while the steward was down, with motion only later in the gap, is either revived by that motion or ends at the restart with a `lease` event that has no `end_time` |
+| `sensor-reading-holds` | GA-LEASE-2 | GA-LEASE-3 | An adopted motion sensor's `occupancy` and `illuminance` readings, cause `external`, each take a person's lease on the sensor |
+| `metering-holds` | GA-LEASE-2 | GA-LEASE-3 | An adopted plug's power reading, a sensor key on an actuator, cause `external`, takes a person's lease on the plug, and a rule's `turn_off` of it is `refuse(leased)` |
+| `unadopted-holds` | GA-LEASE-2 | — | A device not adopted takes a person's lease on an `external` change, and the lease is still held when it is adopted |
+| `guest-hold-blocks-the-owner` | GA-LEASE-10 | GA-LEASE-3 | Under the pinned policy, with `owner_work_passes_guest_holds` set true, a guest's `turn_on` of the lamp at a panel refuses the owner's rule turning it off at 23:00 |
+| `passes-undeclared` | GA-LEASE-10 | GA-LEASE-3 | Under the pinned policy, with `owner_work_passes_guest_holds` set false, the owner's rule turns off a lamp a guest's apply holds |
+| `brain-rule-passes-a-guest` | GA-LEASE-10 | GA-DEF-7 | Under the pinned policy, with `owner_work_passes_guest_holds` set true, a `brain_authored` rule's `turn_off` passes a guest's hold on the lamp |
+| `passes-a-member-hold` | GA-LEASE-10 | GA-LEASE-3 | Under the pinned policy, with `owner_work_passes_guest_holds` set true, the owner's rule passes a member's hold on the lamp |
+| `named-speaker-is-a-guest` | GA-LEASE-10 | — | Under the pinned policy, with `owner_work_passes_guest_holds` set true, the owner's rule passes the hold of an apply through a brain-served satellite that named a member as its `speaker` |
+| `holds-the-auto-lock` | GA-LEASE-11 | GA-LEASE-3 | Under the pinned policy, HS18: an `external` unlock from the phone holds the lock, and an auto-lock rule's `lock.lock` a minute later is `refuse(leased)` |
+| `narrows-a-heater` | GA-LEASE-11 | GA-LEASE-3 | Under the pinned policy, a rule's `onoff.turn_on` of a heater passes a member's hold on it, treated as narrowing |
+| `narrowing-takes-a-hold` | GA-LEASE-11 | GA-LEASE-1 | Under the pinned policy, a member's `valve.close` from the app takes a person's hold, shown in `state` |
+| `narrows-over-safety` | GA-LEASE-11 | GA-LEASE-6 | Under the pinned policy, a rule's `lock.lock` reaches a door a latchless safety rule unlocked, while its `safety_rule` lease holds |
+| `closes-by-opens-with` | GA-LEASE-11 | — | Under the pinned policy, on an `onoff` `water_valve` declared `opens_with: turn_off`, a rule's `turn_off` passes a member's hold as narrowing |
+| `press-lock-holds` | GA-LEASE-9 | GA-LEASE-11 | Under the pinned policy, a press rule whose action is `lock.lock` replaces the member's hold on the lock with a press hold, shown in `state` |
+| `ignores-the-cap` | GA-LEASE-7 | — | Under the pinned policy with `cap_s` set to 7200, motion every 600 s keeps a member's hold on the lamp past 7200 s from the change |
+| `keeps-a-removed-hold` | GA-LEASE-7 | — | Under the pinned policy, the owner removes the lamp from adoption and adopts it again, and the member's earlier hold still refuses a rule on it |
+| `narrows-over-a-run` | GA-LEASE-11 | GA-LEASE-3 | Under the pinned policy, a rule's `lock.lock` reaches a lock a person-started run owns, while the run's lease holds |
+| `missed-change-full-window` | GA-LEASE-2 | GA-LEASE-7 | Under the pinned policy, after a `cursor_expired` gap of two days, an `external` change from its start takes a fresh hold at the read-back |
+| `two-leases-at-once` | GA-LEASE-10 | GA-SCN-2 | Under the pinned policy, with `owner_work_passes_guest_holds` set true, the owner's scheduled run owning the lamp starts while a guest's hold on it stands, passes that hold once its floor has passed, and also leases the lamp, `state` showing two leases |
+| `narrows-by-toggle` | GA-LEASE-11 | — | Under the pinned policy, on an `onoff` `water_valve` whose closing `turn_off` is declared `toggles`, a rule's `turn_off` passes a member's hold as narrowing |
+| `misses-a-vacancy` | GA-LEASE-7 | GA-OCC-1 | Under the pinned policy, with `vacant_ends` set true, a member switches on the lamp in an occupied room whose motion sensor then clears; `occupancy_hold_s` passes with no report and the room becomes `vacant`, and the hold stands until the next presence or liveness report |
+| `quiet-without-its-moment` | GA-LEASE-7 | — | Under the pinned policy, a member switches on the lamp in a busy room, which then falls quiet, and the hold's `lease` event ends it `quiet` with no `quiet_since` |
+| `floor-waits-past-sent` | GA-LEASE-7 | — | Under the pinned policy, with `vacant_ends` set true, a member switches on an open-loop lamp, whose step ends `sent`; the room becomes `vacant` soon after, and the hold stands until `ack_within_s` plus 60 s have passed since dispatch |
+| `schedule-ends-at-the-floor` | GA-LEASE-7 | — | Under the pinned policy, with `schedule_ends` set true, a schedule's step on the lamp meets a member's hold inside its floor, is `refuse(leased)`, and the hold ends when the floor has passed, with `end: schedule` |
+| `ends-a-hold-late` | GA-LEASE-7 | — | Under the pinned policy, a member's hold in a room with no presence source ends 30 s after `fixed_s` has passed since its change, past the hold end lateness |
+| `press-hold-dies-with-rule` | GA-LEASE-9 | — | Under the pinned policy, the owner deletes the press rule whose press holds the lamp, and the press's hold ends with it |
+| `press-cancels-on-unreachable` | GA-LEASE-9 | GA-LEASE-4 | Under the pinned policy, a press at a lamp a member holds ends `unreachable`, and the member's hold it replaced is not restored, the off rule it refused firing |
+| `null-keeps-the-window` | GA-LEASE-8 | — | After the owner set `off_s`, `define` of `hold: { off_s: null }` leaves her value in force rather than the steward's own |
+| `passes-inside-the-floor` | GA-LEASE-10 | — | Under the pinned policy, with `owner_work_passes_guest_holds` set true, the owner's rule turning a lamp off is dispatched while a guest's `turn_on` of it awaits its ack, inside the guest's hold's floor |
 | `forgets-an-asked-plan` | GA-PERSIST-2 | — | A member answers `yes` to a plan's `ask(confirm_tier)`, the steward restarts, and the plan's `apply` is `unknown_plan` |
 
 ## What this standard does not define
@@ -1467,7 +1819,30 @@ steward used.
   direct request) no session is consulted (GA-OCC-3), and `power.sleep` is `reversible`, so anyone
   who may do a `reversible` action may put to sleep a PC someone is using. Whether a direct request
   should consult sessions too, or sleep be tiered higher, is policy. **A known gap:** a
-  person-precedence lease is taken again by every action, so a guest, a mistaken brain or another
-  admin acting again within `hold_time_s` can hold a device, and every rule and schedule acting on
-  it, for as long as they keep acting; a bound is left to a later revision, designed from real use.
+  person-precedence lease is taken again by every action, and, under a hold policy with
+  `presence_renews`, renewed by every presence report in its room, so a guest, a mistaken brain or
+  another admin acting again before the hold ends, or a room that is never quiet for the window, can
+  hold a device, and every rule and schedule acting on it, for as long as they keep acting or the
+  room stays busy. A live sensor stuck at `true` (a lost clear), or a reading spoofed below the
+  applier, renews a hold for ever in the same way. The bound is the policy's `cap_s`, declared, and
+  43200 s in the reference; with it `0`, no hold is bounded, and a steward ends none before its
+  declared policy says (GA-LEASE-7, GA-LEASE-8).
+- **A known residue: who is a guest.** A guest's hold (GA-LEASE-10) rests on the derived role, and
+  through a brain on the brain's `speaker` claim (GA-AUTH-2), as the press rests on its author's mark:
+  a brain that names a member makes the hold a member's, one that names nobody makes it a guest's.
+  And only an apply's hold is a guest's: a guest at the wall switch (`external`), at a press rule's
+  button, or starting a run, holds against the owner's rules as anyone would there, and a child whom a
+  satellite never names is a guest at it while the same words through another ecosystem's assistant
+  (`external`, HS8) hold as a person's. These follow from the ruling that passes only an apply's
+  guest hold (GA-LEASE-10).
+- **A known asymmetry: narrowing by hand.** An `external` narrowing change (a keypad lock, a valve
+  closed by hand) takes a hold under GA-LEASE-2, while the same act through the steward takes none
+  (GA-LEASE-11): the steward cannot tell a person's lock from the echo of an unlock attempt.
+- **A known residue: `press` is the author's word.** The applier says nothing of who or what made an
+  occurrence, so a misfiring or spoofed occurrence on a press rule overrides a person's hold and holds
+  the device as a person would, refusing rules and schedules for the hold's window (GA-LEASE-9). The
+  owner marks only real buttons; a brain's mark has no effect.
+- **Known limitation: a person's hold and stillness.** A motion sensor does not see a person sitting
+  still, so under the quiet-room rule a very still person loses the hold once the window has passed
+  since the last motion it saw; the window is the owner's to lengthen (GA-LEASE-8).
 - The JSON Schemas; until they exist, the tables above are the shapes.

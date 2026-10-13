@@ -56,13 +56,13 @@ export type StewardStateResponse = {
       | undefined;
   };
   /**
-   * Each leased device's lease (steward, Leases): its holder, its precedence and when it ends; a device with none is absent (the reference steward's design, Standards fixes this build shows)
+   * Each leased device's lease (steward, Leases): its holder, its precedence and when it ends; a device with none is absent (the reference steward's design, Standards fixes this build shows). A person's hold's `expires` is the time it would end as of now, which presence may move later and which is never before the ack floor (GA-LEASE-7)
    */
   leases?: {
     [k: string]:
       | {
           /**
-           * Who holds a lease (steward, Clients, endpoints and principals): a principal, or safety_rule or load_cap
+           * Who holds a lease (steward, Clients, endpoints and principals): a principal (a press rule's `{ rule, press }` among them), or safety_rule, external or load_cap
            */
           holder:
             | {
@@ -72,6 +72,15 @@ export type StewardStateResponse = {
               }
             | {
                 rule: string;
+                /**
+                 * A press rule's hold: the press it came from, the occurrence's reported value (GA-LEASE-9)
+                 */
+                press?: {
+                  target: string;
+                  key: string;
+                  value: unknown;
+                  [k: string]: unknown | undefined;
+                };
                 [k: string]: unknown | undefined;
               }
             | {

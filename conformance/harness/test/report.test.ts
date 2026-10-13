@@ -55,4 +55,15 @@ describe("report", () => {
     r.rows[0] = { ...r.rows[0]!, state: "pass", ms: 2500 };
     expect(toMarkdown({ ...r, wallMs: 61_000 })).toContain("Took 61.0 s. Slowest: GA-A-1 2.5 s.");
   });
+
+  it("counts the subjects a check skipped, and prints each", () => {
+    const r = report({ "GA-A-1": "pass" });
+    r.rows[0]!.evidence = ["hold policy: {}", "skipped: GA-A-1 part 2: hold.schedule_ends true refused by the steward",
+      "skipped: GA-A-1 part 3: hold.schedule_ends true refused by the steward"];
+    const md = toMarkdown(r);
+    expect(md).toContain("Skipped subjects: 2.");
+    expect(md).toContain("- skipped: GA-A-1 part 2: hold.schedule_ends true refused by the steward");
+    expect(md).toContain("- skipped: GA-A-1 part 3: hold.schedule_ends true refused by the steward");
+    expect(toMarkdown(report({ "GA-A-1": "pass" }))).not.toContain("Skipped subjects");
+  });
 });

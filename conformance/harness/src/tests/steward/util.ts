@@ -2,12 +2,44 @@ import { randomUUID } from "node:crypto";
 import { fixtureDevices } from "@ludentes/galatea-life-sim";
 import { must } from "../../assert.js";
 import type { TestContext } from "../../context.js";
+import { constantMs } from "../../manifest.js";
 import { McpSeam, type McpResult } from "../../seams/mcp.js";
 import { LAMP as STEWARD_LAMP } from "../../steward-home.js";
 import { pollUntil } from "../../util.js";
 
+export const SECOND = 1_000;
+export const MINUTE = 60_000;
+/** An instant as RFC 3339. */
+export const iso = (ms: number) => new Date(ms).toISOString();
+/** How far an instant a check computes from the moments it saw (a receipt lies between two of them) may sit outside them: rounding only. */
+export const ROUNDING_MS = 1_000;
+
+/** Steps the harness's clock to `atMs`, waiting for it; not at all when it has passed. */
+export async function stepTo(ctx: TestContext, atMs: number): Promise<void> {
+  const left = atMs - ctx.time.now();
+  if (left > 0) await ctx.time.stepAndWait(left);
+}
+
+/** A lease's holder as a word: a cause, an endpoint's id, `press:<rule>`, `run:<id>` or `safety:<rule>`. */
+export function holderWord(h: unknown): string {
+  if (typeof h === "string") return h;
+  const o = (h ?? {}) as Record<string, unknown>;
+  if (typeof o.rule === "string" && o.press !== undefined) return `press:${o.rule}`;
+  if (typeof o.run === "string") return `run:${o.run}`;
+  if (typeof o.safety_rule === "string") return `safety:${o.safety_rule}`;
+  if (typeof o.endpoint === "string") return o.endpoint;
+  return JSON.stringify(h);
+}
+
 export const up = (kind: string, value: unknown) => ({ op: "upsert", kind, value });
 export const del = (kind: string, value: unknown) => ({ op: "delete", kind, value });
+
+/** The wall clock in `tz` at `ms`: `HH:MM` and the date `YYYY-MM-DD`. */
+export function wall(ms: number, tz = "Europe/Moscow"): { hhmm: string; date: string } {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: tz, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit" }).formatToParts(new Date(ms)).map((x) => [x.type, x.value]));
+  return { hhmm: `${p.hour}:${p.minute}`, date: `${p.year}-${p.month}-${p.day}` };
+}
 
 /** The owner's seam, from the steward seam's setup. */
 export const ownerOf = (ctx: TestContext): McpSeam => ctx.steward!.owner;
@@ -162,4 +194,59 @@ export async function cursorExpiredGap(ctx: TestContext, inside: () => unknown):
   applier.scriptGap();
   await inside();
   applier.scriptGapEnd();
+}
+
+/** How late after its computed end a hold may still stand (steward, *Constants*). */
+export const holdEndLatenessMs = () => constantMs("steward", "hold-end-lateness");
+
+/** The pinned policy's windows (steward, *Conformance*): set through define one field at a time; the flags are the steward's own. */
+export const PINNED_WINDOWS = { on_s: 3600, off_s: 600, other_s: 3600, fixed_s: 3600, load_cap_s: 3600, cap_s: 0 } as const;
+
+export type HoldPolicy = { on_s: number; off_s: number; other_s: number; fixed_s: number; load_cap_s: number; cap_s: number;
+  presence_renews: boolean; vacant_ends: boolean; schedule_ends: boolean; owner_work_passes_guest_holds: boolean };
+
+/** Pins the windows, then `extra` windows over them; returns the policy describe then shows, failing unless the windows are as set. */
+export async function pinHold(ctx: TestContext, extra: Partial<Record<keyof typeof PINNED_WINDOWS, number>> = {}): Promise<HoldPolicy> {
+  const want = { ...PINNED_WINDOWS, ...extra };
+  // One field at a time (*Conformance*), so a steward refusing one says which.
+  for (const [k, v] of Object.entries(want)) await mustDefine(ctx, [up("home", { hold: { [k]: v } })], `the pinned ${k}`);
+  const hold = (await ownerOf(ctx).callOk("describe")).home?.hold as HoldPolicy | undefined;
+  must(hold !== undefined, "describe's home shows no hold (GA-LEASE-8)");
+  for (const [k, v] of Object.entries(want)) {
+    must(hold![k as keyof HoldPolicy] === v, `describe's home.hold.${k} is ${JSON.stringify(hold![k as keyof HoldPolicy])}, not the pinned ${v} (GA-LEASE-8)`);
+  }
+  ctx.evidence(`hold policy: ${JSON.stringify(hold)}`);
+  return hold!;
+}
+
+/**
+ * Sets one flag through define: true when taken; false, each of `subjects` recorded as skipped, when refused with data.field
+ * naming it; any other answer fails. A subject is a negative subject's mutation id when the part skipped is one, else
+ * `<requirement id>: <the clause skipped>`, so the report's skipped subjects map to rows and clauses.
+ */
+export async function setFlag(ctx: TestContext, flag: keyof HoldPolicy, value: boolean, subjects: string[]): Promise<boolean> {
+  const r = await ownerDefine(ctx, [up("home", { hold: { [flag]: value } })]);
+  if (r.ok) return true;
+  must(r.error === "invalid_request" && (r.body?.data?.field ?? null) === flag,
+    `define of hold.${flag} ${value} returned ${r.error}: ${r.message}, not invalid_request with data.field ${flag}`, r.body);
+  for (const x of subjects) ctx.evidence(`skipped: ${x}: hold.${flag} ${value} refused by the steward`);
+  return false;
+}
+
+/** The owner's `state` lease of `target`, or undefined. */
+export async function leaseOf(ctx: TestContext, target: string): Promise<{ holder: unknown; precedence: string; expires: string } | undefined> {
+  return (((await ownerOf(ctx).callOk("state")).leases ?? {}) as Record<string, { holder: unknown; precedence: string; expires: string }>)[target];
+}
+
+/** The `lease` events since `cursor`, whole. */
+export async function leaseEventsSince(ctx: TestContext, cursor: string): Promise<Record<string, any>[]> {
+  return ((await ownerOf(ctx).callOk("events", { cursor })).events as Record<string, any>[]).filter((e) => e.type === "lease");
+}
+
+/** `action`'s `ack_within_s` on `target`, as the steward's describe shows the applier's declaration. */
+export async function ackWithinOf(ctx: TestContext, target: string, action: string): Promise<number> {
+  const t = targetIn(await ownerOf(ctx).callOk("describe"), target);
+  const a = (t?.actions ?? []).find((x: any) => x.action === action);
+  must(typeof a?.ack_within_s === "number", `describe shows no ack_within_s for ${target} ${action}`);
+  return a.ack_within_s as number;
 }

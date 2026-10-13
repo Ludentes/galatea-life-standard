@@ -1,0 +1,2 @@
+{ "id": "dead-on", "name": "x", "trigger": { "event": { "target": "sim-bridge:button", "type": "liveness", "new": "dead", "press": true } },
+  "actions": [{ "target": "sim-bridge:lamp", "action": "onoff.turn_on", "args": {} }] }

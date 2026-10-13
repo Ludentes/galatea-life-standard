@@ -1,0 +1,34 @@
+{
+  "steward_id": "demo-steward",
+  "standard_version": "0.7",
+  "revision": 12,
+  "home": {
+    "audio_retention_s": 0,
+    "other_wake_words": [
+      "Алиса"
+    ]
+  },
+  "rooms": [],
+  "targets": [],
+  "groups": [],
+  "endpoints": [],
+  "persons": [
+    {
+      "id": "olga",
+      "name": "Ольга",
+      "role": "owner"
+    }
+  ],
+  "scenarios": [],
+  "rules": [],
+  "schedules": [],
+  "modes": [],
+  "applier": {
+    "applier_id": "sim-applier",
+    "levels": [
+      "Act"
+    ],
+    "ungoverned": []
+  },
+  "test_run_id": "run-1"
+}

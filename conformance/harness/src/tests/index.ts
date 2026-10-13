@@ -42,6 +42,8 @@ import "./steward/targets.js";
 import "./steward/answers.js";
 import "./steward/apply.js";
 import "./steward/leases.js";
+import "./steward/holds.js";
+import "./steward/passes.js";
 import "./steward/notices.js";
 import "./steward/occupancy.js";
 import "./steward/rules.js";
