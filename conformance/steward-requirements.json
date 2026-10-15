@@ -496,7 +496,7 @@
     "level": "MUST",
     "conformance": "Steward",
     "verify": "wire",
-    "text": "An endpoint principal's apply leases each device it dispatched a stateful action to, from dispatch, ending as GA-LEASE-7 says, or if the step ends unreachable; a rule's later action there is refuse(leased); stateless actions, session.lock and narrowing actions (GA-LEASE-11) take no lease",
+    "text": "An endpoint principal's apply leases each device it dispatched a stateful action to, from dispatch, ending as GA-LEASE-7 says, or if the step ends unreachable; a rule's later action there is refuse(leased), unless it passes the hold (GA-LEASE-10, GA-LEASE-12); stateless actions, session.lock and narrowing actions (GA-LEASE-11) take no lease",
     "negative_subjects": [
       {
         "subject": "ignores-leases",
@@ -550,7 +550,7 @@
     "level": "MUST",
     "conformance": "Steward",
     "verify": "wire",
-    "text": "Equal or higher precedence replaces a lease; lower is refused; a session.lock is never refused by a lease and replaces none; a narrowing action is never refused by a person's hold and replaces no person's hold, and a lower or equal lease it would replace it ends (replaced), taking none (GA-LEASE-11); a press passes only a person's hold (GA-LEASE-9); the owner's work may pass a guest's hold (GA-LEASE-10); a duck while a front speaks is refused by no lease but a safety_rule's",
+    "text": "Equal or higher precedence replaces a lease; lower is refused; a session.lock is never refused by a lease and replaces none; a narrowing action is never refused by a person's hold and replaces no person's hold, and a lower or equal lease it would replace it ends (replaced), taking none (GA-LEASE-11); a press passes only a person's hold (GA-LEASE-9); the owner's work may pass a guest's hold (GA-LEASE-10), and passes a person's hold where a switch covers it, once its floor has passed (GA-LEASE-12); a duck while a front speaks is refused by no lease but a safety_rule's",
     "negative_subjects": [
       {
         "subject": "ignores-leases",
@@ -625,7 +625,7 @@
     "level": "MUST",
     "conformance": "Steward",
     "verify": "wire",
-    "text": "A person's hold (GA-LEASE-1, an external change's GA-LEASE-2, a press rule's GA-LEASE-9) ends at the first of these, not before, and not later than the hold end lateness after it: with presence_renews, in a room with a live presence source (an adopted device there reporting motion or occupancy), the room quiet for on_s, off_s or other_s by the change's direction (an apply's or press's by what its action sets, on true or false, every other action, and one declared toggles, being other; an external change's by what changed), counted from the later of the change and the moment the room last became quiet, a source reporting presence while live and reading it, a held true until it clears, with no occupancy_hold_s after it; without it, in such a room, that window from the change; with no room, or no live presence source, fixed_s from its anchor (the latest of the change, a move during the hold and the moment the room lost its last live source; the change when there was neither); with cap_s above 0, cap_s from the change; with vacant_ends, the room becoming vacant after the change, at the first moment GA-OCC-1's condition holds, judged continuously, occupancy_hold_s running out with no report included; with schedule_ends, a schedule's run, not brain_authored, dispatching a step on the device that does not pass the hold under GA-LEASE-10; the device removed, unadopted or made internal; a replacement; an unreachable step; the change's time is the steward's: an apply's or press's dispatch, a live external or load_cap change's receipt, a gap's change by its event's time; room, sources and policy are judged as of now, a move or a source's adoption, removal or return to live restarting the count no earlier than then; a gap's change or presence report counts at its event's time, clamped to no later than the read-back and no earlier than the steward's last live reading before the gap, and a hold whose end passed in the gap ends at the restart with end_time; an apply's or press's hold never ends by quiet, window, cap, vacant or schedule before its step's success (acked, delivered, sent, confirmed; sent on an open-loop device) or, when none comes, its ack_within_s plus 60 s from dispatch: quiet, window, cap and vacant wait for the floor, and a scheduled step meeting the hold inside its floor is refuse(leased) and ends nothing; expires is the end as now computed from the windows, the cap and the floor, never earlier than the floor nor later than the change plus cap_s (when above 0) or the floor when later, and without presence_renews is the change plus the window; a load_cap lease ends load_cap_s after the change, or at removal, unadoption or internal (removed), its expires the change plus load_cap_s, its grant naming no direction and its end at the window window; an ended hold's lease event names its end (quiet with quiet_since, window, cap, vacant, schedule with the run, removed, replaced, unreachable), a replacement putting the old hold's ended event before the new lease's granted one, with end_time when the end fell in a restart's gap, and a granted one its direction and, for an apply's hold, its derived role",
+    "text": "A person's hold (GA-LEASE-1, an external change's GA-LEASE-2, a press rule's GA-LEASE-9) ends at the first of these, not before, and not later than the hold end lateness after it: with presence_renews, in a room with a live presence source (an adopted device there reporting motion or occupancy), the room quiet for on_s, off_s or other_s by the change's direction (an apply's or press's by what its action sets, on true or false, every other action, and one declared toggles, being other; an external change's by what changed), counted from the later of the change and the moment the room last became quiet, a source reporting presence while live and reading it, a held true until it clears, with no occupancy_hold_s after it; without it, in such a room, that window from the change; with no room, or no live presence source, fixed_s from its anchor (the latest of the change, a move during the hold and the moment the room lost its last live source; the change when there was neither); with cap_s above 0, cap_s from the change; with vacant_ends, the room becoming vacant after the change, at the first moment GA-OCC-1's condition holds, judged continuously, occupancy_hold_s running out with no report included; with schedule_ends, a schedule's run, not brain_authored, dispatching a step on the device that does not pass the hold under GA-LEASE-10 or GA-LEASE-12; the device removed, unadopted or made internal; a replacement; an unreachable step; the change's time is the steward's: an apply's or press's dispatch, a live external or load_cap change's receipt, a gap's change by its event's time; room, sources and policy are judged as of now, a move or a source's adoption, removal or return to live restarting the count no earlier than then; a gap's change or presence report counts at its event's time, clamped to no later than the read-back and no earlier than the steward's last live reading before the gap, and a hold whose end passed in the gap ends at the restart with end_time; an apply's or press's hold never ends by quiet, window, cap, vacant or schedule before its step's success (acked, delivered, sent, confirmed; sent on an open-loop device) or, when none comes, its ack_within_s plus 60 s from dispatch: quiet, window, cap and vacant wait for the floor, and a scheduled step meeting the hold inside its floor is refuse(leased) and ends nothing; expires is the end as now computed from the windows, the cap and the floor, never earlier than the floor nor later than the change plus cap_s (when above 0) or the floor when later, and without presence_renews is the change plus the window; a load_cap lease ends load_cap_s after the change, or at removal, unadoption or internal (removed), its expires the change plus load_cap_s, its grant naming no direction and its end at the window window; an ended hold's lease event names its end (quiet with quiet_since, window, cap, vacant, schedule with the run, removed, replaced, unreachable), a replacement putting the old hold's ended event before the new lease's granted one, with end_time when the end fell in a restart's gap, and a granted one its direction and, for an apply's hold, its derived role",
     "negative_subjects": [
       {
         "subject": "ends-a-hold-while-busy",
@@ -740,7 +740,7 @@
     "level": "MUST",
     "conformance": "Steward",
     "verify": "wire",
-    "text": "describe, to every reader but a front (GA-AUTH-8), shows the hold policy in force as the home's hold, { on_s, off_s, other_s, fixed_s, load_cap_s, cap_s, presence_renews, vacant_ends, schedule_ends, owner_work_passes_guest_holds }, every field present, cap_s 0 for none; define of the home's hold sets the fields it names, null returning one to the steward's own, accepts every window of 1 s or more and every cap_s of 0 or more, and may refuse only a flag the steward does not implement, with invalid_request whose data.field names the flag; a change applies at once to the holds held",
+    "text": "describe, to every reader but a front (GA-AUTH-8), shows the hold policy in force as the home's hold, { on_s, off_s, other_s, fixed_s, load_cap_s, cap_s, presence_renews, vacant_ends, schedule_ends, owner_work_passes_guest_holds, owner_work_passes_holds }, every field present, cap_s 0 for none; define of the home's hold sets the fields it names, null returning one to the steward's own, accepts every window of 1 s or more and every cap_s of 0 or more, accepts every flag set false, and may refuse only setting true a flag the steward does not implement, never owner_work_passes_holds (GA-LEASE-12), with invalid_request whose data.field names the flag; a change applies at once to the holds held",
     "negative_subjects": [
       {
         "subject": "hides-the-hold-policy",
@@ -767,7 +767,7 @@
     "level": "MUST",
     "conformance": "Steward",
     "verify": "wire",
-    "text": "A rule whose occurrence trigger its author marks press: true acts, for each of its own actions on a device that is not brain_authored for that device, at person precedence: not refused by a person's hold; refused by a load_cap lease, a safety_rule lease and a run's lease; only when its step is dispatched, and unless it is a narrowing action (which passes a person's hold and takes and replaces none, GA-LEASE-11), does it replace a person's hold, a guest's included (GA-LEASE-10 not applying), its refused rules passing on, and take a person's hold held by { rule, press: { target, key, value } }, value the occurrence's, ending as GA-LEASE-7 says for an apply, outliving the rule's deletion, and refusing other rules and scheduled runs while it holds; a step skipped or refused leaves the earlier hold; a step ending unreachable ends the press's hold and restores the hold it replaced as it was (its change's time, its quiet, its derived role, its refused rules), with a granted lease event marked restored: true after the press's hold's ended one; on a personal occurrence key the hold, its lease events and the holder of a plan step it refuses are withheld as the occurrence is (GA-AUTH-7); it stays the rule's in via, for, its author's confirmation, brain_authored and GA-SCN-4; its conditions still apply; a { scenario } action is a rule's; a brain_authored step acts at rule precedence; define refuses press on any trigger but an occurrence one",
+    "text": "A rule whose occurrence trigger its author marks press: true acts, for each of its own actions on a device that is not brain_authored for that device, at person precedence: not refused by a person's hold; refused by a load_cap lease, a safety_rule lease and a run's lease; only when its step is dispatched, and unless it is a narrowing action (which passes a person's hold and takes and replaces none, GA-LEASE-11), does it replace a person's hold, a guest's included (GA-LEASE-10 not applying), its refused rules passing on, and take a person's hold held by { rule, press: { target, key, value } }, value the occurrence's, ending as GA-LEASE-7 says for an apply, outliving the rule's deletion, and refusing other rules and scheduled runs while it holds, but the owner's work GA-LEASE-10 or GA-LEASE-12 lets through; a rule marked both press and passes_holds acts so for its own device actions; a step skipped or refused leaves the earlier hold; a step ending unreachable ends the press's hold and restores the hold it replaced as it was (its change's time, its quiet, its derived role, its refused rules), with a granted lease event marked restored: true after the press's hold's ended one; on a personal occurrence key the hold, its lease events and the holder of a plan step it refuses are withheld as the occurrence is, and a step that passes it carries no passed_hold for such a reader (GA-AUTH-7, GA-LEASE-12); it stays the rule's in via, for, its author's confirmation, brain_authored and GA-SCN-4; its conditions still apply; a { scenario } action is a rule's; a brain_authored step acts at rule precedence; define refuses press on any trigger but an occurrence one",
     "negative_subjects": [
       {
         "subject": "press-loses-the-hold",
@@ -858,7 +858,7 @@
     "level": "MUST",
     "conformance": "Steward",
     "verify": "wire",
-    "text": "A steward lets a step of a rule, a scheduled run or a rule-started run that is not brain_authored for the device through a guest's hold (an apply's hold whose derived role, kept with the hold and named in its granted lease event, was guest, a brain-served endpoint's with no derived person included) only when describe declares owner_work_passes_guest_holds true, and then always once that hold's floor has passed, inside which the step is refuse(leased): the step is not refuse(leased) by that hold, which stays in place and is not ended by schedule_ends, and takes no lease on that device; a run takes no lease on a device a guest's hold covers at its start or while that hold stands, and takes it when that hold ends mid-run; no other hold is passed, no brain_authored work passes, and a press rule's own action replaces a guest's hold as GA-LEASE-9 says",
+    "text": "A steward lets a step of a rule, a scheduled run or a rule-started run that is not brain_authored for the device through a guest's hold (an apply's hold whose derived role, kept with the hold and named in its granted lease event, was guest, a brain-served endpoint's with no derived person included) only when describe declares owner_work_passes_guest_holds true, and then always once that hold's floor has passed, inside which the step is refuse(leased), the floor for passing also ending when the device reports the key the guest's step sets at the value it set (the report its ack is matched on), judged before any rule that report triggers: the step is not refuse(leased) by that hold, which stays in place and is not ended by schedule_ends, and takes no lease on that device; a run takes no lease on a device a guest's hold covers at its start or while that hold stands, and takes it when that hold ends mid-run; no other hold is passed under this flag, no brain_authored work passes, and a press rule's own action replaces a guest's hold as GA-LEASE-9 says; GA-LEASE-12 passes a guest's hold too, whatever this flag says",
     "negative_subjects": [
       {
         "subject": "guest-hold-blocks-the-owner",
@@ -905,7 +905,7 @@
     "level": "MUST",
     "conformance": "Steward",
     "verify": "wire",
-    "text": "A narrowing action (lock.lock; valve.close; on an onoff water_valve or gas_valve, the onoff action that is not its opens_with; never an action declared toggles), whoever sends it, a press included, is never refused by a person's hold, replaces no person's hold and takes no lease; a step of it brain_authored for the device acts at rule precedence and passes no person's hold; against any other lease it goes by GA-LEASE-3's precedence by its principal (a press's by GA-LEASE-9): a lease it would replace it ends, with end: replaced, the rules that lease refused re-evaluated (GA-LEASE-4), and takes none, the device having no lease after; a lease it would not replace refuses it; no other action, a heater's turn_on included, is narrowing",
+    "text": "A narrowing action (lock.lock; valve.close; on an onoff water_valve or gas_valve, the onoff action that is not its opens_with; never an action declared toggles), whoever sends it, a press included, but a step brain_authored for the device, is never refused by a person's hold, replaces no person's hold and takes no lease; a step of it brain_authored for the device acts at rule precedence and passes no person's hold; against any other lease it goes by GA-LEASE-3's precedence by its principal (a press's by GA-LEASE-9): a lease it would replace it ends, with end: replaced, the rules that lease refused re-evaluated (GA-LEASE-4), and takes none, the device having no lease after; a lease it would not replace refuses it; no other action, a heater's turn_on included, is narrowing",
     "negative_subjects": [
       {
         "subject": "holds-the-auto-lock",
@@ -944,6 +944,140 @@
       {
         "subject": "narrows-by-toggle",
         "coupled": []
+      }
+    ]
+  },
+  {
+    "id": "GA-LEASE-12",
+    "level": "MUST",
+    "conformance": "Steward",
+    "verify": "wire",
+    "text": "A step of the owner's work (a rule's own action, a scheduled run's step or a rule-started run's step, none brain_authored for the device) passes a person's hold (an apply's, a guest's and an owner's own included; an external change's; a press's) where a switch covers it: the rule's passes_holds, for its own actions and every step of the runs its { scenario } actions start and of the runs reached from those through run steps; the device's target's owner_work_passes_holds, for all the owner's work on that device; the home hold's owner_work_passes_holds, for all the owner's work but a step that would undo a narrowing (lock.unlock; valve.open; on an onoff water_valve or gas_valve, its opens_with action, declared toggles or not), which only the rule's or the device's switch passes; a switch's change applying at once, to holds already held too, judged when the rule fires or the run plans the step and again at dispatch; it passes once that hold's floor (GA-LEASE-7, ending for passing also at the device's report of the value the person's step set, the report its ack is matched on, judged before any rule that report triggers; an external change's hold has none) has passed, inside which the step is refuse(leased): the step is not refuse(leased) by that hold, which stays in place, keeps its end and is not ended, by schedule_ends neither, and takes no lease on that device; a run takes no lease on a device a hold it passes covers at its start (a hold whose floor has passed; one inside its floor refuses the step) or while that hold stands, passes a hold that replaces a passed one, once its floor has passed, and takes its lease when a passed hold ends mid-run otherwise than by a replacement, before GA-LEASE-4 re-evaluates what that hold refused; a run whose own lease a person's change replaces mid-run holds none on that device for the rest of the run; a passed hold adds nothing to its refused rules and passing re-evaluates nothing (GA-LEASE-4); a guest's hold is passed whatever owner_work_passes_guest_holds says; no switch passes a safety_rule lease, a load_cap lease or a run's lease; no brain_authored work passes, a marked rule a brain later edited and a marked rule's step brain_authored for a device passing nothing; a press rule's own device actions act as GA-LEASE-9 says, its passes_holds governing only its runs; a narrowing action goes by GA-LEASE-11; describe shows passes_holds on every rule and owner_work_passes_holds on every target as set, false where never set, and both home flags in its hold as set; define refuses none of the three as not implemented; through a brain neither a rule's nor a target's switch is set or cleared, nor a rule or a target whose switch is true deleted (GA-DEF-3); a passing step carries no holder and issues no lease event, and its outcome, returned or in its outcome event, and a run's step's plan step carry passed_hold: { holder, switch }, switch the first of rule, device, home, guest that covers it, a narrowing action and a press rule's own action carrying none; when the passed hold is a press's on a personal occurrence key, passed_hold is left out entirely for every reader the occurrence is withheld from, in plans, outcomes and history (GA-AUTH-7)",
+    "negative_subjects": [
+      {
+        "subject": "owner-passes-the-cap",
+        "coupled": [
+          "GA-LEASE-2",
+          "GA-LEASE-3"
+        ]
+      },
+      {
+        "subject": "owner-passes-a-run",
+        "coupled": [
+          "GA-LEASE-3",
+          "GA-SCN-2"
+        ]
+      },
+      {
+        "subject": "brain-rule-passes-holds",
+        "coupled": [
+          "GA-DEF-7"
+        ]
+      },
+      {
+        "subject": "brain-groups-past-a-hold",
+        "coupled": [
+          "GA-DEF-7"
+        ]
+      },
+      {
+        "subject": "unmarked-rule-passes",
+        "coupled": [
+          "GA-LEASE-3"
+        ]
+      },
+      {
+        "subject": "passes-a-hold-in-its-floor",
+        "coupled": []
+      },
+      {
+        "subject": "passing-ends-the-hold",
+        "coupled": [
+          "GA-LEASE-4",
+          "GA-LEASE-7"
+        ]
+      },
+      {
+        "subject": "passing-takes-a-lease",
+        "coupled": [
+          "GA-SCN-2"
+        ]
+      },
+      {
+        "subject": "ignores-the-device-switch",
+        "coupled": []
+      },
+      {
+        "subject": "ignores-the-home-switch",
+        "coupled": []
+      },
+      {
+        "subject": "marked-run-refused",
+        "coupled": [
+          "GA-SCN-2"
+        ]
+      },
+      {
+        "subject": "marked-press-passes",
+        "coupled": [
+          "GA-LEASE-9"
+        ]
+      },
+      {
+        "subject": "refuses-the-owner-switch",
+        "coupled": [
+          "GA-LEASE-8"
+        ]
+      },
+      {
+        "subject": "switch-spares-held-holds",
+        "coupled": []
+      },
+      {
+        "subject": "pass-re-evaluates-early",
+        "coupled": [
+          "GA-LEASE-4"
+        ]
+      },
+      {
+        "subject": "pass-moves-the-end",
+        "coupled": [
+          "GA-LEASE-7"
+        ]
+      },
+      {
+        "subject": "pass-as-a-lease",
+        "coupled": []
+      },
+      {
+        "subject": "pass-unrecorded",
+        "coupled": []
+      },
+      {
+        "subject": "pass-reveals-a-personal-press",
+        "coupled": [
+          "GA-AUTH-7",
+          "GA-LEASE-9"
+        ]
+      },
+      {
+        "subject": "owner-passes-safety",
+        "coupled": [
+          "GA-LEASE-3",
+          "GA-LEASE-6"
+        ]
+      },
+      {
+        "subject": "refuses-on-the-persons-own-report",
+        "coupled": [
+          "GA-LEASE-10"
+        ]
+      },
+      {
+        "subject": "home-switch-reopens",
+        "coupled": [
+          "GA-LEASE-3"
+        ]
       }
     ]
   },
@@ -1302,7 +1436,7 @@
     "level": "MUST",
     "conformance": "Steward",
     "verify": "wire",
-    "text": "A running scenario leases its owned targets, groups expanded except infrastructure members, and releases only its own leases when it ends",
+    "text": "A running scenario leases its owned targets, groups expanded except infrastructure members, a device whose person's hold the run passes only once that hold ends (GA-LEASE-10, GA-LEASE-12), and releases only its own leases when it ends",
     "negative_subjects": []
   },
   {
@@ -1478,12 +1612,30 @@
     "level": "MUST",
     "conformance": "Steward",
     "verify": "wire",
-    "text": "define is an owner's from an endpoint not served by a brain; through a brain, persons, endpoints, voice records, credentials and home settings are never changed nor a narrowing lifted, narrow being the one exception; anything the steward does not accept is not_permitted",
+    "text": "define is an owner's from an endpoint not served by a brain; through a brain, persons, endpoints, voice records, credentials, home settings, a rule's passes_holds and a target's owner_work_passes_holds are never changed (set or cleared; a rule whose passes_holds or a target whose owner_work_passes_holds is true never deleted) nor a narrowing lifted, a change set touching any of them not_permitted at the call, before any plan, whole and changing nothing, narrow being the one exception; anything the steward does not accept is not_permitted",
     "negative_subjects": [
       {
         "subject": "lifts-for-anyone",
         "coupled": [
           "GA-LISTEN-1"
+        ]
+      },
+      {
+        "subject": "brain-sets-the-device-switch",
+        "coupled": [
+          "GA-LEASE-12"
+        ]
+      },
+      {
+        "subject": "brain-marks-a-rule",
+        "coupled": [
+          "GA-LEASE-12"
+        ]
+      },
+      {
+        "subject": "brain-sets-the-home-switch",
+        "coupled": [
+          "GA-LEASE-12"
         ]
       }
     ]
@@ -1517,13 +1669,19 @@
     "level": "MUST",
     "conformance": "Steward",
     "verify": "wire",
-    "text": "A brain_authored step whose effective tier at dispatch is above reversible is refuse(tier), gets no authored token, and is sent with brain: true; a run that brain_authored work starts, or whose date a brain moved, is brain_authored, and so is an authored step reaching a device through a room or group the device joined through a brain",
+    "text": "A brain_authored step whose effective tier at dispatch is above reversible is refuse(tier), gets no authored token, and is sent with brain: true; a run that brain_authored work starts, or whose date a brain moved, is brain_authored; a step of a scenario defined or changed through a brain is brain_authored whoever starts it, a run the owner's work starts or reaches through a run step included; and so is an authored step reaching a device through a room or group the device joined through a brain",
     "negative_subjects": [
       {
         "subject": "authors-a-moved-device",
         "coupled": [
           "GA-CONF-3",
           "GA-SCN-4"
+        ]
+      },
+      {
+        "subject": "brain-edits-a-passing-scenario",
+        "coupled": [
+          "GA-LEASE-12"
         ]
       }
     ]

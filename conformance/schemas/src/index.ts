@@ -100,6 +100,7 @@ export function requestSchemaFor(side: ToolSide, op: string): ToolInputSchema {
 
 export type { ToolInputSchema, ToolSide };
 export type * from "./generated/index.js";
+export { matcher, sets, TOLERANCE, type ConfirmedBy, type Match, type Sets } from "./actions.js";
 
 const COMBINATORS = ["oneOf", "anyOf", "allOf"] as const;
 

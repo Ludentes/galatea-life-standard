@@ -281,4 +281,8 @@ export interface StewardDefineRule {
         until: string;
       }[]
     | null;
+  /**
+   * The owner's switch: the rule's own actions and its runs' steps pass every person's hold once its floor has passed, unless brain_authored (GA-LEASE-12)
+   */
+  passes_holds?: boolean | null;
 }

@@ -14,4 +14,8 @@ export interface StewardDefineTarget {
   account_persons?: {
     [k: string]: string | undefined;
   } | null;
+  /**
+   * The device's switch: the owner's work on it passes every person's hold once its floor has passed (GA-LEASE-12)
+   */
+  owner_work_passes_holds?: boolean | null;
 }

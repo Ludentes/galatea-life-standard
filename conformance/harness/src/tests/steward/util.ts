@@ -199,17 +199,39 @@ export async function cursorExpiredGap(ctx: TestContext, inside: () => unknown):
 /** How late after its computed end a hold may still stand (steward, *Constants*). */
 export const holdEndLatenessMs = () => constantMs("steward", "hold-end-lateness");
 
-/** The pinned policy's windows (steward, *Conformance*): set through define one field at a time; the flags are the steward's own. */
+/** The pinned policy's windows (steward, *Conformance*): set through define one field at a time. */
 export const PINNED_WINDOWS = { on_s: 3600, off_s: 600, other_s: 3600, fixed_s: 3600, load_cap_s: 3600, cap_s: 0 } as const;
 
-export type HoldPolicy = { on_s: number; off_s: number; other_s: number; fixed_s: number; load_cap_s: number; cap_s: number;
-  presence_renews: boolean; vacant_ends: boolean; schedule_ends: boolean; owner_work_passes_guest_holds: boolean };
+/**
+ * The pinned policy's flags (steward, *Conformance*): `presence_renews` true, which the subjects on renewal rest on, and every
+ * other flag false, each set through define in a call of its own.
+ */
+export const PINNED_FLAGS = { presence_renews: true, vacant_ends: false, schedule_ends: false, owner_work_passes_guest_holds: false,
+  owner_work_passes_holds: false } as const;
 
-/** Pins the windows, then `extra` windows over them; returns the policy describe then shows, failing unless the windows are as set. */
+export type HoldPolicy = { on_s: number; off_s: number; other_s: number; fixed_s: number; load_cap_s: number; cap_s: number;
+  presence_renews: boolean; vacant_ends: boolean; schedule_ends: boolean; owner_work_passes_guest_holds: boolean; owner_work_passes_holds: boolean };
+
+/**
+ * Pins the policy (steward, *Conformance*): the windows, `extra` windows over them, then each flag in a call of its own, a
+ * `false` through mustDefine (always accepted, GA-LEASE-8) and `presence_renews` true through setFlag, its refusal recorded (a
+ * subject resting on it calls setFlag itself, and is skipped and said there). Returns the policy describe then shows, failing
+ * unless every window and flag is as pinned, `presence_renews` only when it was taken.
+ */
 export async function pinHold(ctx: TestContext, extra: Partial<Record<keyof typeof PINNED_WINDOWS, number>> = {}): Promise<HoldPolicy> {
-  const want = { ...PINNED_WINDOWS, ...extra };
+  const want: Record<string, number | boolean> = { ...PINNED_WINDOWS, ...extra };
   // One field at a time (*Conformance*), so a steward refusing one says which.
   for (const [k, v] of Object.entries(want)) await mustDefine(ctx, [up("home", { hold: { [k]: v } })], `the pinned ${k}`);
+  for (const [k, v] of Object.entries(PINNED_FLAGS)) {
+    if (!v) {
+      await mustDefine(ctx, [up("home", { hold: { [k]: false } })], `the pinned ${k} false (GA-LEASE-8: a flag's false is always accepted)`);
+      want[k] = false;
+    } else if (await setFlag(ctx, k as keyof HoldPolicy, true, [])) {
+      want[k] = true;
+    } else {
+      ctx.evidence(`the pinned ${k} true refused by the steward: the subjects resting on it are skipped where they set it`);
+    }
+  }
   const hold = (await ownerOf(ctx).callOk("describe")).home?.hold as HoldPolicy | undefined;
   must(hold !== undefined, "describe's home shows no hold (GA-LEASE-8)");
   for (const [k, v] of Object.entries(want)) {

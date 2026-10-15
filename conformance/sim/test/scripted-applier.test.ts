@@ -6,6 +6,7 @@ import { serveMcp } from "../src/applier/mcp.js";
 import { SCRIPTED_ACK_MS, SimApplier } from "../src/applier/sim-applier.js";
 import { fixtureDevices } from "../src/fixture.js";
 import { freePort } from "../src/net.js";
+import { stateAfter } from "../src/vocabulary.js";
 import { nonLoopbackAddress, selfSigned } from "../src/tls.js";
 
 const cleanup: (() => unknown)[] = [];
@@ -102,6 +103,20 @@ describe("the scripted stand-in applier", () => {
     expect(of(multi).sensor_keys).toEqual(["occupancy", "illuminance"]);
     expect(of(multi).actions).toEqual([]);
     expect(of(lock)).not.toHaveProperty("opens_with");
+  });
+
+  it("scripts a thermostat: a closed climate device whose two keys, mode and setpoint, two actions set (GA-LEASE-12)", async () => {
+    const applier = await standIn();
+    const client = applier.caller("steward-secret");
+    const id = applier.scriptDevice(fixtureDevices(["thermostat"])[0]!, { adopt: "boiler" });
+    const body = async (tool: string) => ((await applier.call(client, tool, {})) as { body: any }).body;
+    const t = (await body("describe")).devices.find((x: { id: string }) => x.id === id);
+    expect(t).toMatchObject({ class: "boiler", feedback: "closed" });
+    expect(t.actions.map((a: { action: string }) => a.action).sort()).toEqual(["climate.set_mode", "climate.set_setpoint"]);
+    const values = (await body("state")).targets[id].values as { key: string; value: unknown }[];
+    expect(Object.fromEntries(values.map((v) => [v.key, v.value]))).toEqual({ mode: "heat", setpoint: 21 });
+    expect(stateAfter("climate.set_mode", { mode: "off" })).toEqual({ mode: "off" });
+    expect(stateAfter("climate.set_setpoint", { celsius: 18 })).toEqual({ setpoint: 18 });
   });
 
   it("records each client's read-back calls, history and state, so a check can time a restarted steward's read-back", async () => {
@@ -459,6 +474,27 @@ describe("the scripted stand-in applier", () => {
     applier.scriptToggles(tv, "onoff.turn_off", true);
     expect(await turnOff()).toMatchObject({ toggles: true });
     expect((await body("events", { cursor })).events.map((e: any) => e.type)).toEqual(["model", "model"]);
+  });
+});
+
+describe("the scripted stand-in: the device's report of a step still unacked (GA-EVT-1)", () => {
+  it("reports the value a pending scripted step sets, caused by its apply, the step still pending", async () => {
+    const clock = new SteppedClock();
+    const applier = await standIn(clock);
+    const client = applier.caller("steward-secret");
+    const body = async (tool: string, args: Record<string, unknown> = {}) => ((await applier.call(client, tool, args)) as { body: any }).body;
+    const lamp = "sim-bridge:lamp";
+    expect(() => applier.scriptReportOfStep(lamp)).toThrow();
+    applier.scriptOutcome(lamp, "onoff.turn_on", { outcome: "failed", reason: "no_ack" });
+    const forWhom = { endpoint: "olga-app", person: "olga" };
+    const r = await body("apply", { request: { actions: [{ target: lamp, action: "onoff.turn_on", args: {}, via: "app", brain: false, for: forWhom }] },
+      idempotency_key: "k-1" });
+    const { cursor } = await body("events");
+    applier.scriptReportOfStep(lamp);
+    const events = (await body("events", { cursor })).events;
+    expect(events.map((e: any) => [e.type, e.key, e.value])).toEqual([["state", "on", true]]);
+    expect(events[0].cause).toEqual({ apply: r.apply_id, client: "steward", for: forWhom });
+    expect((await body("outcome", { apply_id: r.apply_id })).outcomes[0]).toMatchObject({ outcome: "dispatched" });
   });
 });
 

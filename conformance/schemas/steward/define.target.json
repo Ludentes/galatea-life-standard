@@ -14,6 +14,10 @@
       "description": "A computer's account tokens mapped to person ids (GA-DEF-11), apart from the applier's accounts",
       "type": ["object", "null"],
       "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "owner_work_passes_holds": {
+      "description": "The device's switch: the owner's work on it passes every person's hold once its floor has passed (GA-LEASE-12)",
+      "type": ["boolean", "null"]
     }
   }
 }

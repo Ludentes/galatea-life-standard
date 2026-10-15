@@ -5,7 +5,7 @@ last_verified:
 area: architecture
 audience: dev
 author: Galatea maintainers
-version: 0.16
+version: 0.17
 related:
   - standard/steward.md
   - standard/bridge.md
@@ -16,6 +16,7 @@ related:
   - CONTEXT.md
   - docs/reviews/2026-10-06-bridge-0.6-applier-0.15.md
   - docs/reviews/2026-10-11-applier-0.16.md
+  - docs/reviews/2026-10-13-applier-0.17.md
 ---
 
 # The Galatea applier standard
@@ -24,6 +25,7 @@ related:
 
 | Date | Version | Change |
 |---|---|---|
+| 2026-10-13 | 0.17 | From the bench, by the maintainer's ruling of 2026-10-13 (change record `docs/reviews/2026-10-13-applier-0.17.md`): a mains plug, adopted, cut from its power until its bridge reported it `available: false`, then plugged in again, came back with its own reports carrying keys the applier had never held, each reported `external` under 0.16; each was a key one of its actions sets, so the steward leased the plug for an hour and refused the owner's rule meanwhile. A key's first value, the applier holding none for it, is now reported with cause `device` wherever it arrives, a live report from a running bridge instance on an adopted device included, unless an apply's correlation or GA-APPLY-11's late-ack window gives it that apply's; this reverses 0.16's live case, where a person's first press stayed `external`. A held value is defined: the last a bridge, or an adapter from its engine, reported in the applier's current run, never an assumed value, neither set nor cleared by `"unknown"` (itself reported `device`), kept across a left-out key, `dead`, a broker loss, a new instance, a route move and a re-interview, dropped by the applier's restart, `forget`, removal and `replaces`; a held value re-reported unchanged by another bridge or over a new route is no change. A first value inside an apply's window is the apply's only where it matches what the action sets within its tolerance, or shows its side effect. A first value is still told by what the applier holds, never by the retain flag; a held key's changed value is `external` at any time, a device's return from `dead` included; a report moving away from an apply's value is `external` only for a held key; `self_changing` keys as before. The costs, both ways (the applier's own restart and downtime, a device's power-on behaviour, a re-interview after a factory reset), and the residual risk of a forged first value below Box, are stated in *Causes*, with the checks on a real installation; the ⚠️ moves from GA-EVT-1's row into that prose. The plugin server's known gap closes. GA-META-6 relays a child's direct change with the child's cause (amended, its intent kept), with the known cost that a route move between children relays the new child's first value as `device`. GA-EVT-1 amended; *Causes*; *Compatibility*. The negative subjects `externalises-a-snapshot-value`, `externalises-a-rerouted-value` and `devices-a-live-press` are withdrawn; new subjects `externalises-a-live-first-value`, `devices-a-changed-value` and `devices-a-correlated-first-value`. The tabled revision the backlog called applier 0.17 is now 0.18. Reviewed in `docs/reviews/2026-10-13-applier-0.17.md` in three rounds: Kimi `k3` and a no-context Claude reader in rounds 1 and 2, the Claude reader alone in round 3 by the maintainer's word (a recorded exception to FR-REV-01), a scenario walk each round, no grade moved; round 1 read a narrower rule (a first value with a device's return from `dead`), which the maintainer replaced on its findings; round 2's blocker (the late-ack window) fixed; round 3 had none, so its fixes were not re-read (the stopping rule); deferred items in the workshop's backlog for applier 0.18; **PASS** 2026-10-13 |
 | 2026-10-12 | — | Editorial, for steward 0.12 (change record `docs/reviews/2026-10-12-steward-0.12.md`): *Causes* says which first values lease a device, since steward 0.12's GA-LEASE-2 takes a hold only for a change to a key one of the device's actions sets, on an adopted device; no requirement changed |
 | 2026-10-11 | 0.16 | From the first light on the bench and the plug rehearsal, by the maintainer's rulings of 2026-10-11. HS35 (scenarios 16): the owner may lower a tier they raised. Each action has a floor, the *Default tiers* table with its classes, flags, loads, hosts and `requested_tier`, which stays the safety floor, and a default, the floor or, for an extension action, the higher of `confirm` and its floor; its tier is the higher of the floor and the owner's value where set, and the default otherwise; `configure` sets any tier at or above the floor and deletes the owner's value, and refuses one below it with `invalid_request`, never clamping, for a standard action as for an extension one (GA-DESC-3, GA-DESC-14 amended; GA-DESC-11's delete no longer the one lowering); a change of `load` or `infrastructure` re-derives the tier from the new floor and never rewrites the owner's value, so a socket turned from `heating` to `lighting` drops to its new default (GA-DESC-13 amended); a later lowering raises no `other_admin` notice (GA-ADOPT-3's text). From the review: every tier check in a change set is judged against the floor the whole change set leaves, except GA-ADOPT-3's `other_admin` judgement, which takes the higher of each action's tier before and after the change set (GA-DESC-14, GA-ADOPT-3 amended); an extension action's floor is the extension tier's floor on any device, and the table's column reads as the floor (GA-DESC-3); a replacement's kept tier is stored as the owner's value (GA-DESC-11 amended). The plug rehearsal (F3), and the maintainer's ruling of 2026-10-11 on the review: a key's first value, the applier holding none before, is told by what the applier observes, not by the retain flag, and is reported with cause `device`, not `external`, and so takes no lease, when it arrives while the applier loads statuses after it connects or restarts, in a bridge's answer to `snapshot` or among a new instance's first statuses before it, over a new route after a route moves, or on a device not adopted; an adapter treats its engine's return as a snapshot; a live report from a running bridge instance on an adopted device stays `external`; a plugin server's first values after adoption a known gap; ⚠️ to be checked on a real installation (GA-EVT-1 amended). New negative subjects `keeps-an-owner-raise`, `keeps-an-owner-raise-on-a-set`, `keeps-a-manifest-kept-tier`, `lowers-a-heater-below-the-table`, `keeps-a-table-tier-over-a-new-load`, `externalises-a-first-value`, `externalises-a-snapshot-value`, `externalises-a-rerouted-value` and `devices-a-live-press`. Change record `docs/reviews/2026-10-11-applier-0.16.md`. Reviewed in `docs/reviews/2026-10-11-applier-0.16.md`, lighter by the maintainer's ruling (one reader, Kimi `k3`, and a scenario walk; a recorded exception to FR-REV-01's two readers): 18 finding rows, 13 fixed, 5 deferred (steward 0.12, applier 0.17, the backlog), none rejected; no blocker; round 1's fixes not re-read by a further round (the stopping rule); **PASS** 2026-10-11 (the maintainer, after walking the deferred items) |
 | 2026-10-06 | — | Editorial: private references removed for publication; no requirement changed. Decisions once credited to another system now state what was decided and why; links to documents that are not public are reworded |
@@ -106,8 +108,9 @@ again when the engine answers. A device the engine has not yet loaded after its 
 
 `standard_version` is `major.minor`. A minor version only adds: fields, enum values, operations,
 requirements, except where its changelog row says it renames or removes one (0.15 renames the
-sensor key `contact` to `opening`; 0.16 reports a key's first value from a retained status or on a
-device not adopted with cause `device`, where it was `external`): only the current version exists, and a client of an earlier one
+sensor key `contact` to `opening`; 0.16 and 0.17 change causes: 0.16 reports a key's first value with
+cause `device` where no hand could be told, and 0.17 reports every first value so, a live one on an
+adopted device included, where it was `external`): only the current version exists, and a client of an earlier one
 is not supported (the maintainer's ruling: no backward compatibility). Nothing on the wire refuses
 one, so a home moves its components to a revision together, and an owner redefines a rule stored on
 a renamed key. A client MUST ignore a field it does not know, and MUST treat an enum value it does not
@@ -584,47 +587,72 @@ Every state change the applier reports carries a `cause`, one of:
   `unsupported`), whichever comes first. `failed(not_locked)` is a "may have acted" ack, as
   `failed(no_confirmation)` is: a slow screen locker may still lock the session after it
   (`standard/bridge.md`, GA-BRIDGE-66), so a `locked` inside the step's `ack_within_s` is the
-  apply's, not `external`, and takes no lease. A report that moves away from it is `external`, and a report caused by a safety rule or a
+  apply's, not `external`, and takes no lease. For a key the applier holds none for there is no
+  "towards": a first value inside the window is the apply's only where it matches what the action
+  sets, within its tolerance, as an ack would, or shows its side effect; any other first value is
+  `device` (below). A report that moves away from it is `external` where the applier holds the key; a report caused by a safety rule or a
   load cap keeps that cause. With two applies on one target, the later one's;
 - `{ safety_rule: rule id }`;
 - `load_cap`;
-- `device`: a change of a key the device declares `self_changing`, or a key's first value where no
-  hand can be told, as below: the device's own word, never a person's;
+- `device`: a change of a key the device declares `self_changing`, or a key's first value, as
+  below: the device's own word, no hand can be told from it;
 - `external`: any other change the applier did not make.
 
 Every state change the applier did not make, other than a `self_changing` key and a first value
-below, MUST be reported with cause `external` (GA-EVT-1). A key's **first value**, the applier
-holding no value for it before, changes nothing the applier knew. The applier tells it by what it
-observes, never by a message's retain flag. A first value MUST be reported with cause `device`,
-unless the first item above gives it to an apply, and so takes no lease (the steward's GA-LEASE-2),
-when it arrives:
-- while the applier loads statuses after it connects or restarts: the deliveries on subscribing.
-  Reported values are not kept across a restart (GA-PERSIST-1 keeps assumed states, not reported
-  ones), so after one every key's value comes in again;
-- in a bridge's answer to the applier's `snapshot` (GA-BUS-6), or among a bridge's first statuses of
-  a new instance, an `instanceId` the applier has not seen, before that snapshot's answer: a bridge
-  that starts after the applier, after a power cut, is this case;
-- over a new route, after a `configure` route moves a device to another bridge or child (*configure*,
-  GA-META-1);
-- on a device not adopted: its interview's reads, values that came before its description.
+below, MUST be reported with cause `external` (GA-EVT-1). A key's **first value** is a value of a
+key the applier holds none for. A key's **held value** is the last value a bridge, or an adapter from
+its engine, reported for it on that device in the applier's current run, since its start; it is never
+an assumed value (an open device's, or a `whole_state` frame's, GA-STATE-4, GA-APPLY-16, which are not
+reports). A report of `"unknown"`, the bridge having read the device and derived nothing, neither sets
+nor clears it: it is reported with cause `device`, and the held value stays, so a later report equal
+to it is no change and a different one is `external`. A held value is kept when a status leaves the
+key out, while the device reads `dead` or `available: false`, across a broker loss, a bridge's new
+instance, a route move and a re-interview. It is dropped by the applier's restart (reported values are
+not kept across one: GA-PERSIST-1 keeps assumed states, not reported ones, and a build MUST NOT take a
+value reported before its start as held), by `forget`, by the device's removal, and by an adoption
+with `replaces`, whose new hardware's first reports under the id are first values. The applier tells
+a first value by what it holds, never by a message's retain flag, nor by whether the bridge or route
+now reporting it has reported the key before: a held value re-reported unchanged, over a new route or
+by a bridge re-registered under a new identity, is no change at all.
 
-In each, no hand can be told from the value: pairing a device, restarting the applier or a bridge, or
-moving a route leases nothing to a person. An adapter takes the values it reads from its engine when
-it connects to it again, after the engine was unreachable or restarted, as the second case's, a
-snapshot of the engine; where it cannot tell the engine restarted while it stayed connected, it has no
-such moment, and those values are `external`. A report arriving live from a bridge instance already
-running, on an adopted device, is a change like any other, `external`, a person's real first press
-included, so it keeps the lease the steward gives such a change (GA-EVT-1; `standard/steward.md`,
-GA-LEASE-2, where only a change to a key an action sets, on an adopted device, takes one). A known gap: a plugin's server starts only when its
-device is adopted (GA-ADOPT-4), under its bridge's running instance, so its device's first values
-arrive live on an adopted device and are `external`, and lease it where they include a key one of its
-actions sets (`standard/steward.md`, GA-LEASE-2), as the rule stands. ⚠️ To be
-checked on a real installation: the rule rests on the order in which values arrive, which only a
-house shows; the checks are a power cut with the bridge starting after the applier, a bridge's
-restart, an adapter's engine restarting, and a route move, each leasing nothing (the workshop's backlog,
-*From the applier 0.16 review*). `device` thus carries two
-meanings, a `self_changing` key's change and such a first value, which nothing on the wire tells
-apart; both mean that no person is taken to have acted.
+A first value MUST be reported with cause `device`, unless the first item above, or GA-APPLY-11's
+late-ack window, gives it to an apply, wherever and however it arrives: in the statuses delivered when
+the applier connects or restarts, in a bridge's answer to `snapshot` or a new instance's first
+statuses, over a new route, on a device not adopted, as a device comes back from `dead`, from a plugin
+server started at adoption, or live from a bridge instance already running on an adopted device. So
+it takes no lease (the steward's GA-LEASE-2). A held key whose value changes is `external` at any time:
+at a device's return from `dead`, after a power cut the applier survives, over a new route where the
+new hardware reports a different value, or live. A `feedback: open` device's assumed values are not
+reports and are never held; a status its bridge sends for it, where it sends one, is told as any
+other.
+
+No hand can be told from a first value: it may be a device's interview, a restart's, a power cut's or
+a returning device's first report of a key the applier never held, and nothing on the wire says
+which. That has costs both ways. A person's real first act on a key the applier holds none for takes
+no lease, and the owner's rules may undo it: a key the device never reported before (a newly paired
+device whose state no interview read, a setting a device reports only at power-up); and, after the
+applier's own restart (a power cut of its box) or across its downtime, any key its bridge does not
+deliver in the load, such as a device that sends nothing at power-up after a cut that took its
+bridge down too, until it next reports, and any change made while the applier was down, which comes
+back as a first value. A bridge's restart alone unholds nothing: the applier keeps what it holds. The
+other way, a held key changed by the device itself reads `external` and leases the device as a
+person's change would: a device's power-on behaviour (a plug set to come back on, or off, after its
+power returns), and a device re-interviewed after a factory reset, whose defaults differ from what the
+applier holds. Below Box (*Bridges*: the broker is the floor under the gate), a value forged by a
+publisher on the broker for a key the applier never held reads `device` and takes no lease, where a
+forged change of a held key reads `external`; the broker's grants (GA-BOX-1) are the gate against
+both.
+
+⚠️ To be checked on a real installation, each by watching the `state` events' causes and the
+steward's leases: that a held key's change after a power cut the applier survives, after a bridge's
+restart alone, after a route move, and at a device's return from its own power cut, is `external`, the
+applier holding the key; that after the applier's restart and its load the keys of everyday use are
+held again; and how often a person's first act meets a key not yet held, on a newly adopted device,
+after a re-interview, and after the applier's restart or downtime. One observation so far: a mains
+plug cut from its power, reported `available: false` and plugged in again, came back with its own
+reports carrying keys the applier had never held, which an earlier revision reported `external` and
+so leased. `device` thus carries two meanings, a `self_changing` key's change and a first value,
+which nothing on the wire tells apart; both mean that no hand was seen, not that the device acted.
 
 A change of a `self_changing` key MUST be reported with cause `device`,
 except a report that the first item above gives to a dispatched action on a key that action sets,
@@ -1720,8 +1748,12 @@ state. Everything above applies to it, and in addition:
   child event caused by the meta-applier's own delegation MUST carry the meta-applier's apply as its
   cause and MUST NOT be reported as `external`; a child's safety rule id is reported as
   `<child applier_id>/<rule id>` (GA-META-8).
-- **Around the side.** A change made on a child directly reaches the meta-applier with cause
-  `external`, and the meta-applier MUST relay it as `external` and MUST NOT undo it (GA-META-6).
+- **Around the side.** A change made on a child directly reaches the meta-applier with the child's
+  cause: `external` where the child held the key, `device` where it was the child's first value
+  (GA-EVT-1). The meta-applier MUST relay it with that cause and MUST NOT undo it (GA-META-6). A
+  known cost: the meta-applier holds no house state, so after a route move between children, the new
+  child's first value of a key is relayed `device`, where a single applier holding the key would
+  report a different value as `external`.
 - **Child liveness.** The meta-applier polls each child's `events` with `wait_s` of at most 5. A
   child is dead when a call to it has gone 10 s without an answer, or its connection is refused; its
   devices then read `dead` within 1 s, and live again on the child's next answer. A call held open
@@ -1959,7 +1991,7 @@ checks it: `wire` against a running applier, `static` against its `describe` out
 | GA-APPLY-14 | MUST | Act | wire | A `notify` without `from` is accepted; `from` is sent in the command's value only when the request carries it and only to a device whose `notify` declaration lists `from` among its `args`, and left out for any other; a meta-applier passes it to a child only when the child's `standard_version` is 0.10 or later and the child's device lists it, and leaves it out otherwise |
 | GA-APPLY-15 | MUST | Act | wire | The `detail` of the terminal ack taken for a step is carried in that step's final outcome and its `outcome` event, whatever the outcome, which it never changes |
 | GA-APPLY-16 | MUST | Act | wire | A command for an action declared `whole_state: true` carries in `state` the device's assumed value of every key the applier holds one for, across a restart too, each key's value being the one the latest earlier action on the device sets, from any apply, once dispatched and unless it ended `failed` or `unreachable`, otherwise the assumed value, the action's own key carrying the value it asks for; no step waits for another to build it; when such a command ends `sent` or `unanswered`, every key it carried becomes assumed |
-| GA-EVT-1 | MUST | Act | wire | Every state change the applier did not make, other than a `self_changing` key, appears with cause `external`, except a key's first value, the applier holding none before, told by what the applier observes and not by the retain flag, which appears with cause `device` unless an apply's correlation gives it that apply's, when it arrives while the applier loads statuses after it connects or restarts, in a bridge's answer to `snapshot` or among a new instance's first statuses before that answer, over a new route after a route moves, or on a device not adopted (⚠️ to be checked on a real installation); a report arriving live from a running bridge instance on an adopted device is `external`, a first press included; a report moving towards a dispatched action's value, until it matches or `ack_within_s` passes, is that apply's, after a `failed(no_confirmation)` or `failed(not_locked)` ack too; the key `session.lock` sets is its argument's `session.<account>` |
+| GA-EVT-1 | MUST | Act | wire | Every state change the applier did not make, other than a `self_changing` key, appears with cause `external`, except a key's first value, the applier holding none for it (a held value being the last a bridge, or an adapter from its engine, reported in the applier's current run, never an assumed value, and neither set nor cleared by `"unknown"`), told by what the applier holds and not by the retain flag or by which bridge or route reports it, which appears with cause `device` wherever it arrives, a live report on an adopted device included, unless it matches what a dispatched action sets within its tolerance, or its side effect, inside that action's window, or GA-APPLY-11's late-ack window gives it that apply's; `"unknown"` appears with cause `device`; a held key's changed value is `external`, at a device's return from `dead` as at any time; a report moving towards a dispatched action's value, until it matches or `ack_within_s` passes, is that apply's, after a `failed(no_confirmation)` or `failed(not_locked)` ack too; the key `session.lock` sets is its argument's `session.<account>` |
 | GA-EVT-2 | MUST | Act | wire | Every change event carries a cause; `history` returns the same causes in order |
 | GA-EVT-3 | MUST | Act | wire | `acked` arrives only after the device's reported state matches within its tolerance, on the key the action sets (for `session.lock`, its argument's, matched by `locked`, `disconnected` or `none`; for an extension action, its `confirmed_by`); `media.launch` and `power.wake` are acked only as GA-EVT-7 and GA-APPLY-13 say |
 | GA-EVT-4 | MUST | Act | wire | Events are kept at least 3600 s; an older cursor is `cursor_expired` |
@@ -1995,7 +2027,7 @@ checks it: `wire` against a running applier, `static` against its `describe` out
 | GA-META-3 | MUST | Meta | wire | A safety rule within one child's devices is refused at the meta-applier; one spanning children is hosted there and fires with no client connected, unless a child it actuates has a non-empty `ungoverned` or another client, which is refused at `configure` and disables the rule with a notice later |
 | GA-META-4 | MUST | Meta | wire | `real` / `emulated` passes through from the child unchanged |
 | GA-META-5 | MUST | Meta | wire | Registering a child whose id or descendants include the meta-applier's own id is refused with `cycle` |
-| GA-META-6 | MUST | Meta | wire | A change made on a child directly is relayed as `external` and not undone |
+| GA-META-6 | MUST | Meta | wire | A change made on a child directly is relayed with the child's cause, `external` where the child held the key and `device` where it was the child's first value (GA-EVT-1), and not undone |
 | GA-META-7 | MUST | Meta | wire | Children are polled with `wait_s` ≤ 5; a call unanswered 10 s or a refused connection reads `dead` within 1 s; a quiet child answering empty stays live |
 | GA-META-8 | MUST | Meta | wire | A child's outcome, state, `late_ack`, liveness, `rule_fired`, `latch`, `model`, `route_conflict`, `provision`, `freshness`, `transport`, `other_admins`, `bridge_fault`, `occurrence` and `undescribed` events and its notices are relayed; those caused by the meta-applier's delegation carry its own cause, never `external` |
 | GA-META-9 | MUST | Meta | wire | The meta-applier's `revision` changes whenever a child's does |
@@ -2089,10 +2121,10 @@ is `pass`. A SHOULD is reported, never failed.
 | `never-fails-a-silent-ack` | GA-APPLY-8 | GA-APPLY-11, GA-SAFE-2, GA-SAFE-3, GA-SAFE-8, GA-SAFE-12 | A `late_ack` needs the `failed(no_ack)` first; a safety rule waits on the same outcome, and its `refuse(safety)` window with it |
 | `no-late-ack-for-a-slow-lock` | GA-APPLY-11 | — | A simulated computer acks a `session.lock` `failed(not_locked)`, then reports the key `locked` within its `ack_within_s`, and no `late_ack` event comes |
 | `acks-without-state` | GA-EVT-3 | — | |
-| `externalises-a-first-value` | GA-EVT-1 | — | A simulated bridge's device, not adopted, first reports `on`, or after the subject's restart a status delivered on subscribing brings a value back, and the subject reports it with cause `external`; a key first reported live on an adopted device is `external` in the subject as in the text |
-| `externalises-a-snapshot-value` | GA-EVT-1 | GA-BUS-6 | The subject restarts with the simulated bridge stopped; the bridge then starts with a new `instanceId` and publishes an adopted device's status, live, before and in answer to the subject's `snapshot`, and the subject reports the value with cause `external` |
-| `externalises-a-rerouted-value` | GA-EVT-1 | — | The owner's `configure` moves an adopted device's route to a second simulated bridge, which reports a key the first bridge never reported, and the subject reports it with cause `external` |
-| `devices-a-live-press` | GA-EVT-1 | — | With the simulated bridge's instance running and the subject holding the adopted device's other keys, the bridge first reports a key live, and the subject reports it with cause `device` |
+| `externalises-a-first-value` | GA-EVT-1 | — | A simulated bridge's device, not adopted, first reports `on`, or after the subject's restart a status delivered on subscribing brings back a value different from the one held before the restart, and the subject reports it with cause `external` (a build that keeps held values across its restart does) |
+| `externalises-a-live-first-value` | GA-EVT-1 | — | With the simulated bridge's instance running, an adopted device first reports a key live, and the subject reports it with cause `external` |
+| `devices-a-changed-value` | GA-EVT-1 | GA-EVT-2, GA-APPLY-11 | A key not declared `self_changing` that the subject holds changes with no apply moving towards it, live on an adopted device, at the device's return from `dead`, after a broker loss and after the bridge's new instance, and the subject reports the change with cause `device`; GA-EVT-2's and GA-APPLY-11's checks assert `external` for a held key's change too |
+| `devices-a-correlated-first-value` | GA-EVT-1 | — | A key the subject holds none for first reports the value a dispatched action sets, the read-back acking that apply, and the subject reports it with cause `device` |
 | `lock-fails-on-logout` | GA-EVT-3 | — | The simulated computer answers a `session.lock` by reporting the account's key `none`, a logout, and the step ends `failed(no_ack)` |
 | `externalises-a-late-lock` | GA-EVT-1 | — | The simulated computer acks a `session.lock` `failed(not_locked)` and reports the account's key `locked` 3 s later, inside the step's `ack_within_s`, and the subject reports it with cause `external` |
 | `applies-without-token` | GA-TOKEN-1 | GA-TOKEN-2, GA-APPLY-9, GA-META-10, GA-SAFE-7 | Every token check is the same check |

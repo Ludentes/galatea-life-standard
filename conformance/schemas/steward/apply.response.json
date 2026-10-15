@@ -9,7 +9,8 @@
       "type": "array",
       "items": {
         "allOf": [{ "$ref": "../applier/outcome.json" }, { "required": ["time"] }],
-        "properties": { "from_replaced": { "const": true, "description": "On a notify step applied inline whose caller-set from the steward overwrote (GA-NOTE-2)" } }
+        "properties": { "from_replaced": { "const": true, "description": "On a notify step applied inline whose caller-set from the steward overwrote (GA-NOTE-2)" },
+          "passed_hold": { "$ref": "../common.json#/$defs/passedHold" } }
       }
     }
   }

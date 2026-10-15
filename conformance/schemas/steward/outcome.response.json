@@ -7,7 +7,8 @@
     "apply_id": { "type": "string" },
     "outcomes": {
       "type": "array",
-      "items": { "allOf": [{ "$ref": "../applier/outcome.json" }, { "required": ["time"] }] }
+      "items": { "allOf": [{ "$ref": "../applier/outcome.json" }, { "required": ["time"] }],
+        "properties": { "passed_hold": { "$ref": "../common.json#/$defs/passedHold" } } }
     }
   }
 }

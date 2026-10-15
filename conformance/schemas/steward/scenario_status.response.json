@@ -12,11 +12,13 @@
       "type": "array",
       "items": { "type": "object", "required": ["step_id", "outcome", "time"],
         "properties": { "step_id": { "type": "string" }, "outcome": { "$ref": "../common.json#/$defs/outcome" },
-          "reason": { "type": "string" }, "time": { "$ref": "../common.json#/$defs/time" } } }
+          "reason": { "type": "string" }, "time": { "$ref": "../common.json#/$defs/time" },
+          "passed_hold": { "$ref": "../common.json#/$defs/passedHold" } } }
     },
     "sent_steps": {
       "type": "array",
-      "items": { "type": "object", "required": ["step_id"], "properties": { "step_id": { "type": "string" } } }
+      "items": { "type": "object", "required": ["step_id"], "properties": { "step_id": { "type": "string" },
+        "passed_hold": { "$ref": "../common.json#/$defs/passedHold" } } }
     }
   },
   "if": { "properties": { "status": { "const": "ended" } } },

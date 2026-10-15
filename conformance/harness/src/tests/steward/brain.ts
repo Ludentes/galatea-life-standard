@@ -8,7 +8,8 @@ import { answer, heard, mustAccept, sentFrom } from "./answers.js";
 import { cursorNow, eventsAfter, fires, type Ev } from "./rules.js";
 import { failedOf, runReads, runSent, scene, startRun } from "./scenarios.js";
 import { minuteAfter, stepOver } from "./schedules.js";
-import { act, brainChat, mustDefine, ownerOf, raiseTier, revisionOf, scripted, up, wall } from "./util.js";
+import { bench, holds, OFF, runStepOf } from "./pass-helpers.js";
+import { act, brainChat, mustDefine, ownerOf, pinHold, raiseTier, revisionOf, scripted, up, wall } from "./util.js";
 
 const ON = "onoff.turn_on";
 const NOTIFY = "notify.notify";
@@ -90,7 +91,7 @@ requirement("GA-DEF-6", {
 
 requirement("GA-DEF-7", {
   seam: "steward",
-  covers: "a scenario the brain defined is brain_authored in describe; the owner's app runs it: its confirm step is refuse(tier) in the plan and never sent, its reversible step sent with brain: true; the brain's rule starts the owner's scenario: its confirm step refused(tier), never sent; a date the brain moved runs the owner's scenario with its confirm step refused(tier), and the next day's run sends it with the schedule's token; the owner's rule acts on a group: the heater the brain added to it is refused(tier) and never sent, and once the owner sets the group again it is sent with the rule's token",
+  covers: "a scenario the brain defined is brain_authored in describe; the owner's app runs it: its confirm step is refuse(tier) in the plan and never sent, its reversible step sent with brain: true; the brain's rule starts the owner's scenario: its confirm step refused(tier), never sent; a date the brain moved runs the owner's scenario with its confirm step refused(tier), and the next day's run sends it with the schedule's token; the owner's rule acts on a group: the heater the brain added to it is refused(tier) and never sent, and once the owner sets the group again it is sent with the rule's token; under the pinned policy, the owner's rule marked passes_holds starts a scenario turning a lamp off, a member's turn_on holds the lamp, acked (its floor passed), a brain changes that scenario's step (its respect_occupancy), the scenario then brain_authored in describe and the rule still unmarked by a brain: the rule fires and the run's step is refused(leased) naming the member's hold",
 }, async (ctx) => {
   const s = ctx.steward!;
   const [dimmer, motion, heater] = await scripted(ctx, [{ fixture: "dimmer", adopt: "light" }, { fixture: "motion", adopt: "sensor" },
@@ -158,6 +159,27 @@ requirement("GA-DEF-7", {
   await fires(ctx, cursor, "dark", 1, "the owner's rule once the owner set the group");
   await pollUntil(async () => heated().length >= 1 || undefined, 10_000, "the owner's rule sent the heater nothing once the owner set the group", 100);
   mustEqual(heated().map(shown), [`${heater} brain:false token:true`], "what the owner's rule sent the heater once the owner set the group");
+  // A step of a scenario a brain changed is brain_authored though the owner's marked rule starts it: it passes no person's hold (GA-LEASE-12).
+  await pinHold(ctx);
+  const p = await bench(ctx, "def7-pass", ["lamp", "motion"]);
+  const step = (respect_occupancy: boolean) => scene("dark-p", [{ ...act(p.lamp, OFF), respect_occupancy }]);
+  await mustDefine(ctx, [step(true), up("rule", { id: "dark-p", name: "Темно", passes_holds: true,
+    trigger: { state: { target: p.motion, key: "motion", op: "eq", value: true } }, actions: [{ scenario: "dark-p" }] })],
+  "the owner's scenario turning the lamp off and the owner's rule marked passes_holds starting it");
+  await holds(ctx, s.olga, "olga-app", p.lamp, ON, "olga-app", "the member's turn_on of the lamp, acked");
+  await byBrain(ctx, [step(false)], "the step of the scenario the owner's marked rule starts");
+  const after = await ownerOf(ctx).callOk("describe");
+  const sc = (after.scenarios as { id: string; brain_authored?: boolean }[]).find((x) => x.id === "dark-p");
+  const rule = (after.rules as { id: string; brain_authored?: boolean; passes_holds?: boolean }[]).find((x) => x.id === "dark-p");
+  ctx.evidence(`after the brain's change: the scenario ${JSON.stringify(sc)}; the rule ${JSON.stringify(rule)}`);
+  mustEqual([sc?.brain_authored, rule?.passes_holds, rule?.brain_authored === true], [true, true, false],
+    "the scenario's brain_authored, the rule's passes_holds and whether the rule is brain_authored");
+  const passSent = sentFrom(ctx);
+  cursor = await cursorNow(ctx);
+  ctx.standIn!.applier.scriptValue(p.motion, "motion", true, { cause: "device" });
+  await fires(ctx, cursor, "dark-p", 1, "the owner's marked rule starting the scenario a brain changed");
+  mustEqual(await runStepOf(ctx, cursor, passSent, p.lamp, OFF, "the run of the scenario a brain changed"), "refused(leased) olga-app",
+    "the step of the scenario a brain changed, under the member's hold");
 });
 
 /** The notify the brain's rule sends, through the stand-in's channel, once the motion sensor reads `value`. */

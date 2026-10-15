@@ -1,0 +1,4 @@
+{ "plan_id": "p4", "expires_at": "2026-09-27T10:02:00.000Z", "revision": 12, "endpoint": "demo-panel",
+  "request": { "endpoint": "demo-panel", "actions": [{ "target": "sim-bridge:plug", "action": "onoff.turn_off", "args": {} }] },
+  "steps": [{ "step_id": "s1", "target": "sim-bridge:plug", "action": "onoff.turn_off", "args": {}, "verdict": "op",
+    "passed_hold": { "holder": "external" }, "tier": "reversible", "stale": false, "basis": "real" }] }

@@ -1,0 +1,3 @@
+{ "apply_id": "a3", "outcomes": [{ "step_id": "s1", "target": "sim-bridge:lamp", "outcome": "dispatched",
+  "passed_hold": { "holder": { "person": "olga", "endpoint": "olga-app" }, "switch": "home" },
+  "time": "2026-09-27T10:00:00.000+03:00" }] }

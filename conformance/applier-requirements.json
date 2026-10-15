@@ -752,24 +752,25 @@
     "level": "MUST",
     "conformance": "Act",
     "verify": "wire",
-    "text": "Every state change the applier did not make, other than a self_changing key, appears with cause external, except a key's first value, the applier holding none before, told by what the applier observes and not by the retain flag, which appears with cause device unless an apply's correlation gives it that apply's, when it arrives while the applier loads statuses after it connects or restarts, in a bridge's answer to snapshot or among a new instance's first statuses before that answer, over a new route after a route moves, or on a device not adopted (⚠️ to be checked on a real installation); a report arriving live from a running bridge instance on an adopted device is external, a first press included; a report moving towards a dispatched action's value, until it matches or ack_within_s passes, is that apply's, after a failed(no_confirmation) or failed(not_locked) ack too; the key session.lock sets is its argument's session.<account>",
+    "text": "Every state change the applier did not make, other than a self_changing key, appears with cause external, except a key's first value, the applier holding none for it (a held value being the last a bridge, or an adapter from its engine, reported in the applier's current run, never an assumed value, and neither set nor cleared by \"unknown\"), told by what the applier holds and not by the retain flag or by which bridge or route reports it, which appears with cause device wherever it arrives, a live report on an adopted device included, unless it matches what a dispatched action sets within its tolerance, or its side effect, inside that action's window, or GA-APPLY-11's late-ack window gives it that apply's; \"unknown\" appears with cause device; a held key's changed value is external, at a device's return from dead as at any time; a report moving towards a dispatched action's value, until it matches or ack_within_s passes, is that apply's, after a failed(no_confirmation) or failed(not_locked) ack too; the key session.lock sets is its argument's session.<account>",
     "negative_subjects": [
       {
         "subject": "externalises-a-first-value",
         "coupled": []
       },
       {
-        "subject": "externalises-a-snapshot-value",
-        "coupled": [
-          "GA-BUS-6"
-        ]
-      },
-      {
-        "subject": "externalises-a-rerouted-value",
+        "subject": "externalises-a-live-first-value",
         "coupled": []
       },
       {
-        "subject": "devices-a-live-press",
+        "subject": "devices-a-changed-value",
+        "coupled": [
+          "GA-EVT-2",
+          "GA-APPLY-11"
+        ]
+      },
+      {
+        "subject": "devices-a-correlated-first-value",
         "coupled": []
       },
       {
@@ -1199,7 +1200,7 @@
     "level": "MUST",
     "conformance": "Meta",
     "verify": "wire",
-    "text": "A change made on a child directly is relayed as external and not undone",
+    "text": "A change made on a child directly is relayed with the child's cause, external where the child held the key and device where it was the child's first value (GA-EVT-1), and not undone",
     "negative_subjects": []
   },
   {

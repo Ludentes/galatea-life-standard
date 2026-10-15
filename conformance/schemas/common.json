@@ -137,7 +137,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["on_s", "off_s", "other_s", "fixed_s", "load_cap_s", "cap_s", "presence_renews", "vacant_ends", "schedule_ends",
-        "owner_work_passes_guest_holds"],
+        "owner_work_passes_guest_holds", "owner_work_passes_holds"],
       "properties": {
         "on_s": { "type": "integer", "minimum": 1, "description": "The quiet window after an on change" },
         "off_s": { "type": "integer", "minimum": 1, "description": "The quiet window after an off change" },
@@ -148,7 +148,18 @@
         "presence_renews": { "type": "boolean" },
         "vacant_ends": { "type": "boolean" },
         "schedule_ends": { "type": "boolean" },
-        "owner_work_passes_guest_holds": { "type": "boolean", "description": "Whether the owner's rules and schedules pass a guest's hold (GA-LEASE-10)" }
+        "owner_work_passes_guest_holds": { "type": "boolean", "description": "Whether the owner's rules and schedules pass a guest's hold (GA-LEASE-10)" },
+        "owner_work_passes_holds": { "type": "boolean", "description": "The home's switch: whether all the owner's work passes every person's hold once its floor has passed; every steward implements it (GA-LEASE-12)" }
+      }
+    },
+    "passedHold": {
+      "description": "On a step that passed a person's hold (steward, The owner passes a person's hold; GA-LEASE-10, GA-LEASE-12): the hold's holder and the first switch that covers the step; left out entirely for a reader a personal press's occurrence is withheld from (GA-AUTH-7); never on a narrowing action or a press's own action",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["holder", "switch"],
+      "properties": {
+        "holder": { "$ref": "#/$defs/principal" },
+        "switch": { "enum": ["rule", "device", "home", "guest"] }
       }
     },
     "principal": {

@@ -33,6 +33,7 @@
         "stale": { "type": "boolean" },
         "basis": { "$ref": "../common.json#/$defs/planBasis" },
         "from_replaced": { "const": true },
+        "passed_hold": { "$ref": "../common.json#/$defs/passedHold" },
         "brain_authored": { "const": true, "description": "A step of brain_authored work (GA-DEF-7): above reversible it is refuse(tier), and it is sent with brain: true (steward, Steps)" },
         "answer": { "$ref": "../common.json#/$defs/answer", "description": "The answer that stands for an asked step, once one was given (steward, The confirmation dialogue): the plan, updated, that answer returns" }
       }

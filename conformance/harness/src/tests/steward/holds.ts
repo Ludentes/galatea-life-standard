@@ -12,14 +12,14 @@ import { ackWithinOf, act, del, holdEndLatenessMs, iso, leaseEventsSince, leaseO
   setFlag, stepTo, stewardSees, targetIn, up, wall, type HoldPolicy } from "./util.js";
 
 const FIELDS = ["on_s", "off_s", "other_s", "fixed_s", "load_cap_s", "cap_s", "presence_renews", "vacant_ends", "schedule_ends",
-  "owner_work_passes_guest_holds"];
+  "owner_work_passes_guest_holds", "owner_work_passes_holds"];
 
 /** The owner's describe's home.hold. */
 const holdNow = async (ctx: TestContext) => (await ownerOf(ctx).callOk("describe")).home?.hold as HoldPolicy | undefined;
 
 requirement("GA-LEASE-8", {
   seam: "steward",
-  covers: "describe's home shows hold with every field, each window an integer of 1 or more and `cap_s` one of 0 or more; define of 20 s windows with `cap_s` 0 (no cap), of 1 s windows and of a cap of 1 s is taken and shown; a field set to null returns to the steward's own (the one `define` of `hold: null` gives), not the value set before; `schedule_ends` true is taken, or refused with invalid_request whose `data.field` names the flag; a change applies at once, a held hold's expires moving with it",
+  covers: "describe's home shows hold with every field, each window an integer of 1 or more and `cap_s` one of 0 or more; define of 20 s windows with `cap_s` 0 (no cap), of 1 s windows and of a cap of 1 s is taken and shown; every flag set false is taken and shown, each in a call of its own; a field set to null returns to the steward's own (the one `define` of `hold: null` gives), not the value set before; `schedule_ends` true is taken, or refused with invalid_request whose `data.field` names the flag; a change applies at once, a held hold's expires moving with it",
 }, async (ctx) => {
   // The steward's own policy: every field back to it first, so no earlier setting is taken for it.
   await mustDefine(ctx, [up("home", { hold: null })], "the hold policy back to the steward's own");
@@ -29,10 +29,11 @@ requirement("GA-LEASE-8", {
   mustEqual(Object.keys(own!).sort(), [...FIELDS].sort(), "the hold policy's fields");
   for (const k of ["on_s", "off_s", "other_s", "fixed_s", "load_cap_s"] as const) must(Number.isInteger(own![k]) && own![k] >= 1, `hold.${k} ${own![k]}`);
   must(Number.isInteger(own!.cap_s) && own!.cap_s >= 0, `hold.cap_s ${own!.cap_s}`);
-  for (const k of ["presence_renews", "vacant_ends", "schedule_ends", "owner_work_passes_guest_holds"] as const) {
+  for (const k of ["presence_renews", "vacant_ends", "schedule_ends", "owner_work_passes_guest_holds", "owner_work_passes_holds"] as const) {
     must(typeof own![k] === "boolean", `hold.${k} ${own![k]}`);
   }
-  // Short windows, no cap, and a cap, each taken and shown (pinHold fails unless describe shows them).
+  // Short windows, no cap, and a cap, each taken and shown, and every flag's false taken and shown, each in a call of its
+  // own (pinHold fails unless define takes each and describe shows it).
   await pinHold(ctx, { on_s: 20, off_s: 20, other_s: 20, fixed_s: 20, load_cap_s: 20, cap_s: 0 });
   await pinHold(ctx, { on_s: 1, off_s: 1, other_s: 1, fixed_s: 1, load_cap_s: 1, cap_s: 1 });
   // A field set to null returns to the steward's own, not to the value the owner set before.
@@ -362,6 +363,7 @@ requirement("GA-LEASE-7", {
   // The heater's guard: load_cap_s from the change, no direction, end window; motion in the gym, cap_s 900 and,
   // when vacant_ends is taken, the boiler room turning vacant notwithstanding.
   p = await pinHold(ctx, { cap_s: 900 });
+  if (vacant) await mustDefine(ctx, [up("home", { hold: { vacant_ends: true } })], "vacant_ends true again, over the pinned false");
   {
     const [heater2, presence] = await scripted(ctx, [{ fixture: "heater", adopt: "socket", bridge: "hold-e5" }, sensorOn("presence", "hold-e5")]);
     await mustDefine(ctx, room("hold-boiler", [heater2!, presence!]), "the boiler room");
@@ -389,6 +391,7 @@ requirement("GA-LEASE-7", {
   // occupancy_hold_s running out with no report; one taken while it was vacant ends on_s after its change.
   p = await pinHold(ctx);
   if (vacant) {
+    await mustDefine(ctx, [up("home", { hold: { vacant_ends: true } })], "vacant_ends true again, over the pinned false");
     const [lampO, presence] = await scripted(ctx, [lampOn("hold-f"), sensorOn("presence", "hold-f")]);
     const [lampP] = await scripted(ctx, [lampOn("hold-f2")]);
     await mustDefine(ctx, room("hold-bedroom", [lampO!, presence!, lampP!]), "the bedroom");
@@ -502,8 +505,9 @@ requirement("GA-LEASE-7", {
   // A schedule's end (when schedule_ends is taken): a run's step after the floor ends the hold `schedule` naming
   // the run; one inside the floor is refused and ends nothing, then or when the floor passes; a step skipped
   // (skip(occupied)) and a brain_authored run's step end nothing.
+  // Pinned first: the pinned policy sets schedule_ends false.
+  await pinHold(ctx);
   if (await setFlag(ctx, "schedule_ends", true, ["schedule-cannot-end", "schedule-ends-without-dispatch", "schedule-end-without-run", "schedule-ends-at-the-floor"])) {
-    await pinHold(ctx);
     const [lampT] = await scripted(ctx, [lampOn("hold-h2")]);
     const [lampU] = await scripted(ctx, [lampOn("hold-h3")]);
     const [lampY, presenceY] = await scripted(ctx, [lampOn("hold-h4"), sensorOn("presence", "hold-h4")]);

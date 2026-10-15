@@ -22,7 +22,8 @@
         "presence_renews": { "type": ["boolean", "null"] },
         "vacant_ends": { "type": ["boolean", "null"] },
         "schedule_ends": { "type": ["boolean", "null"] },
-        "owner_work_passes_guest_holds": { "type": ["boolean", "null"] }
+        "owner_work_passes_guest_holds": { "type": ["boolean", "null"] },
+        "owner_work_passes_holds": { "type": ["boolean", "null"], "description": "The home's switch (GA-LEASE-12); no steward refuses it" }
       }
     },
     "occupancy_hold_s": { "type": ["integer", "null"], "minimum": 1 },

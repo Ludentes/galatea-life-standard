@@ -19,6 +19,10 @@ export interface StewardDefineHome {
     vacant_ends?: boolean | null;
     schedule_ends?: boolean | null;
     owner_work_passes_guest_holds?: boolean | null;
+    /**
+     * The home's switch (GA-LEASE-12); no steward refuses it
+     */
+    owner_work_passes_holds?: boolean | null;
   } | null;
   occupancy_hold_s?: number | null;
   ask_expiry_s?: number | null;

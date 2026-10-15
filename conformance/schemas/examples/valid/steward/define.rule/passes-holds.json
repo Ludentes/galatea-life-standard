@@ -1,0 +1,7 @@
+{
+  "id": "plug-off",
+  "name": "Розетка гаснет по кнопке",
+  "trigger": { "event": { "target": "sim-bridge:switch", "type": "occurrence", "key": "action", "value": "2_single" } },
+  "actions": [{ "target": "sim-bridge:plug", "action": "onoff.turn_off", "args": {} }],
+  "passes_holds": true
+}

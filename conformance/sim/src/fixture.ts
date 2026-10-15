@@ -201,6 +201,10 @@ const SCRIPTED: Record<string, FixtureDevice> = {
   // A multisensor: presence and light readings, neither set by any action (GA-LEASE-2).
   multisensor: device({ id: "multisensor", capabilities: ["sensor"], sensorKeys: ["occupancy", "illuminance"], feedback: "closed",
     proposedClass: "sensor", initial: { occupancy: false, illuminance: 0 } }),
+  // A thermostat: a closed climate device, two keys set by two actions (`climate.set_mode` sets `mode`,
+  // `climate.set_setpoint` sets `setpoint`), what `owner-passes-safety` latches one of (GA-LEASE-12).
+  thermostat: device({ id: "thermostat", capabilities: ["climate"], feedback: "closed", proposedClass: "boiler",
+    initial: { mode: "heat", setpoint: 21 } }),
 };
 
 /** A device's entry in its bridge's `devices` document (`bridge/devices.json`), as the simulated bridge publishes it. */

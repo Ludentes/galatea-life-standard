@@ -43,6 +43,10 @@ export interface StewardDescribeResponse {
        * Whether the owner's rules and schedules pass a guest's hold (GA-LEASE-10)
        */
       owner_work_passes_guest_holds: boolean;
+      /**
+       * The home's switch: whether all the owner's work passes every person's hold once its floor has passed; every steward implements it (GA-LEASE-12)
+       */
+      owner_work_passes_holds: boolean;
     };
     [k: string]: unknown | undefined;
   };

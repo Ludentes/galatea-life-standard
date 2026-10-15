@@ -2,8 +2,10 @@ import { must, mustEqual } from "../../assert.js";
 import { requirement } from "../../registry.js";
 import { CHANNEL, LAMP } from "../../steward-home.js";
 import { mustAccept, mustBe } from "./answers.js";
-import { brainAsks, brainDefine, defineByPlan, ownerChat, ownerSaysYes } from "./brain.js";
-import { announcer, freshSecret, mustDefine, mustRefuse, ownerDefine, ownerOf, revisionOf, scripted, up, voice } from "./util.js";
+import type { TestContext } from "../../context.js";
+import { brainAsks, brainDefine, byBrain, defineByPlan, ownerChat, ownerSaysYes } from "./brain.js";
+import { cursorNow, eventsAfter } from "./rules.js";
+import { announcer, del, freshSecret, mustDefine, mustRefuse, ownerDefine, ownerOf, revisionOf, scripted, up, voice } from "./util.js";
 
 const attic = up("room", { id: "attic", name: "Чердак" });
 
@@ -38,7 +40,7 @@ requirement("GA-DEF-2", {
 
 requirement("GA-DEF-3", {
   seam: "steward",
-  covers: "the owner clause: define is refused not_permitted from a member's app, a guest panel, and a brain naming the owner as its speaker at the kitchen's voice endpoint, whose role cap is member, and accepted from the owner's app; through a brain, at the owner's chat window: a person is refused not_permitted, a room is asked; the front is not tried, since GA-AUTH-8 refuses it define before the owner clause is read (GA-AUTH-8, slice 9)",
+  covers: "the owner clause: define is refused not_permitted from a member's app, a guest panel, and a brain naming the owner as its speaker at the kitchen's voice endpoint, whose role cap is member, and accepted from the owner's app; through a brain, at the owner's chat window: a person is refused not_permitted, a room is asked; the front is not tried, since GA-AUTH-8 refuses it define before the owner clause is read (GA-AUTH-8, slice 9); the switches, through a brain at the owner's chat window, each refused not_permitted at the call, the revision and describe unchanged and no ask event put: a lamp's owner_work_passes_holds set true; the target of a lamp whose switch the owner set true deleted; a rule the owner marked passes_holds deleted; a rule created with passes_holds true; the mark cleared on the owner's marked rule; the home hold's owner_work_passes_holds set true; a change set of a room beside the lamp's switch cleared, refused whole; then a rename of the owner's marked rule, leaving passes_holds out, taken through a plan the owner answers yes, the rule then brain_authored with passes_holds still true in describe (no switch is named at its current value: a steward may refuse that or take it as no change)",
 }, async (ctx) => {
   const s = ctx.steward!;
   const tries = [
@@ -57,7 +59,49 @@ requirement("GA-DEF-3", {
   await brainAsks(ctx, [attic], "a room");
   const r = await ownerDefine(ctx, [attic]);
   must(r.ok, `define from the owner's app returned ${r.ok ? "" : r.error}`, r.body);
+
+  // The owner's switches are out of a brain's reach (GA-LEASE-12): each change set refused at the call, before any plan.
+  const lampSwitch = up("target", { id: LAMP, owner_work_passes_holds: true });
+  await brainMustNot(ctx, [lampSwitch], "a lamp's owner_work_passes_holds set true through a brain");
+  await mustDefine(ctx, [lampSwitch, up("rule", { id: "kept", name: "Выключить", conditions: [{ target: LAMP, key: "on", op: "eq", value: true }],
+    actions: [{ target: LAMP, action: "onoff.turn_off", args: {} }], active: false, passes_holds: true })], "the owner's lamp switch and the owner's marked rule");
+  await brainMustNot(ctx, [del("target", { id: LAMP })], "the target of a lamp whose switch the owner set true deleted through a brain");
+  await brainMustNot(ctx, [del("rule", { id: "kept" })], "the owner's marked rule deleted through a brain");
+  await brainMustNot(ctx, [up("rule", { id: "marked", name: "Помечено", conditions: [{ target: LAMP, key: "on", op: "eq", value: false }],
+    actions: [{ target: LAMP, action: "onoff.turn_on", args: {} }], active: false, passes_holds: true })], "a rule created with passes_holds true through a brain");
+  await brainMustNot(ctx, [up("rule", { id: "kept", passes_holds: false })], "the mark cleared on the owner's marked rule through a brain");
+  await brainMustNot(ctx, [up("home", { hold: { owner_work_passes_holds: true } })], "the home hold's owner_work_passes_holds set true through a brain");
+  await brainMustNot(ctx, [up("room", { id: "loft", name: "Мансарда" }), up("target", { id: LAMP, owner_work_passes_holds: false })],
+    "a room beside the lamp's switch cleared, through a brain");
+  // A rename, the mark left out: taken through a plan, the rule then brain_authored, its mark kept.
+  await byBrain(ctx, [up("rule", { id: "kept", name: "Выключить свет" })], "a rename of the owner's marked rule");
+  const kept = ((await ownerOf(ctx).callOk("describe")).rules as { id: string; name?: string; brain_authored?: boolean; passes_holds?: boolean }[])
+    .find((x) => x.id === "kept");
+  ctx.evidence(`the owner's marked rule after the brain's rename: ${JSON.stringify(kept)}`);
+  mustEqual([kept?.name, kept?.brain_authored, kept?.passes_holds], ["Выключить свет", true, true], "the marked rule's name, brain_authored and passes_holds after the brain's rename");
 });
+
+/**
+ * What GA-DEF-3's refused change sets could touch in `describe`: the revision, the lamp's target and its switch, the rules, the rooms and the
+ * home's `hold`. The rest (liveness, notices, a clock) may move between two reads of a conforming steward.
+ */
+const touched = (d: any) => {
+  const lamp = (d.targets as { id: string; owner_work_passes_holds?: boolean }[]).find((t) => t.id === LAMP);
+  return { revision: d.revision, lamp: lamp && { owner_work_passes_holds: lamp.owner_work_passes_holds ?? false }, rules: d.rules, rooms: d.rooms, hold: d.home?.hold };
+};
+
+/**
+ * Fails unless `define` of `changes` through the brain at the owner's chat window is `not_permitted` at the call: no plan, the
+ * revision and describe unchanged, and no `ask` event put (GA-DEF-3).
+ */
+async function brainMustNot(ctx: TestContext, changes: unknown[], what: string): Promise<void> {
+  const before = touched(await ownerOf(ctx).callOk("describe"));
+  const cursor = await cursorNow(ctx);
+  const r = await brainDefine(ctx, changes);
+  mustBe(ctx, r, "not_permitted", what);
+  mustEqual(touched(await ownerOf(ctx).callOk("describe")), before, `describe once ${what} was refused`);
+  mustEqual((await eventsAfter(ctx, cursor)).filter((e) => e.type === "ask").length, 0, `ask events once ${what} was refused`);
+}
 
 requirement("GA-DEF-5", {
   seam: "steward",

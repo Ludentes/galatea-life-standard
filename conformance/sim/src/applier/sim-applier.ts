@@ -92,6 +92,8 @@ type Plan = ApplierPlan & { expiresMs: number };
 interface Pending {
   apply_id: string; step_id: string; target: string; action: string; commandId: string;
   expect?: Record<string, unknown>; applied: boolean; open: boolean; timer: number;
+  /** A scripted step's apply as a `state` event's cause names it (`scriptReportOfStep`). */
+  cause?: Record<string, unknown>;
 }
 /** An event as held: the generated `applier/event.json` plus its time on the clock. */
 type Event = ApplierEvent & { timeMs: number };
@@ -319,6 +321,22 @@ export class SimApplier {
       d.values[key] = { value, basis_time };
       this.emit("state", { target, key, value, basis_time, cause: { ...f.cause } });
       this.emit("late_ack", { apply_id: f.apply_id, step_id: f.step_id, target, key, value, cause: { ...f.cause } });
+    }
+  }
+
+  /**
+   * The scripted stand-in: the device reports the values the step on `target` a script ends (`scriptOutcome`) sets, while that
+   * step is still pending: a `state` event each that changed, caused by its apply (GA-EVT-1), the step's own end left as scripted.
+   */
+  scriptReportOfStep(target: string): void {
+    const p = [...this.pending.values()].find((x) => x.target === target && x.cause !== undefined);
+    if (!p) throw new Error(`no scripted step pending on ${target}`);
+    const d = this.scripted(target);
+    for (const [key, value] of Object.entries(p.expect ?? {})) {
+      if (d.values[key]?.value === value) continue;
+      const basis_time = this.iso();
+      d.values[key] = { value, basis_time };
+      this.emit("state", { target, key, value, basis_time, cause: { ...p.cause } });
     }
   }
 
@@ -654,7 +672,8 @@ export class SimApplier {
         if (end.outcome === "failed") this.failed.set(d.id, { apply_id, step_id: step.step_id, expect, cause: { apply: apply_id, client, for: forWhom } });
         this.finish(commandId, end.outcome, end.reason);
       }, end.afterMs ?? (atAck ? ackWithinS(d.class, d.doc.reachMs) * 1000 : SCRIPTED_ACK_MS));
-      this.pending.set(commandId, { apply_id, step_id: step.step_id, target: step.target, action: step.action, commandId, expect, applied: true, open, timer });
+      this.pending.set(commandId, { apply_id, step_id: step.step_id, target: step.target, action: step.action, commandId, expect, applied: true, open, timer,
+        cause: { apply: apply_id, client, for: forWhom } });
       return "dispatched";
     }
     const timer = this.clock.setTimeout(() => {
